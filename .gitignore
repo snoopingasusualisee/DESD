@@ -1,0 +1,9 @@
+# Add any local file dir here to avoid commit of shortcuts etc
+
+__pycache__/
+db.sqlite3
+*.log
+.venv/
+env/
+venv/
+alex_notes.txt
