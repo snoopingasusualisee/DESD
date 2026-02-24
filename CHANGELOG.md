@@ -11,3 +11,8 @@
 - Added docker-compose.yml
 - Added requirements.txt
 - Added start.sh
+# V1.0.3 - Sebastian Macfarlane Woodley
+- Began Html page design
+- Began linking marketplace and accounts
+# V1.0.4 - Alex McBride
+- Setup view shells under marketplace and accounts. Merged with changes to views from main
