@@ -11,3 +11,7 @@
 - Added docker-compose.yml
 - Added requirements.txt
 - Added start.sh
+# V1.0.3 - Sebastian Macfarlane Woodley
+- Began Html page design
+- Began linking marketplace and accounts
+-
