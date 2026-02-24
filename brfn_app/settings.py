@@ -75,15 +75,15 @@ WSGI_APPLICATION = 'brfn_app.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-if os.environ.get('DATABASE_ENGINE') == 'postgresql':
+if os.environ.get('DATABASE_ENGINE') == 'mysql':
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
+            'ENGINE': 'django.db.backends.mysql',
             'NAME': os.environ.get('DATABASE_NAME', 'brfn_db'),
             'USER': os.environ.get('DATABASE_USER', 'brfn_user'),
             'PASSWORD': os.environ.get('DATABASE_PASSWORD', 'brfn_pass'),
             'HOST': os.environ.get('DATABASE_HOST', 'db'),
-            'PORT': os.environ.get('DATABASE_PORT', '5432'),
+            'PORT': os.environ.get('DATABASE_PORT', '3306'),
         }
     }
 else:
