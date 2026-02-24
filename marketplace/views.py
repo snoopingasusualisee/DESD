@@ -12,17 +12,21 @@ def browse(request):
 
     category_slug = request.GET.get('category')
     search = request.GET.get('search', '').strip()
+    producer_name = request.GET.get('producer', '').strip()
 
     if category_slug:
         products = products.filter(category__slug=category_slug)
     if search:
         products = products.filter(name__icontains=search)
+    if producer_name:
+        products = products.filter(producer__username=producer_name)
 
     return render(request, 'marketplace/browse.html', {
         'products': products,
         'categories': categories,
         'search': search,
         'selected_category': category_slug,
+        'producer_name': producer_name,
     })
 
 

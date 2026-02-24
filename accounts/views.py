@@ -63,14 +63,14 @@ def authorise(user, action):
     """
     pass
 
-def login(user):
+def login_helper(user):
     """Login helper function."""
     pass
 
-def logout(user):
+def logout_helper(user):
     """Logout helper function."""
     pass
 
-def register(user):
+def register_helper(user):
     """Register helper function."""
     pass
