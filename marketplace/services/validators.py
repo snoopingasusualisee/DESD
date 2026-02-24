@@ -1,6 +1,6 @@
 """
 Validation functions for marketplace business rules.
-Author: TJ Okocha
+Author: TJ
 """
 
 from datetime import datetime, timedelta

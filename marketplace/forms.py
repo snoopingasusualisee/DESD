@@ -1,6 +1,6 @@
 """
 Django forms for marketplace with validation.
-Author: TJ Okocha
+Author: TJ
 """
 
 from django import forms

@@ -14,8 +14,7 @@
 # V1.0.3 - Sebastian Macfarlane Woodley
 - Began Html page design
 - Began linking marketplace and accounts
--
-# V1.0.4 - TJ Okocha
+# V1.0.4 - TJ
 - Added marketplace/services/validators.py with 4 core validators
 - Added marketplace/forms.py with ProductForm, CheckoutForm, OrderStatusForm
 - Implemented 48-hour lead time validation
