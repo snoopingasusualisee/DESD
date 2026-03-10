@@ -38,3 +38,17 @@
 - Extended models
 - Registered models in admin panel
 - Added 1 new dependency in requirements
+# V1.0.10 - Sebastian Macfarlane Woodley
+- Created HTML templates for cart and detail pages including editing and deleting products
+- Added Cart Buttons to browse and product detail page
+- Cart view shows all items with quantities, subtotals, and a total
+- Users can update quantities or remove items
+- Created product_detail view that returns product via product ID
+- Edit view pre-fills product form with existing data. Validates on submit then saves
+- Delete view shows confirm page on GET, Deletes on POST. Currently hard delete need to switch to soft delete
+- Added cart buttons using POST form that sends product ID to add to cart view
+- Cart uses Basket model, each BasketItem stores product and quantities
+- Basket Get Total calculates sums all subtotals
+- Users can remove items with POST requests
+- Removed admin from registration role dropdown for security
+- Added success confirmation message after registration
