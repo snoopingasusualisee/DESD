@@ -45,6 +45,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -83,8 +84,19 @@ if os.environ.get('DATABASE_ENGINE') == 'postgresql':
             'NAME': os.environ.get('DATABASE_NAME', 'brfn_db'),
             'USER': os.environ.get('DATABASE_USER', 'brfn_user'),
             'PASSWORD': os.environ.get('DATABASE_PASSWORD', 'brfn_pass'),
-            'HOST': os.environ.get('DATABASE_HOST', 'db'),
+            'HOST': os.environ.get('DATABASE_HOST', 'localhost'),
             'PORT': os.environ.get('DATABASE_PORT', '5432'),
+        }
+    }
+elif os.environ.get('DATABASE_ENGINE') == 'mysql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('DATABASE_NAME', 'brfn_db'),
+            'USER': os.environ.get('DATABASE_USER', 'brfn_user'),
+            'PASSWORD': os.environ.get('DATABASE_PASSWORD', 'brfn_pass'),
+            'HOST': os.environ.get('DATABASE_HOST', 'db'),
+            'PORT': os.environ.get('DATABASE_PORT', '3306'),
         }
     }
 else:

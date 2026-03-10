@@ -1,7 +1,7 @@
-# build dependencies and packages stag
+# build dependencies and packages stage
 FROM python:3.12-alpine AS builder
 
-RUN apk add --no-cache gcc musl-dev postgresql-dev
+RUN apk add --no-cache gcc musl-dev mariadb-dev pkgconf
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # run stage
 FROM python:3.12-alpine AS production
 
-RUN apk add --no-cache libpq
+RUN apk add --no-cache mariadb-connector-c
 
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"

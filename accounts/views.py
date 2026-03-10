@@ -2,7 +2,11 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from .models import CustomUser
+from .forms import CustomerRegistrationForm
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 
+# PAGE VIEWS
 
 def login_view(request):
     if request.method == 'POST':
@@ -23,17 +27,55 @@ def logout_view(request):
 
 def register(request):
     error = None
+    success = None
+
     if request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        role = request.POST.get('role')
-        if CustomUser.objects.filter(username=username).exists():
-            error = 'Username already taken.'
-        else:
-            user = CustomUser.objects.create_user(
-                username=username, email=email, password=password, role=role
-            )
+        form = CustomerRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
             login(request, user)
             return redirect('/')
-    return render(request, 'accounts/register.html', {'error': error})
+        else:
+            error = 'Please correct the errors below.'
+    else:
+        form = CustomerRegistrationForm()
+
+    return render(request, 'accounts/register.html', {
+        'form': form,
+        'error': error,
+        'success': success,
+    })
+
+@login_required
+def transaction_history(request):
+    """View transaction history page - displays user's past transactions."""
+    pass
+
+
+@login_required
+def current_orders(request):
+    """View current/in-progress orders page."""
+    pass
+
+# HELPER FUNCTIONS
+
+def authorise(user, action):
+    """
+    Checks if user has permission to perform action.
+    Will use postgres for permission checking.
+    
+    Note: Consider moving to a separate utils.py or permissions.py file.
+    """
+    pass
+
+def login_helper(user):
+    """Login helper function."""
+    pass
+
+def logout_helper(user):
+    """Logout helper function."""
+    pass
+
+def register_helper(user):
+    """Register helper function."""
+    pass
