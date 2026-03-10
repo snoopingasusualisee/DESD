@@ -67,3 +67,9 @@
 - Users can remove items with POST requests
 - Removed admin from registration role dropdown for security
 - Added success confirmation message after registration
+# V1.0.11 - Zain Malik
+- Added GitHub Actions workflow files for collaboration and infrastructure pipeline scaffolding
+- Implemented `collab.yml` to validate the Django project on push
+- Configured collaboration workflow to support an easier team pull process using `main`
+- Added placeholder `deploy.yml` workflow for future AWS infrastructure deployment
+- Added placeholder `destroy.yml` workflow for future AWS infrastructure teardown
