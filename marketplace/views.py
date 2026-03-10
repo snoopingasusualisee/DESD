@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from .models import Product, Category
 from accounts.models import CustomUser
 
@@ -52,8 +52,8 @@ from .forms import ProductForm
 def add_product(request):
     """Add new product page - allows producers to add new products."""
     # Only producers can add products
-    if request.user.role != 'producer':
-        return redirect('/browse/')
+    if request.user.role != CustomUser.Role.PRODUCER:
+        return HttpResponseForbidden('You do not have permission to add products.')
 
     error = None
     success = None

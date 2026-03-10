@@ -47,7 +47,7 @@
 - Registered order models in Django admin
 # V1.0.9 - Alex McBride
 - Added Postgres DB integration via migration of structure to sqlite3 for now
-- Added fixture to read/write saved data for population (can be loaded into local sqlite3 via: `python manage.py loaddata categories` AFTER running migrate. Saved data can be overwritten via: `python manage.py dumpdata marketplace.Category --indent 2 > marketplace/fixtures/categories.json`, which will take from your local sqlite3 file)
+- Added fixture to read/write saved data for population (can be loaded into local sqlite3 via: `Get-ChildItem marketplace/fixtures/*.json | ForEach-Object { python manage.py loaddata $_.FullName }` AFTER running migrate. Saved data can be overwritten via: `python manage.py dumpdata marketplace.Category --indent 2 > marketplace/fixtures/categories.json`, which will take from your local sqlite3 file) (EXTRA NOTE: different db models will have to be dumped separately, e.g. accounts being `python manage.py dumpdata accounts --indent 2 > marketplace/fixtures/accounts.json`.)
 - Added .env.example (environment variable template)
 - Added more migration files for models
 - Extended models
@@ -73,3 +73,9 @@
 - Configured collaboration workflow to support an easier team pull process using `main`
 - Added placeholder `deploy.yml` workflow for future AWS infrastructure deployment
 - Added placeholder `destroy.yml` workflow for future AWS infrastructure teardown
+# V1.0.12 - Alex McBride
+- Fixed role escalation vulnerability in registration: server-side whitelist now enforces only permitted roles (customer, producer, community_group, restaurant), admin role cannot be self-assigned via any client-side manipulation
+- Added `clean_role` method to `CustomerRegistrationForm`, rejecting any non-whitelisted role at form validation level
+- Fixed CSRF logout vulnerability: `logout_view` now requires POST (`@require_POST`): all logout links across all templates replaced with CSRF-token-protected POST forms (covers all 15 templates: accounts, marketplace, orders)
+- Improved `add_product` access control: non-producers now receive `403 Forbidden` instead of a silent redirect
+- Security review of merged code from main: confirmed all new orders views (`cart`, `checkout`, `order_detail`, `order_list`, `manage_orders`, `manage_order_detail`) are correctly guarded with `@login_required` and role checks (`_is_customer`, `_is_producer`), confirmed `edit_product` and `delete_product` use ownership-scoped `get_object_or_404` preventing cross-producer access

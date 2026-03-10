@@ -72,6 +72,18 @@ class CustomerRegistrationForm(forms.ModelForm):
             if value != 'admin'
         ]
 
+    def clean_role(self):
+        role = self.cleaned_data.get('role')
+        allowed = {
+            CustomUser.Role.CUSTOMER,
+            CustomUser.Role.PRODUCER,
+            CustomUser.Role.COMMUNITY_GROUP,
+            CustomUser.Role.RESTAURANT,
+        }
+        if role not in allowed:
+            raise ValidationError("Invalid role selection.")
+        return role
+
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if email and CustomUser.objects.filter(email=email).exists():

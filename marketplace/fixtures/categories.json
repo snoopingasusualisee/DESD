@@ -5,7 +5,7 @@
   "fields": {
     "name": "test",
     "slug": "test",
-    "description": "if you can see this under produce categories, data has been loaded successfully",
+    "description": "hi?",
     "is_active": true
   }
 }

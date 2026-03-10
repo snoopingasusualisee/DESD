@@ -24,7 +24,7 @@
                 <div class="user-menu" onclick="this.classList.toggle('open')">
                     <span class="user-badge">{{ user.username }} ({{ user.role }})</span>
                     <div class="user-dropdown">
-                        <a href="/accounts/logout/">Log Out</a>
+                        <form method="post" action="/accounts/logout/" style="display:inline;margin:0;padding:0">{% csrf_token %}<button type="submit" style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:inherit;">Log Out</button></form>
                     </div>
                 </div>
             {% else %}

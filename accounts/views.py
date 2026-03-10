@@ -5,6 +5,7 @@ from .models import CustomUser
 from .forms import CustomerRegistrationForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 
 # PAGE VIEWS
@@ -21,6 +22,7 @@ def login_view(request):
     return render(request, 'accounts/login.html', {'form': form})
 
 
+@require_POST
 def logout_view(request):
     logout(request)
     return redirect('/')
