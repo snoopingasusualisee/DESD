@@ -5,6 +5,7 @@ from .models import CustomUser
 from .forms import CustomerRegistrationForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.contrib import messages
 
 # PAGE VIEWS
 
@@ -34,6 +35,7 @@ def register(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
+            messages.success(request, 'Welcome to BRFN! Your account has been created successfully.')
             return redirect('/')
         else:
             error = 'Please correct the errors below.'

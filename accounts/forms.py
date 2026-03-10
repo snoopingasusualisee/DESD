@@ -66,6 +66,11 @@ class CustomerRegistrationForm(forms.ModelForm):
         self.fields['first_name'].required = True
         self.fields['last_name'].required = True
         self.fields['email'].required = True
+        # Remove admin from role choices - admin accounts are created via Django admin only
+        self.fields['role'].choices = [
+            (value, label) for value, label in self.fields['role'].choices
+            if value != 'admin'
+        ]
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
