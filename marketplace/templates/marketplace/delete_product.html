@@ -34,16 +34,6 @@
                 </div>
             </div>
             {% else %}
-            <a href="/orders/cart/">Cart</a>
-            <a href="/orders/my-orders/">My Orders</a>
-            {% endif %}
-            <div class="user-menu" onclick="this.classList.toggle('open')">
-                <span class="user-badge">{{ user.username }} ({{ user.role }})</span>
-                <div class="user-dropdown">
-                    <a href="/accounts/logout/">Log Out</a>
-                </div>
-            </div>
-            {% else %}
             <a href="/accounts/login/">Log In</a>
             {% endif %}
         </nav>
