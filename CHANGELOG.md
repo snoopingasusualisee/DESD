@@ -30,6 +30,21 @@
 - Resolved silent UI failure by adding missing is_available flag to product form
 - Configured WhiteNoise for static file serving in Docker
 - Created pop_database.py to automatically seed food categories and test users
+# V1.0.7 - Rob Howells
+- Added custom user model for accounts and roles
+- Created CustomUser with role field (customer/producer)
+- Configured AUTH_USER_MODEL in settings
+- Updated Django admin to display/manage user roles
+- Created marketplace core models (Category and Product)
+- Linked Product to producer user (FK relationship)
+- Refactored templates to use shared static/css/main.css
+# V1.0.8 - Rob Howells
+- Created orders app backend (Cart/Checkout foundation)
+- Added models: Cart, CartItem, Order, OrderItem
+- Created and applied initial order migrations
+- Added orders/urls.py and defined cart/checkout/order endpoints
+- Wired orders into project
+- Registered order models in Django admin
 # V1.0.9 - Alex McBride
 - Added Postgres DB integration via migration of structure to sqlite3 for now
 - Added fixture to read/write saved data for population (can be loaded into local sqlite3 via: `python manage.py loaddata categories` AFTER running migrate. Saved data can be overwritten via: `python manage.py dumpdata marketplace.Category --indent 2 > marketplace/fixtures/categories.json`, which will take from your local sqlite3 file)
