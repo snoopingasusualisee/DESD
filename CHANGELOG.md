@@ -14,4 +14,56 @@
 # V1.0.3 - Sebastian Macfarlane Woodley
 - Began Html page design
 - Began linking marketplace and accounts
--
+# V1.0.4 - Alex McBride
+- Setup view shells under marketplace and accounts. Merged with changes to views from main
+# V1.0.5 - TJ
+- Added marketplace/services/validators.py with 4 core validators
+- Added marketplace/forms.py with ProductForm, CheckoutForm, OrderStatusForm
+- Implemented 48-hour lead time validation
+- Implemented UK postcode validation
+- Implemented product data validation
+- Implemented order status transition validation
+# V1.0.6 - Sebastian Macfarlane Woodley
+- Linked accounts and marketplace with real views and templates
+- Wired up ProductForm and natively rendered Django fields in add_product.html
+- Resolved server-side form validation bypass for pricing and hooked up UI error rendering
+- Resolved silent UI failure by adding missing is_available flag to product form
+- Configured WhiteNoise for static file serving in Docker
+- Created pop_database.py to automatically seed food categories and test users
+# V1.0.7 - Rob Howells
+- Added custom user model for accounts and roles
+- Created CustomUser with role field (customer/producer)
+- Configured AUTH_USER_MODEL in settings
+- Updated Django admin to display/manage user roles
+- Created marketplace core models (Category and Product)
+- Linked Product to producer user (FK relationship)
+- Refactored templates to use shared static/css/main.css
+# V1.0.8 - Rob Howells
+- Created orders app backend (Cart/Checkout foundation)
+- Added models: Cart, CartItem, Order, OrderItem
+- Created and applied initial order migrations
+- Added orders/urls.py and defined cart/checkout/order endpoints
+- Wired orders into project
+- Registered order models in Django admin
+# V1.0.9 - Alex McBride
+- Added Postgres DB integration via migration of structure to sqlite3 for now
+- Added fixture to read/write saved data for population (can be loaded into local sqlite3 via: `python manage.py loaddata categories` AFTER running migrate. Saved data can be overwritten via: `python manage.py dumpdata marketplace.Category --indent 2 > marketplace/fixtures/categories.json`, which will take from your local sqlite3 file)
+- Added .env.example (environment variable template)
+- Added more migration files for models
+- Extended models
+- Registered models in admin panel
+- Added 1 new dependency in requirements
+# V1.0.10 - Sebastian Macfarlane Woodley
+- Created HTML templates for cart and detail pages including editing and deleting products
+- Added Cart Buttons to browse and product detail page
+- Cart view shows all items with quantities, subtotals, and a total
+- Users can update quantities or remove items
+- Created product_detail view that returns product via product ID
+- Edit view pre-fills product form with existing data. Validates on submit then saves
+- Delete view shows confirm page on GET, Deletes on POST. Currently hard delete need to switch to soft delete
+- Added cart buttons using POST form that sends product ID to add to cart view
+- Cart uses Basket model, each BasketItem stores product and quantities
+- Basket Get Total calculates sums all subtotals
+- Users can remove items with POST requests
+- Removed admin from registration role dropdown for security
+- Added success confirmation message after registration
