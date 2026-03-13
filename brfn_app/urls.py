@@ -8,4 +8,5 @@ urlpatterns = [
     path('browse/', include('marketplace.urls')),
     path('accounts/', include('accounts.urls')),
     path("orders/", include("orders.urls")),
+    path("terms/", views.terms, name="terms"),
 ]
