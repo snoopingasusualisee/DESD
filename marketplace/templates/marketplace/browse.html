@@ -66,6 +66,11 @@
             Showing results for "<strong>{{ search }}</strong>" -
             {{ products|length }} product{{ products|length|pluralize }} found
         </p>
+        {% elif producer_name %}
+        <p class="search-summary">
+            Showing products from producer: <strong>{{ producer_name }}</strong> -
+            {{ products|length }} product{{ products|length|pluralize }} found
+        </p>
         {% endif %}
 
         {% if products %}
