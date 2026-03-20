@@ -59,6 +59,16 @@
             <span class="category-tag" style="background: #e8f5e9; color: #2e7d32;">
                 {{ product.get_seasonal_status_display }}
             </span>
+            {% if product.organic_certification_status == 'certified_organic' %}
+            <span class="category-tag" style="background: #e8f5e9; color: #1b5e20;">
+                Certified Organic
+            </span>
+            {% else %}
+            <span class="category-tag" style="background: #f1f1f1; color: #555;">
+                Not Certified
+            </span>
+            {% endif %}
+
             <h2 style="margin: 0.5rem 0;">{{ product.name }}</h2>
             <p class="producer">By {{ product.producer.username }}</p>
 
@@ -83,6 +93,11 @@
                 <strong>Food miles:</strong> {{ food_miles }} miles
             </div>
             {% endif %}
+
+            <div
+                style="margin-top: 0.75rem; padding: 0.5rem 0.75rem; background: #e8f5e9; border-radius: 4px; font-size: 0.85rem;">
+                <strong>Organic Certification:</strong> {{ product.get_organic_certification_status_display }}
+            </div>
 
             {% if product.allergen_info %}
             <div

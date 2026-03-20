@@ -31,6 +31,7 @@ class ProductForm(forms.ModelForm):
             'category',
             'is_available',
             'seasonal_status',
+            'organic_certification_status',
             'allergen_info',
             'harvest_date',
             'image',
@@ -49,6 +50,7 @@ class ProductForm(forms.ModelForm):
                 'min': '0',
                 'placeholder': '0'
             }),
+            'organic_certification_status': forms.Select(),
             'allergen_info': forms.Textarea(attrs={
                 'rows': 2,
                 'placeholder': 'e.g. Contains eggs, milk, gluten'
@@ -60,6 +62,10 @@ class ProductForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.fields['organic_certification_status'].required = True
+        self.fields['organic_certification_status'].label = 'Organic Certification'
+        self.fields['organic_certification_status'].help_text = 'Select whether this product is Certified Organic or Not Certified.'
 
         self.fields['allergen_info'].required = True
         self.fields['allergen_info'].help_text = 'List any allergens contained in this product, or state no common allergens.'

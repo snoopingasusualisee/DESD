@@ -115,7 +115,7 @@
 - Added test cases 6-10
 # V1.0.19 - Rob Howells
 - Added test cases 11-15
-# V 1.0.20 - Rob Howells
+# V1.0.20 - Rob Howells
 - Updated product edit/update flow so producer stock and availability changes save correctly
 - Fixed inventory update behaviour so unavailable products are hidden from browse and reappear when made available again
 - Improved product form validation for stock updates and allergen information
@@ -128,3 +128,9 @@
 - Added food miles display per cart item and total food miles summary in cart
 - Updated cart view context to support food miles data used by TC-013 tests
 - Confirmed TC-011, TC-013 and TC-015 now passing
+# V1.0.21 - Rob Howells
+- Added organic certification status to products
+- Let producers set organic certification when creating/editing listings
+- Added organic certification filter on browse page
+- Displayed certification status on browse cards and product detail page
+- Completed TC-014 and got all related tests passing

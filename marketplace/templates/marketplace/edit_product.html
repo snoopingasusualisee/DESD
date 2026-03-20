@@ -66,14 +66,17 @@
                 </div>
                 {% endif %}
             </div>
+
             <div class="form-group">
                 <label for="{{ form.description.id_for_label }}">Description</label>
                 {{ form.description }}
             </div>
+
             <div class="form-group">
                 <label for="{{ form.category.id_for_label }}">Category</label>
                 {{ form.category }}
             </div>
+
             <div class="row">
                 <div class="form-group">
                     <label for="{{ form.price.id_for_label }}">Price (£)</label>
@@ -84,11 +87,13 @@
                     </div>
                     {% endif %}
                 </div>
+
                 <div class="form-group">
                     <label for="{{ form.unit.id_for_label }}">Unit</label>
                     {{ form.unit }}
                 </div>
             </div>
+
             <div class="form-group">
                 <label for="{{ form.stock_quantity.id_for_label }}">Stock Quantity</label>
                 {{ form.stock_quantity }}
@@ -105,10 +110,28 @@
             </div>
 
             <div class="form-group">
+                <label for="{{ form.organic_certification_status.id_for_label }}">Organic Certification</label>
+                {{ form.organic_certification_status }}
+                {% if form.organic_certification_status.errors %}
+                <div class="field-error" style="color: #d9534f; font-size: 0.85rem;">
+                    {{ form.organic_certification_status.errors.0 }}
+                </div>
+                {% endif %}
+                <div style="font-size: 0.8rem; color: #888; margin-top: 0.25rem;">
+                    Select whether this product is Certified Organic or Not Certified
+                </div>
+            </div>
+
+            <div class="form-group">
                 <label for="{{ form.allergen_info.id_for_label }}">Allergen Information</label>
                 {{ form.allergen_info }}
                 <div style="font-size: 0.8rem; color: #888; margin-top: 0.25rem;">List any allergens contained in this
                     product</div>
+                {% if form.allergen_info.errors %}
+                <div class="field-error" style="color: #d9534f; font-size: 0.85rem; margin-top: 0.25rem;">
+                    {{ form.allergen_info.errors.0 }}
+                </div>
+                {% endif %}
             </div>
 
             <div class="form-group">
@@ -128,8 +151,10 @@
                 <label for="{{ form.is_available.id_for_label }}" style="margin-bottom: 0;">Available for
                     purchase</label>
             </div>
+
             <button type="submit">Save Changes</button>
         </form>
+
         <p class="link"><a href="/browse/product/{{ product.id }}/">← Back to Product</a></p>
     </div>
 

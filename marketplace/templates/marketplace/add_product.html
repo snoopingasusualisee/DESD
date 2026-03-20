@@ -112,10 +112,28 @@
             </div>
 
             <div class="form-group">
+                <label for="{{ form.organic_certification_status.id_for_label }}">Organic Certification</label>
+                {{ form.organic_certification_status }}
+                {% if form.organic_certification_status.errors %}
+                <div class="field-error" style="color: #d9534f; font-size: 0.85rem;">
+                    {{ form.organic_certification_status.errors.0 }}
+                </div>
+                {% endif %}
+                <div style="font-size: 0.8rem; color: #888; margin-top: 0.25rem;">
+                    Select whether this product is Certified Organic or Not Certified
+                </div>
+            </div>
+
+            <div class="form-group">
                 <label for="{{ form.allergen_info.id_for_label }}">Allergen Information</label>
                 {{ form.allergen_info }}
                 <div style="font-size: 0.8rem; color: #888; margin-top: 0.25rem;">List any allergens contained in this
                     product</div>
+                {% if form.allergen_info.errors %}
+                <div class="field-error" style="color: #d9534f; font-size: 0.85rem; margin-top: 0.25rem;">
+                    {{ form.allergen_info.errors.0 }}
+                </div>
+                {% endif %}
             </div>
 
             <div class="form-group">

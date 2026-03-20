@@ -33,6 +33,10 @@ class Product(models.Model):
         ALL_YEAR = "all_year", "Available All Year"
         LIMITED = "limited", "Limited Availability"
 
+    class OrganicCertificationStatus(models.TextChoices):
+        CERTIFIED_ORGANIC = "certified_organic", "Certified Organic"
+        NOT_CERTIFIED = "not_certified", "Not Certified"
+
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="products")
     producer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="products")
 
@@ -47,9 +51,14 @@ class Product(models.Model):
         choices=SeasonalStatus.choices,
         default=SeasonalStatus.ALL_YEAR,
     )
+    organic_certification_status = models.CharField(
+        max_length=25,
+        choices=OrganicCertificationStatus.choices,
+        default=OrganicCertificationStatus.NOT_CERTIFIED,
+    )
     allergen_info = models.TextField(blank=True, help_text="List any allergens, e.g. Contains eggs")
     harvest_date = models.DateField(null=True, blank=True, help_text="Date of harvest or production")
-    image = models.ImageField(upload_to='products/', blank=True, null=True)
+    image = models.ImageField(upload_to="products/", blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -63,7 +72,6 @@ class Product(models.Model):
 
 
 class Basket(models.Model):
-    """Shopping basket for customers."""
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="basket")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -76,7 +84,6 @@ class Basket(models.Model):
 
 
 class BasketItem(models.Model):
-    """Individual items in a basket."""
     basket = models.ForeignKey(Basket, on_delete=models.CASCADE, related_name="items")
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
@@ -93,7 +100,6 @@ class BasketItem(models.Model):
 
 
 class Order(models.Model):
-    """Customer orders."""
     class Status(models.TextChoices):
         PENDING = "pending", "Pending"
         CONFIRMED = "confirmed", "Confirmed"
@@ -103,13 +109,13 @@ class Order(models.Model):
         CANCELLED = "cancelled", "Cancelled"
 
     customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="marketplace_orders")
-    delivery_address = models.ForeignKey('accounts.Address', on_delete=models.SET_NULL, null=True, blank=True)
-    
+    delivery_address = models.ForeignKey("accounts.Address", on_delete=models.SET_NULL, null=True, blank=True)
+
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     commission_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     food_miles = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -121,11 +127,10 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-    """Individual items within an order."""
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
     producer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="sold_items")
-    
+
     quantity = models.PositiveIntegerField()
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
@@ -135,7 +140,6 @@ class OrderItem(models.Model):
 
 
 class Transaction(models.Model):
-    """Financial transactions for order payments."""
     class Type(models.TextChoices):
         PAYMENT = "payment", "Payment"
         REFUND = "refund", "Refund"
@@ -148,14 +152,14 @@ class Transaction(models.Model):
 
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="transactions")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="transactions")
-    
+
     transaction_type = models.CharField(max_length=20, choices=Type.choices)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
-    
+
     payment_processor_id = models.CharField(max_length=255, blank=True)
     payment_method = models.CharField(max_length=50, blank=True)
-    
+
     created_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
 
@@ -167,14 +171,13 @@ class Transaction(models.Model):
 
 
 class Commission(models.Model):
-    """Commission records for platform earnings."""
     order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="commission_record")
     producer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="commissions")
-    
+
     order_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    commission_rate = models.DecimalField(max_digits=5, decimal_places=2)  # Percentage
+    commission_rate = models.DecimalField(max_digits=5, decimal_places=2)
     commission_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -182,7 +185,6 @@ class Commission(models.Model):
 
 
 class AuditLog(models.Model):
-    """Audit trail for important system actions."""
     class Action(models.TextChoices):
         USER_CREATED = "user_created", "User Created"
         USER_UPDATED = "user_updated", "User Updated"

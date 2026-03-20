@@ -75,6 +75,7 @@ def browse(request):
     search = request.GET.get('search', '').strip()
     producer_name = request.GET.get('producer', '').strip()
     allergen_filter = request.GET.get('allergen_filter', '').strip()
+    organic_certification = request.GET.get('organic_certification', '').strip()
 
     if category_slug:
         products = products.filter(category__slug=category_slug)
@@ -94,6 +95,15 @@ def browse(request):
     elif allergen_filter == 'no_allergens':
         products = products.filter(
             Q(allergen_info__isnull=True) | Q(allergen_info__exact='')
+        )
+
+    if organic_certification == Product.OrganicCertificationStatus.CERTIFIED_ORGANIC:
+        products = products.filter(
+            organic_certification_status=Product.OrganicCertificationStatus.CERTIFIED_ORGANIC
+        )
+    elif organic_certification == Product.OrganicCertificationStatus.NOT_CERTIFIED:
+        products = products.filter(
+            organic_certification_status=Product.OrganicCertificationStatus.NOT_CERTIFIED
         )
 
     category_list = list(categories)
@@ -118,6 +128,7 @@ def browse(request):
         'selected_category': category_slug,
         'producer_name': producer_name,
         'allergen_filter': allergen_filter,
+        'organic_certification': organic_certification,
         'product_food_miles': product_food_miles,
     })
 
