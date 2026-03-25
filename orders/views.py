@@ -1,3 +1,4 @@
+import csv
 import math
 import re
 import stripe
@@ -8,11 +9,13 @@ from datetime import datetime, date, timedelta
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 from marketplace.models import Product
 from .models import Cart, CartItem, Order, OrderItem, StatusUpdate
+from .notifications import send_order_confirmation_email, send_status_update_email
 
 
 POSTCODE_COORDS = {
@@ -136,6 +139,98 @@ def _group_order_items_by_producer(items):
     return list(grouped.values())
 
 
+def _get_previous_week_window():
+    today = timezone.localdate()
+    current_week_start = today - timedelta(days=today.weekday())
+    previous_week_start = current_week_start - timedelta(days=7)
+    previous_week_end = current_week_start
+    return previous_week_start, previous_week_end
+
+
+def _get_tax_year_start():
+    today = timezone.localdate()
+    if (today.month, today.day) >= (4, 6):
+        return date(today.year, 4, 6)
+    return date(today.year - 1, 4, 6)
+
+
+def _get_weekly_settlement_queryset(producer):
+    previous_week_start, previous_week_end = _get_previous_week_window()
+    return (
+        Order.objects.filter(
+            status=Order.STATUS_DELIVERED,
+            created_at__date__gte=previous_week_start,
+            created_at__date__lt=previous_week_end,
+            items__product__producer=producer,
+        )
+        .distinct()
+        .prefetch_related("items__product__producer")
+        .order_by("created_at", "id")
+    )
+
+
+def _build_producer_settlement_rows(orders, producer):
+    rows = []
+    total_orders_value = Decimal("0.00")
+
+    for order in orders:
+        producer_items = []
+        producer_total = Decimal("0.00")
+
+        for item in order.items.all():
+            item_producer = item.product.producer if item.product else None
+            if item_producer == producer:
+                producer_items.append(item)
+                producer_total += item.line_total
+
+        if producer_total == Decimal("0.00"):
+            continue
+
+        commission = (producer_total * Order.COMMISSION_RATE).quantize(Decimal("0.01"))
+        producer_payment = (producer_total - commission).quantize(Decimal("0.01"))
+
+        rows.append({
+            "order": order,
+            "items": producer_items,
+            "order_total": producer_total.quantize(Decimal("0.01")),
+            "commission": commission,
+            "producer_payment": producer_payment,
+        })
+        total_orders_value += producer_total
+
+    total_orders_value = total_orders_value.quantize(Decimal("0.01"))
+    total_commission = (total_orders_value * Order.COMMISSION_RATE).quantize(Decimal("0.01"))
+    total_producer_payment = (total_orders_value - total_commission).quantize(Decimal("0.01"))
+
+    return rows, total_orders_value, total_commission, total_producer_payment
+
+
+def _get_tax_year_total_for_producer(producer):
+    tax_year_start = _get_tax_year_start()
+    delivered_orders = (
+        Order.objects.filter(
+            status=Order.STATUS_DELIVERED,
+            created_at__date__gte=tax_year_start,
+            items__product__producer=producer,
+        )
+        .distinct()
+        .prefetch_related("items__product__producer")
+    )
+
+    total = Decimal("0.00")
+    for order in delivered_orders:
+        for item in order.items.all():
+            item_producer = item.product.producer if item.product else None
+            if item_producer == producer:
+                total += item.line_total
+
+    return total.quantize(Decimal("0.01"))
+
+
+def _get_payment_status(rows):
+    return "Processed" if rows else "Pending Bank Transfer"
+
+
 @login_required
 def cart_detail(request):
     cart = _get_cart(request.user)
@@ -189,9 +284,9 @@ def add_to_cart(request, product_id):
     item.save()
 
     from django.contrib import messages
-    messages.success(request, f'Successfully added {qty}x {product.name} to your cart.')
+    messages.success(request, f"Successfully added {qty}x {product.name} to your cart.")
 
-    next_url = request.META.get('HTTP_REFERER', 'orders:cart')
+    next_url = request.META.get("HTTP_REFERER", "orders:cart")
     return redirect(next_url)
 
 
@@ -346,7 +441,7 @@ def stripe_success(request):
             postcode=details.get("postcode", ""),
             total=Decimal("0.00"),
             delivery_date=parsed_date,
-            status=Order.STATUS_PAID,
+            status=Order.STATUS_CONFIRMED,
         )
 
         total = Decimal("0.00")
@@ -379,6 +474,8 @@ def stripe_success(request):
         cart.status = Cart.STATUS_CONVERTED
         cart.save(update_fields=["status"])
         cart.items.all().delete()
+
+    send_order_confirmation_email(order)
 
     return redirect("orders:order_detail", order_id=order.id)
 
@@ -456,6 +553,8 @@ def manage_order_detail(request, order_id):
                     changed_by=request.user,
                 )
 
+                send_status_update_email(order, old_status, new_status, note)
+
                 from django.contrib import messages
                 messages.success(request, f"Order status updated to {order.get_status_display()}.")
 
@@ -471,3 +570,76 @@ def manage_order_detail(request, order_id):
         "form": form,
         "status_updates": status_updates,
     })
+
+
+@login_required
+def payments(request):
+    if not _is_producer(request.user):
+        raise Http404
+
+    weekly_orders = _get_weekly_settlement_queryset(request.user)
+    settlement_rows, total_orders_value, total_commission, total_producer_payment = _build_producer_settlement_rows(
+        weekly_orders, request.user
+    )
+    payment_status = _get_payment_status(settlement_rows)
+    tax_year_total = _get_tax_year_total_for_producer(request.user)
+    previous_week_start, previous_week_end = _get_previous_week_window()
+
+    return render(request, "orders/payments.html", {
+        "settlement_rows": settlement_rows,
+        "total_orders_value": total_orders_value,
+        "total_commission": total_commission,
+        "total_producer_payment": total_producer_payment,
+        "payment_status": payment_status,
+        "tax_year_total": tax_year_total,
+        "previous_week_start": previous_week_start,
+        "previous_week_end": previous_week_end - timedelta(days=1),
+    })
+
+
+@login_required
+def payments_report_csv(request):
+    if not _is_producer(request.user):
+        raise Http404
+
+    weekly_orders = _get_weekly_settlement_queryset(request.user)
+    settlement_rows, total_orders_value, total_commission, total_producer_payment = _build_producer_settlement_rows(weekly_orders, request.user)
+    payment_status = _get_payment_status(settlement_rows)
+
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="weekly_payment_report.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        "order_id",
+        "customer_name",
+        "items",
+        "order_total",
+        "commission",
+        "producer_payment",
+        "payment_status",
+    ])
+
+    for row in settlement_rows:
+        writer.writerow([
+            row["order"].id,
+            row["order"].full_name,
+            "; ".join(item.product_name for item in row["items"]),
+            f"{row['order_total']:.2f}",
+            f"{row['commission']:.2f}",
+            f"{row['producer_payment']:.2f}",
+            payment_status,
+        ])
+
+    writer.writerow([])
+    writer.writerow([
+        "totals",
+        "",
+        "",
+        f"{total_orders_value:.2f}",
+        f"{total_commission:.2f}",
+        f"{total_producer_payment:.2f}",
+        payment_status,
+    ])
+
+    return response

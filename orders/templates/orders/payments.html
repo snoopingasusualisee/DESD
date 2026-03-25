@@ -1,0 +1,105 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payments – BRFN</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+
+<body class="app-body">
+    <header>
+        <h1><a href="/" class="brand-link">Bristol Regional Food Network</a></h1>
+        <nav>
+            <a href="/browse/">Browse</a>
+            <a href="/browse/producers/">Producers</a>
+            {% if user.is_authenticated %}
+                {% if user.role == 'producer' %}
+                    <a href="/browse/add-product/">Add Product</a>
+                    <a href="/orders/manage/">Manage Orders</a>
+                    <a href="/orders/payments/">Payments</a>
+                    
+                {% else %}
+                    <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
+                    <a href="/orders/my-orders/">My Orders</a>
+                {% endif %}
+                <div class="user-menu" onclick="this.classList.toggle('open')">
+                    <span class="user-badge">{{ user.username }} ({{ user.role }})</span>
+                    <div class="user-dropdown">
+                        <form method="post" action="/accounts/logout/" style="display:inline;margin:0;padding:0">
+                            {% csrf_token %}
+                            <button type="submit" style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:inherit;">
+                                Log Out
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <a href="/accounts/login/">Log In</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    {% if messages %}
+    <div style="max-width: 1200px; margin: 1rem auto; padding: 0 2rem;">
+        {% for message in messages %}
+        <div style="background:#d4edda; color:#155724; padding:0.75rem 1rem; text-align:center; border-radius:4px; margin-bottom:0.5rem;">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="page-wide">
+        <h2>Payments</h2>
+        <p style="margin-bottom: 1.5rem; color: #666;">Financial Reports</p>
+
+        <div class="producer-card" style="margin-bottom: 1.5rem;">
+            <h3>Settlement Week</h3>
+            <p>{{ previous_week_start }} to {{ previous_week_end }}</p>
+        </div>
+
+        {% if settlement_rows %}
+        <div class="producer-list" style="margin-bottom: 1.5rem;">
+            {% for row in settlement_rows %}
+            <div class="producer-card">
+                <div>
+                    <h3>Order {{ row.order.id }} - {{ row.order.full_name }}</h3>
+                    <p>Customer: {{ row.order.full_name }}</p>
+                    <p>
+                        Items:
+                        {% for item in row.items %}
+                            {{ item.product_name }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </p>
+                </div>
+                <div style="text-align: right;">
+                    <p><strong>Order Total:</strong> £{{ row.order_total }}</p>
+                    <p><strong>Commission:</strong> £{{ row.commission }}</p>
+                    <p><strong>Producer Payment:</strong> £{{ row.producer_payment }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty">No weekly settlements found.</p>
+        {% endif %}
+
+        <div class="producer-card" style="margin-bottom: 1.5rem;">
+            <h3>Summary</h3>
+            <p><strong>Total Orders Value:</strong> £{{ total_orders_value }}</p>
+            <p><strong>Commission:</strong> £{{ total_commission }}</p>
+            <p><strong>Producer Payment:</strong> £{{ total_producer_payment }}</p>
+            <p><strong>Payment Status:</strong> {{ payment_status }}</p>
+            <p><strong>Tax Year Total:</strong> £{{ tax_year_total }}</p>
+        </div>
+
+        <a href="/orders/payments/report/csv/" class="btn">Download CSV Report</a>
+    </div>
+
+    <footer>&copy; 2026 Bristol Regional Food Network</footer>
+</body>
+
+</html>

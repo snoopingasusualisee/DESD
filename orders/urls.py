@@ -15,4 +15,6 @@ urlpatterns = [
     path("my-orders/<int:order_id>/", views.order_detail, name="order_detail"),
     path("manage/", views.manage_orders, name="manage_orders"),
     path("manage/<int:order_id>/", views.manage_order_detail, name="manage_order_detail"),
+    path("payments/", views.payments, name="payments"),
+    path("payments/report/csv/", views.payments_report_csv, name="payments_report_csv"),
 ]

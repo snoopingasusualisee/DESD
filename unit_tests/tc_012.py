@@ -246,12 +246,12 @@ class TC012WeeklySettlementTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        self.assertContains(response, str(self.order_1.id))
-        self.assertContains(response, str(self.order_2.id))
+        self.assertContains(response, f"Order {self.order_1.id} -")
+        self.assertContains(response, f"Order {self.order_2.id} -")
 
-        self.assertNotContains(response, str(self.order_3.id))  # pending
-        self.assertNotContains(response, str(self.order_4.id))  # other producer
-        self.assertNotContains(response, str(self.order_5.id))  # current week
+        self.assertNotContains(response, f"Order {self.order_3.id} -")  
+        self.assertNotContains(response, f"Order {self.order_4.id} -")  
+        self.assertNotContains(response, f"Order {self.order_5.id} -")  
 
     def test_weekly_summary_shows_correct_commission_and_producer_payment(self):
         """
