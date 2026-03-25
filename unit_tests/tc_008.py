@@ -1,5 +1,6 @@
 from decimal import Decimal
 from datetime import date, timedelta
+from unittest.mock import patch, MagicMock
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -97,8 +98,18 @@ class TC008MultiVendorCheckoutTests(TestCase):
 
         self.assertContains(response, 'Network Commission (5%)')
 
-    def test_multi_vendor_order_created_with_commission(self):
+    @patch('stripe.checkout.Session.create')
+    @patch('stripe.checkout.Session.retrieve')
+    def test_multi_vendor_order_created_with_commission(self, mock_retrieve, mock_create):
         """Placing a multi-vendor order creates one Order with correct commission."""
+        # Mock Stripe responses
+        mock_session = MagicMock()
+        mock_session.url = 'https://checkout.stripe.com/test'
+        mock_session.id = 'cs_test_123'
+        mock_session.payment_status = 'paid'
+        mock_create.return_value = mock_session
+        mock_retrieve.return_value = mock_session
+        
         self._add_all_to_cart()
 
         delivery_date = (date.today() + timedelta(days=3)).strftime('%Y-%m-%d')
@@ -108,6 +119,9 @@ class TC008MultiVendorCheckoutTests(TestCase):
             'city': 'Bristol', 'postcode': 'BS1 1AA',
             'delivery_date': delivery_date,
         })
+        
+        # Complete payment
+        self.client.get(reverse('orders:stripe_success') + '?session_id=cs_test_123')
 
         self.assertEqual(Order.objects.filter(user=self.customer).count(), 1)
         order = Order.objects.get(user=self.customer)
@@ -117,8 +131,18 @@ class TC008MultiVendorCheckoutTests(TestCase):
 
         self.assertEqual(order.items.count(), 4)
 
-    def test_producer1_sees_only_their_items(self):
+    @patch('stripe.checkout.Session.create')
+    @patch('stripe.checkout.Session.retrieve')
+    def test_producer1_sees_only_their_items(self, mock_retrieve, mock_create):
         """Producer 1 can only see their 2 items in the multi-vendor order."""
+        # Mock Stripe responses
+        mock_session = MagicMock()
+        mock_session.url = 'https://checkout.stripe.com/test'
+        mock_session.id = 'cs_test_123'
+        mock_session.payment_status = 'paid'
+        mock_create.return_value = mock_session
+        mock_retrieve.return_value = mock_session
+        
         self._add_all_to_cart()
 
         delivery_date = (date.today() + timedelta(days=3)).strftime('%Y-%m-%d')
@@ -128,6 +152,9 @@ class TC008MultiVendorCheckoutTests(TestCase):
             'city': 'Bristol', 'postcode': 'BS1 1AA',
             'delivery_date': delivery_date,
         })
+        
+        # Complete payment
+        self.client.get(reverse('orders:stripe_success') + '?session_id=cs_test_123')
         order = Order.objects.get(user=self.customer)
 
         self.client.logout()
@@ -141,8 +168,18 @@ class TC008MultiVendorCheckoutTests(TestCase):
         item_names = {i.product_name for i in items}
         self.assertEqual(item_names, {'Organic Carrots', 'Farm Eggs'})
 
-    def test_producer2_sees_only_their_items(self):
+    @patch('stripe.checkout.Session.create')
+    @patch('stripe.checkout.Session.retrieve')
+    def test_producer2_sees_only_their_items(self, mock_retrieve, mock_create):
         """Producer 2 can only see their 2 items in the multi-vendor order."""
+        # Mock Stripe responses
+        mock_session = MagicMock()
+        mock_session.url = 'https://checkout.stripe.com/test'
+        mock_session.id = 'cs_test_123'
+        mock_session.payment_status = 'paid'
+        mock_create.return_value = mock_session
+        mock_retrieve.return_value = mock_session
+        
         self._add_all_to_cart()
 
         delivery_date = (date.today() + timedelta(days=3)).strftime('%Y-%m-%d')
@@ -152,6 +189,9 @@ class TC008MultiVendorCheckoutTests(TestCase):
             'city': 'Bristol', 'postcode': 'BS1 1AA',
             'delivery_date': delivery_date,
         })
+        
+        # Complete payment
+        self.client.get(reverse('orders:stripe_success') + '?session_id=cs_test_123')
         order = Order.objects.get(user=self.customer)
 
         self.client.logout()
@@ -165,8 +205,18 @@ class TC008MultiVendorCheckoutTests(TestCase):
         item_names = {i.product_name for i in items}
         self.assertEqual(item_names, {'Fresh Milk', 'Cheddar Cheese'})
 
-    def test_customer_order_detail_grouped_by_producer(self):
+    @patch('stripe.checkout.Session.create')
+    @patch('stripe.checkout.Session.retrieve')
+    def test_customer_order_detail_grouped_by_producer(self, mock_retrieve, mock_create):
         """Customer order detail shows items grouped by producer with subtotals."""
+        # Mock Stripe responses
+        mock_session = MagicMock()
+        mock_session.url = 'https://checkout.stripe.com/test'
+        mock_session.id = 'cs_test_123'
+        mock_session.payment_status = 'paid'
+        mock_create.return_value = mock_session
+        mock_retrieve.return_value = mock_session
+        
         self._add_all_to_cart()
 
         delivery_date = (date.today() + timedelta(days=3)).strftime('%Y-%m-%d')
@@ -176,6 +226,9 @@ class TC008MultiVendorCheckoutTests(TestCase):
             'city': 'Bristol', 'postcode': 'BS1 1AA',
             'delivery_date': delivery_date,
         })
+        
+        # Complete payment
+        self.client.get(reverse('orders:stripe_success') + '?session_id=cs_test_123')
         order = Order.objects.get(user=self.customer)
 
         response = self.client.get(reverse('orders:order_detail', args=[order.id]))

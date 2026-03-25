@@ -19,9 +19,34 @@ from .notifications import send_order_confirmation_email, send_status_update_ema
 
 
 POSTCODE_COORDS = {
-    'BS1': (51.4545, -2.5879),
-    'BA1': (51.3811, -2.3590),
-    'EX1': (50.7260, -3.5270),
+    'BS1': (51.4545, -2.5879),  # Bristol City Centre
+    'BS2': (51.4550, -2.5750),  # Bristol East
+    'BS3': (51.4380, -2.6020),  # Bedminster
+    'BS4': (51.4340, -2.5530),  # Knowle/Brislington
+    'BS5': (51.4620, -2.5330),  # Eastville/St George
+    'BS6': (51.4750, -2.6020),  # Redland/Cotham
+    'BS7': (51.4840, -2.5830),  # Horfield/Bishopston
+    'BS8': (51.4630, -2.6170),  # Clifton
+    'BS9': (51.4880, -2.6290),  # Stoke Bishop
+    'BS10': (51.5160, -2.5960), # Southmead/Henbury
+    'BS11': (51.4930, -2.6830), # Shirehampton/Avonmouth
+    'BS13': (51.4180, -2.6170), # Hartcliffe/Withywood
+    'BS14': (51.4030, -2.5470), # Stockwood/Hengrove
+    'BS15': (51.4530, -2.4850), # Kingswood/Hanham
+    'BS16': (51.4850, -2.5050), # Downend/Fishponds
+    'BS20': (51.4870, -2.7540), # Portishead
+    'BS30': (51.4410, -2.4930), # Warmley
+    'BS31': (51.3670, -2.4850), # Keynsham
+    'BS32': (51.5370, -2.5520), # Bradley Stoke/Aztec West
+    'BS34': (51.5460, -2.5180), # Filton/Patchway
+    'BS35': (51.5380, -2.4770), # Thornbury
+    'BS36': (51.5170, -2.4730), # Winterbourne
+    'BS37': (51.5590, -2.4650), # Yate/Chipping Sodbury
+    'BS39': (51.3260, -2.5480), # Farrington Gurney
+    'BS40': (51.3640, -2.6740), # Chew Magna
+    'BS41': (51.4150, -2.7070), # Long Ashton
+    'BS48': (51.3940, -2.7910), # Nailsea
+    'BS49': (51.4360, -2.8310) # Winscombe
 }
 
 
@@ -46,6 +71,23 @@ def _get_outward_code(postcode):
 
     parts = postcode.split()
     return parts[0] if parts else None
+
+
+def _sanitize_csv_field(value):
+    """
+    Sanitize CSV field to prevent CSV injection attacks.
+    Formulas starting with =, +, -, @, tab, or carriage return can execute in Excel.
+    """
+    if not value:
+        return ""
+    
+    value_str = str(value).strip()
+    
+    # If field starts with dangerous characters, prefix with single quote
+    if value_str and value_str[0] in ('=', '+', '-', '@', '\t', '\r'):
+        return "'" + value_str
+    
+    return value_str
 
 
 def _get_coords_from_postcode(postcode):
@@ -422,7 +464,7 @@ def stripe_success(request):
             p = products.get(i.product_id)
             if p is None:
                 raise Http404
-            if hasattr(p, "stock") and p.stock < i.quantity:
+            if p.stock_quantity < i.quantity:
                 return redirect("orders:cart")
 
         raw_delivery_date = details.get("delivery_date", "")
@@ -460,9 +502,15 @@ def stripe_success(request):
                 line_total=line_total,
             )
 
-            if hasattr(p, "stock"):
-                p.stock -= i.quantity
-                p.save(update_fields=["stock"])
+            # Decrement stock quantity
+            p.stock_quantity -= i.quantity
+            
+            # Mark as unavailable if out of stock
+            if p.stock_quantity <= 0:
+                p.is_available = False
+                p.save(update_fields=["stock_quantity", "is_available"])
+            else:
+                p.save(update_fields=["stock_quantity"])
 
             total += line_total
 
@@ -621,10 +669,14 @@ def payments_report_csv(request):
     ])
 
     for row in settlement_rows:
+        # Sanitize all fields to prevent CSV injection
+        customer_name = _sanitize_csv_field(row["order"].full_name)
+        items_list = "; ".join(_sanitize_csv_field(item.product_name) for item in row["items"])
+        
         writer.writerow([
             row["order"].id,
-            row["order"].full_name,
-            "; ".join(item.product_name for item in row["items"]),
+            customer_name,
+            items_list,
             f"{row['order_total']:.2f}",
             f"{row['commission']:.2f}",
             f"{row['producer_payment']:.2f}",

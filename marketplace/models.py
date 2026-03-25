@@ -1,5 +1,10 @@
 from django.conf import settings
 from django.db import models
+from .services.file_validators import (
+    validate_image_file_extension,
+    validate_image_file_size,
+    validate_image_content_type,
+)
 
 
 class Category(models.Model):
@@ -58,7 +63,12 @@ class Product(models.Model):
     )
     allergen_info = models.TextField(blank=True, help_text="List any allergens, e.g. Contains eggs")
     harvest_date = models.DateField(null=True, blank=True, help_text="Date of harvest or production")
-    image = models.ImageField(upload_to="products/", blank=True, null=True)
+    image = models.ImageField(
+        upload_to="products/",
+        blank=True,
+        null=True,
+        validators=[validate_image_file_extension, validate_image_file_size, validate_image_content_type]
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

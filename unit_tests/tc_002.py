@@ -88,9 +88,10 @@ class TC002CustomerRegistrationTest(TestCase):
             "Password should not be stored in plain text"
         )
         
+        # Check password is hashed (supports Argon2, PBKDF2, etc.)
         self.assertTrue(
-            user.password.startswith('pbkdf2_sha256$'),
-            "Password should be hashed using Django's password hasher"
+            user.password.startswith(('argon2$', 'pbkdf2_sha256$')),
+            "Password should be hashed using Django's password hasher (Argon2 or PBKDF2)"
         )
     
     def test_delivery_address_stored(self):

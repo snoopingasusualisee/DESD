@@ -1,5 +1,6 @@
 from decimal import Decimal
 from datetime import date, timedelta
+from unittest.mock import patch, MagicMock
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -71,8 +72,18 @@ class TC009ProducerDashboardTests(TestCase):
         OrderItem.objects.create(order=self.order4, product=self.p2_product_1, product_name='Bananas', unit_price=Decimal('1.50'), quantity=1, line_total=Decimal('1.50'))
 
 
-    def test_tc009_lead_time_checkout_validation(self):
+    @patch('stripe.checkout.Session.create')
+    @patch('stripe.checkout.Session.retrieve')
+    def test_tc009_lead_time_checkout_validation(self, mock_retrieve, mock_create):
         """Verifies explicitly that 48-hour lead time from order date is strictly enforced."""
+        # Mock Stripe responses
+        mock_session = MagicMock()
+        mock_session.url = 'https://checkout.stripe.com/test'
+        mock_session.id = 'cs_test_123'
+        mock_session.payment_status = 'paid'
+        mock_create.return_value = mock_session
+        mock_retrieve.return_value = mock_session
+        
         self.client.login(username='test_customer', password='Password123!')
         
         cart, _ = Cart.objects.get_or_create(user=self.customer, status=Cart.STATUS_ACTIVE)
@@ -90,6 +101,9 @@ class TC009ProducerDashboardTests(TestCase):
             'full_name': 'Test', 'email': 'test@test.com', 'address_line1': '10 St', 'city': 'Bristol', 'postcode': 'BS1 1AA',
             'delivery_date': good_date
         })
+        
+        # Complete payment
+        self.client.get(reverse('orders:stripe_success') + '?session_id=cs_test_123')
         self.assertEqual(Cart.objects.filter(user=self.customer, status=Cart.STATUS_ACTIVE).exists(), False)
 
 

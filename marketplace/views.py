@@ -12,9 +12,35 @@ from accounts.models import CustomUser
 
 
 POSTCODE_COORDS = {
-    'BS1': (51.4545, -2.5879),
-    'BA1': (51.3811, -2.3590),
-    'EX1': (50.7260, -3.5270),
+    # Bristol postcodes
+    'BS1': (51.4545, -2.5879),  # Bristol City Centre
+    'BS2': (51.4550, -2.5750),  # Bristol East
+    'BS3': (51.4380, -2.6020),  # Bedminster
+    'BS4': (51.4340, -2.5530),  # Knowle/Brislington
+    'BS5': (51.4620, -2.5330),  # Eastville/St George
+    'BS6': (51.4750, -2.6020),  # Redland/Cotham
+    'BS7': (51.4840, -2.5830),  # Horfield/Bishopston
+    'BS8': (51.4630, -2.6170),  # Clifton
+    'BS9': (51.4880, -2.6290),  # Stoke Bishop
+    'BS10': (51.5160, -2.5960), # Southmead/Henbury
+    'BS11': (51.4930, -2.6830), # Shirehampton/Avonmouth
+    'BS13': (51.4180, -2.6170), # Hartcliffe/Withywood
+    'BS14': (51.4030, -2.5470), # Stockwood/Hengrove
+    'BS15': (51.4530, -2.4850), # Kingswood/Hanham
+    'BS16': (51.4850, -2.5050), # Downend/Fishponds
+    'BS20': (51.4870, -2.7540), # Portishead
+    'BS30': (51.4410, -2.4930), # Warmley
+    'BS31': (51.3670, -2.4850), # Keynsham
+    'BS32': (51.5370, -2.5520), # Bradley Stoke/Aztec West
+    'BS34': (51.5460, -2.5180), # Filton/Patchway
+    'BS35': (51.5380, -2.4770), # Thornbury
+    'BS36': (51.5170, -2.4730), # Winterbourne
+    'BS37': (51.5590, -2.4650), # Yate/Chipping Sodbury
+    'BS39': (51.3260, -2.5480), # Farrington Gurney
+    'BS40': (51.3640, -2.6740), # Chew Magna
+    'BS41': (51.4150, -2.7070), # Long Ashton
+    'BS48': (51.3940, -2.7910), # Nailsea
+    'BS49': (51.4360, -2.8310) # Winscombe
 }
 
 

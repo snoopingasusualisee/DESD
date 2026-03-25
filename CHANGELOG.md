@@ -167,3 +167,28 @@
 - Added Payments link to producer navigation
 - Merged email notification changes with existing orders/views.py work
 - Kept order confirmation and status update email functions in place
+# V1.0.26 - Alex McBride
+- Fixed missing image validators - added file extension, size (5MB max), and content-type validation to Product.image field
+- Fixed email injection vulnerability - sanitised all user input in email notifications to prevent header injection attacks
+- Fixed CSV injection vulnerability - sanitised CSV export data to prevent formula execution in Excel
+- Added API rate limiting - anonymous users: 100/hour, authenticated users: 1000/hour
+- Enhanced password hashing - configured Argon2 as primary password hasher (stronger than default PBKDF2)
+- Added security headers - `SESSION_COOKIE_HTTPONLY`, `CSRF_COOKIE_HTTPONLY`, `SECURE_BROWSER_XSS_FILTER`, `SECURE_CONTENT_TYPE_NOSNIFF`, `X_FRAME_OPTIONS`
+- Added `FILE_UPLOAD_MAX_MEMORY_SIZE` limit of 5MB to match image validators
+- Enforced minimum password length of 8 characters
+- Created marketplace/services/file_validators.py with image validation functions
+- Cleaned up duplicate configuration entries in settings.py (`REST_FRAMEWORK`, `STATIC_URL`)
+- Fixed test cases to support Argon2 password hashing (tc_001, tc_002)
+- Added Stripe API mocking to checkout tests (tc_007, tc_008, tc_009) to prevent live API calls during testing
+- All security fixes apply without breaking existing functionality
+- Expanded food miles calculation system with comprehensive postcode database
+- Added 25+ postcode coordinates covering Bristol area (BS1-BS49)
+- Food miles now calculated using Haversine formula for accurate great-circle distance between producer and customer
+- Updated both marketplace/views.py and orders/views.py with expanded `POSTCODE_COORDS` dictionary
+- System falls back to estimates (1 mile same outward, 15 miles same area, 60 miles different areas) for unlisted postcodes
+- Food miles displayed on browse page and product detail page for logged-in customers
+- Fixed stock quantity not updating after orders: corrected field name from 'stock' to 'stock_quantity'
+- Stock now properly decrements when orders are completed through Stripe checkout
+- Products automatically marked as unavailable when stock reaches 0
+- Added stock validation to prevent orders when insufficient stock available
+- Stock updates performed within database transaction to prevent race conditions

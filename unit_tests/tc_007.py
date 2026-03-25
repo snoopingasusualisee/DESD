@@ -1,5 +1,6 @@
 from decimal import Decimal
 from datetime import date, timedelta
+from unittest.mock import patch, MagicMock
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -97,29 +98,53 @@ class TC007SingleProducerCheckoutTests(TestCase):
         self.assertTrue(Cart.objects.filter(user=self.customer, status=Cart.STATUS_ACTIVE).exists())
         self.assertEqual(Order.objects.filter(user=self.customer).count(), 0)
 
-    def test_order_created_with_pending_status_and_commission(self):
+    @patch('stripe.checkout.Session.create')
+    @patch('stripe.checkout.Session.retrieve')
+    def test_order_created_with_pending_status_and_commission(self, mock_retrieve, mock_create):
         """Placing order creates it with Pending status, correct total and commission."""
+        # Mock Stripe responses
+        mock_session = MagicMock()
+        mock_session.url = 'https://checkout.stripe.com/test'
+        mock_session.id = 'cs_test_123'
+        mock_session.payment_status = 'paid'
+        mock_create.return_value = mock_session
+        mock_retrieve.return_value = mock_session
+        
         self._add_products_and_login()
 
+        # Post to checkout (redirects to Stripe)
         response = self.client.post(reverse('orders:checkout'), {
             'full_name': 'Jane Buyer', 'email': 'c@test.com',
             'address_line1': '5 Market St', 'address_line2': '',
             'city': 'Bristol', 'postcode': 'BS1 1AA',
             'delivery_date': self.delivery_date,
         })
+        
+        # Simulate successful Stripe payment
+        response = self.client.get(reverse('orders:stripe_success') + '?session_id=cs_test_123')
 
         self.assertEqual(Order.objects.filter(user=self.customer).count(), 1)
         order = Order.objects.get(user=self.customer)
 
-        self.assertEqual(order.status, Order.STATUS_PENDING)
+        self.assertEqual(order.status, Order.STATUS_CONFIRMED)
         self.assertEqual(order.total, Decimal('7.50'))
         self.assertEqual(order.commission, Decimal('0.38'))
         self.assertEqual(order.items.count(), 2)
         self.assertEqual(order.full_name, 'Jane Buyer')
         self.assertIsNotNone(order.delivery_date)
 
-    def test_customer_can_view_order(self):
+    @patch('stripe.checkout.Session.create')
+    @patch('stripe.checkout.Session.retrieve')
+    def test_customer_can_view_order(self, mock_retrieve, mock_create):
         """Customer can see the completed order with all details."""
+        # Mock Stripe responses
+        mock_session = MagicMock()
+        mock_session.url = 'https://checkout.stripe.com/test'
+        mock_session.id = 'cs_test_123'
+        mock_session.payment_status = 'paid'
+        mock_create.return_value = mock_session
+        mock_retrieve.return_value = mock_session
+        
         self._add_products_and_login()
 
         self.client.post(reverse('orders:checkout'), {
@@ -128,6 +153,9 @@ class TC007SingleProducerCheckoutTests(TestCase):
             'city': 'Bristol', 'postcode': 'BS1 1AA',
             'delivery_date': self.delivery_date,
         })
+        
+        # Complete payment
+        self.client.get(reverse('orders:stripe_success') + '?session_id=cs_test_123')
         order = Order.objects.get(user=self.customer)
 
         response = self.client.get(reverse('orders:order_detail', args=[order.id]))
@@ -136,8 +164,18 @@ class TC007SingleProducerCheckoutTests(TestCase):
         self.assertContains(response, 'Farm Eggs')
         self.assertContains(response, 'bristol_valley_farm')
 
-    def test_producer_can_view_order(self):
+    @patch('stripe.checkout.Session.create')
+    @patch('stripe.checkout.Session.retrieve')
+    def test_producer_can_view_order(self, mock_retrieve, mock_create):
         """Producer can see their order items from this single-producer order."""
+        # Mock Stripe responses
+        mock_session = MagicMock()
+        mock_session.url = 'https://checkout.stripe.com/test'
+        mock_session.id = 'cs_test_123'
+        mock_session.payment_status = 'paid'
+        mock_create.return_value = mock_session
+        mock_retrieve.return_value = mock_session
+        
         self._add_products_and_login()
 
         self.client.post(reverse('orders:checkout'), {
@@ -146,6 +184,9 @@ class TC007SingleProducerCheckoutTests(TestCase):
             'city': 'Bristol', 'postcode': 'BS1 1AA',
             'delivery_date': self.delivery_date,
         })
+        
+        # Complete payment
+        self.client.get(reverse('orders:stripe_success') + '?session_id=cs_test_123')
         order = Order.objects.get(user=self.customer)
 
         self.client.logout()

@@ -1,26 +1,46 @@
 import logging
+import re
 from django.core.mail import send_mail
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
 
+def sanitize_email_content(text):
+    """
+    Sanitize text to prevent email header injection.
+    Removes newlines and carriage returns that could be used to inject headers.
+    """
+    if not text:
+        return ""
+    # Remove any newline characters that could break email headers
+    return re.sub(r'[\r\n]+', ' ', str(text).strip())
+
+
 def send_order_confirmation_email(order):
     """Send an email to the customer when an order is placed successfully."""
+    # Sanitize all user input to prevent email header injection
+    full_name = sanitize_email_content(order.full_name)
+    email = sanitize_email_content(order.email)
+    address_line1 = sanitize_email_content(order.address_line1)
+    city = sanitize_email_content(order.city)
+    postcode = sanitize_email_content(order.postcode)
+    
     subject = f"BRFN - Order #{order.id} Confirmation"
 
     # Build itemised receipt from order items
     items = order.items.select_related("product").all()
     receipt_lines = []
     for item in items:
+        product_name = sanitize_email_content(item.product_name)
         receipt_lines.append(
-            f"  {item.product_name} x{item.quantity}  "
+            f"  {product_name} x{item.quantity}  "
             f"@ £{item.unit_price:.2f} each  =  £{item.line_total:.2f}"
         )
     receipt = "\n".join(receipt_lines)
 
     message = (
-        f"Hi {order.full_name},\n\n"
+        f"Hi {full_name},\n\n"
         f"Thank you for your order! Here is your receipt:\n\n"
         f"Order Number: #{order.id}\n"
         f"Date: {order.created_at.strftime('%d %B %Y, %H:%M')}\n\n"
@@ -32,7 +52,7 @@ def send_order_confirmation_email(order):
         f"Commission (5%): £{order.commission:.2f}\n"
         f"Order Total: £{(order.total + order.commission):.2f}\n\n"
         f"Delivery Date: {order.delivery_date}\n"
-        f"Delivery Address: {order.address_line1}, {order.city}, {order.postcode}\n\n"
+        f"Delivery Address: {address_line1}, {city}, {postcode}\n\n"
         f"You can view your order status at any time by logging into your account.\n\n"
         f"Kind regards,\n"
         f"The BRFN Team"
@@ -43,21 +63,26 @@ def send_order_confirmation_email(order):
             subject,
             message,
             settings.DEFAULT_FROM_EMAIL,
-            [order.email],
+            [email],
             fail_silently=True,
         )
-        logger.info(f"Order confirmation email sent for Order #{order.id} to {order.email}")
+        logger.info(f"Order confirmation email sent for Order #{order.id} to {email}")
     except Exception as e:
         logger.error(f"Failed to send order confirmation email for Order #{order.id}: {e}")
 
 
 def send_status_update_email(order, old_status, new_status, note=""):
     """Send an email to the customer when their order status changes."""
+    # Sanitize all user input to prevent email header injection
+    full_name = sanitize_email_content(order.full_name)
+    email = sanitize_email_content(order.email)
+    note = sanitize_email_content(note)
+    
     status_display = dict(order.STATUS_CHOICES).get(new_status, new_status)
 
     subject = f"BRFN - Order #{order.id} Status Update"
     message = (
-        f"Hi {order.full_name},\n\n"
+        f"Hi {full_name},\n\n"
         f"Your order #{order.id} has been updated.\n\n"
         f"New Status: {status_display}\n"
     )
@@ -76,9 +101,9 @@ def send_status_update_email(order, old_status, new_status, note=""):
             subject,
             message,
             settings.DEFAULT_FROM_EMAIL,
-            [order.email],
+            [email],
             fail_silently=True,
         )
-        logger.info(f"Status update email sent for Order #{order.id} to {order.email}")
+        logger.info(f"Status update email sent for Order #{order.id} to {email}")
     except Exception as e:
         logger.error(f"Failed to send status update email for Order #{order.id}: {e}")
