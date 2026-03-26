@@ -168,6 +168,6 @@
 - Kept order confirmation and status update email functions in place
 # V1.0.26 - Zain Malik
 - Added dedicated run-tests job to collab.yml CI/CD pipeline
-- Pipeline now runs all 15 unit tests as a separate job
+- Pipeline now runs all 15 unit tests as a separate jobs
 - Merge to main is now gated on test cases passing — code only merges if all tests succeed
 - Restructured pipeline flow: build-and-validate → run-tests → merge-to-main
