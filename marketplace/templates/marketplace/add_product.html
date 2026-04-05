@@ -13,16 +13,21 @@
     <header>
         <h1><a href="/" class="brand-link">Bristol Regional Food Network</a></h1>
         <nav>
-            <a href="/browse/">Browse</a>
+            <a href="/browse/">Browse Products</a>
+            <a href="/browse/recipes/">Recipes</a>
+            <a href="/browse/stories/">Farm Stories</a>
             <a href="/browse/producers/">Producers</a>
             {% if user.is_authenticated %}
             {% if user.role == 'producer' %}
             <a href="/browse/add-product/">Add Product</a>
             <a href="/browse/my-products/">My Products</a>
+            <a href="/browse/my-recipes/">My Recipes</a>
+            <a href="/browse/my-stories/">My Stories</a>
             <a href="/orders/manage/">Manage Orders</a>
             {% else %}
             <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
             <a href="/orders/my-orders/">My Orders</a>
+            <a href="/browse/favorite-recipes/">My Favorite Recipes</a>
             {% endif %}
             <div class="user-menu" onclick="this.classList.toggle('open')">
                 <span class="user-badge">{{ user.username }} ({{ user.role }})</span>
@@ -152,7 +157,8 @@
                     purchase</label>
             </div>
 
-            <button type="submit">Add Product</button>
+            <button type="submit" class="btn-primary">Add Product</button>
+            <a href="/browse/my-products/" class="btn-primary">Cancel</a>
         </form>
     </div>
 

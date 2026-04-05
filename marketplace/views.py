@@ -6,8 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.db.models import Q
 
-from .models import Product, Category
-from .forms import ProductForm
+from .models import Product, Category, Recipe, RecipeProduct, FarmStory, FavoriteRecipe
+from .forms import ProductForm, RecipeForm, FarmStoryForm
 from accounts.models import CustomUser
 
 
@@ -172,10 +172,17 @@ def product_detail(request, product_id):
         customer_postcode,
         getattr(product.producer, 'postcode', None)
     )
+    
+    # Get recipes that use this product
+    linked_recipes = Recipe.objects.filter(
+        linked_products__product=product,
+        is_published=True
+    ).distinct()
 
     return render(request, 'marketplace/product_detail.html', {
         'product': product,
         'food_miles': food_miles,
+        'linked_recipes': linked_recipes,
     })
 
 
@@ -323,3 +330,299 @@ def update_inventory(product_id, quantity_change):
 
 def generate_report(report_type, filters):
     pass
+
+
+# RECIPE VIEWS
+
+@login_required(login_url='/accounts/login/')
+def my_recipes(request):
+    """View for producers to see and manage their recipes."""
+    if request.user.role != CustomUser.Role.PRODUCER:
+        return redirect('/browse/')
+    recipes = Recipe.objects.filter(producer=request.user).prefetch_related('linked_products__product')
+    return render(request, 'marketplace/my_recipes.html', {'recipes': recipes})
+
+
+@login_required(login_url='/accounts/login/')
+def add_recipe(request):
+    """View for producers to add a new recipe."""
+    if request.user.role != CustomUser.Role.PRODUCER:
+        return HttpResponseForbidden('You do not have permission to add recipes.')
+    
+    error = None
+    success = None
+    
+    if request.method == 'POST':
+        form = RecipeForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                recipe = form.save(commit=False)
+                recipe.producer = request.user
+                recipe.save()
+                
+                # Link products to recipe
+                product_ids = request.POST.getlist('linked_products')
+                for product_id in product_ids:
+                    if product_id:
+                        product = Product.objects.filter(id=product_id, producer=request.user).first()
+                        if product:
+                            RecipeProduct.objects.get_or_create(recipe=recipe, product=product)
+                
+                success = f'"{recipe.title}" has been added successfully!'
+                form = RecipeForm()
+            except Exception as e:
+                error = f'Error adding recipe: {e}'
+        else:
+            error = 'Please correct the errors below.'
+    else:
+        form = RecipeForm()
+    
+    # Get producer's products for linking
+    producer_products = Product.objects.filter(producer=request.user, is_available=True)
+    
+    return render(request, 'marketplace/add_recipe.html', {
+        'form': form,
+        'error': error,
+        'success': success,
+        'producer_products': producer_products,
+    })
+
+
+@login_required(login_url='/accounts/login/')
+def edit_recipe(request, recipe_id):
+    """View for producers to edit their recipes."""
+    recipe = get_object_or_404(Recipe, id=recipe_id, producer=request.user)
+    
+    error = None
+    success = None
+    
+    if request.method == 'POST':
+        form = RecipeForm(request.POST, request.FILES, instance=recipe)
+        if form.is_valid():
+            try:
+                recipe = form.save()
+                
+                # Update linked products
+                RecipeProduct.objects.filter(recipe=recipe).delete()
+                product_ids = request.POST.getlist('linked_products')
+                for product_id in product_ids:
+                    if product_id:
+                        product = Product.objects.filter(id=product_id, producer=request.user).first()
+                        if product:
+                            RecipeProduct.objects.get_or_create(recipe=recipe, product=product)
+                
+                success = f'"{recipe.title}" has been updated successfully!'
+            except Exception as e:
+                error = f'Error updating recipe: {e}'
+        else:
+            error = 'Please correct the errors below.'
+    else:
+        form = RecipeForm(instance=recipe)
+    
+    # Get producer's products for linking
+    producer_products = Product.objects.filter(producer=request.user, is_available=True)
+    current_linked_products = recipe.linked_products.values_list('product_id', flat=True)
+    
+    return render(request, 'marketplace/edit_recipe.html', {
+        'form': form,
+        'recipe': recipe,
+        'error': error,
+        'success': success,
+        'producer_products': producer_products,
+        'current_linked_products': list(current_linked_products),
+    })
+
+
+@login_required(login_url='/accounts/login/')
+def delete_recipe(request, recipe_id):
+    """View for producers to delete their recipes."""
+    recipe = get_object_or_404(Recipe, id=recipe_id, producer=request.user)
+    
+    if request.method == 'POST':
+        recipe.delete()
+        return redirect('my_recipes')
+    
+    return render(request, 'marketplace/delete_recipe.html', {'recipe': recipe})
+
+
+def recipe_detail(request, recipe_id):
+    """View for anyone to see a published recipe."""
+    recipe = get_object_or_404(Recipe, id=recipe_id, is_published=True)
+    linked_products = recipe.linked_products.select_related('product').all()
+    
+    # Check if current user has favorited this recipe
+    is_favorited = False
+    if request.user.is_authenticated:
+        is_favorited = FavoriteRecipe.objects.filter(user=request.user, recipe=recipe).exists()
+    
+    return render(request, 'marketplace/recipe_detail.html', {
+        'recipe': recipe,
+        'linked_products': linked_products,
+        'is_favorited': is_favorited,
+    })
+
+
+# FARM STORY VIEWS
+
+@login_required(login_url='/accounts/login/')
+def my_stories(request):
+    """View for producers to see and manage their farm stories."""
+    if request.user.role != CustomUser.Role.PRODUCER:
+        return redirect('/browse/')
+    stories = FarmStory.objects.filter(producer=request.user)
+    return render(request, 'marketplace/my_stories.html', {'stories': stories})
+
+
+@login_required(login_url='/accounts/login/')
+def add_story(request):
+    """View for producers to add a new farm story."""
+    if request.user.role != CustomUser.Role.PRODUCER:
+        return HttpResponseForbidden('You do not have permission to add stories.')
+    
+    error = None
+    success = None
+    
+    if request.method == 'POST':
+        form = FarmStoryForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                story = form.save(commit=False)
+                story.producer = request.user
+                story.save()
+                success = f'"{story.title}" has been added successfully!'
+                form = FarmStoryForm()
+            except Exception as e:
+                error = f'Error adding story: {e}'
+        else:
+            error = 'Please correct the errors below.'
+    else:
+        form = FarmStoryForm()
+    
+    return render(request, 'marketplace/add_story.html', {
+        'form': form,
+        'error': error,
+        'success': success,
+    })
+
+
+@login_required(login_url='/accounts/login/')
+def edit_story(request, story_id):
+    """View for producers to edit their farm stories."""
+    story = get_object_or_404(FarmStory, id=story_id, producer=request.user)
+    
+    error = None
+    success = None
+    
+    if request.method == 'POST':
+        form = FarmStoryForm(request.POST, request.FILES, instance=story)
+        if form.is_valid():
+            form.save()
+            success = f'"{story.title}" has been updated successfully!'
+        else:
+            error = 'Please correct the errors below.'
+    else:
+        form = FarmStoryForm(instance=story)
+    
+    return render(request, 'marketplace/edit_story.html', {
+        'form': form,
+        'story': story,
+        'error': error,
+        'success': success,
+    })
+
+
+@login_required(login_url='/accounts/login/')
+def delete_story(request, story_id):
+    """View for producers to delete their farm stories."""
+    story = get_object_or_404(FarmStory, id=story_id, producer=request.user)
+    
+    if request.method == 'POST':
+        story.delete()
+        return redirect('my_stories')
+    
+    return render(request, 'marketplace/delete_story.html', {'story': story})
+
+
+def story_detail(request, story_id):
+    """View for anyone to see a published farm story."""
+    story = get_object_or_404(FarmStory, id=story_id, is_published=True)
+    
+    return render(request, 'marketplace/story_detail.html', {
+        'story': story,
+    })
+
+
+def producer_profile(request, producer_id):
+    """View for customers to see a producer's profile with stories and recipes."""
+    producer = get_object_or_404(CustomUser, id=producer_id, role=CustomUser.Role.PRODUCER)
+    stories = FarmStory.objects.filter(producer=producer, is_published=True)[:5]
+    recipes = Recipe.objects.filter(producer=producer, is_published=True)[:5]
+    products = Product.objects.filter(producer=producer, is_available=True)[:10]
+    
+    return render(request, 'marketplace/producer_profile.html', {
+        'producer': producer,
+        'stories': stories,
+        'recipes': recipes,
+        'products': products,
+    })
+
+
+def browse_recipes(request):
+    """View for browsing all published recipes."""
+    recipes = Recipe.objects.filter(is_published=True).select_related('producer')
+    
+    # Filter by seasonal tag if provided
+    seasonal_tag = request.GET.get('season')
+    if seasonal_tag:
+        recipes = recipes.filter(seasonal_tag=seasonal_tag)
+    
+    return render(request, 'marketplace/browse_recipes.html', {
+        'recipes': recipes,
+        'seasonal_tag': seasonal_tag,
+    })
+
+
+def browse_stories(request):
+    """View for browsing all published farm stories."""
+    stories = FarmStory.objects.filter(is_published=True).select_related('producer')
+    
+    return render(request, 'marketplace/browse_stories.html', {
+        'stories': stories,
+    })
+
+
+# FAVORITE RECIPE VIEWS
+
+@login_required(login_url='/accounts/login/')
+def toggle_favorite_recipe(request, recipe_id):
+    """Toggle a recipe as favorite for the current user."""
+    recipe = get_object_or_404(Recipe, id=recipe_id, is_published=True)
+    
+    # Check if already favorited
+    favorite = FavoriteRecipe.objects.filter(user=request.user, recipe=recipe).first()
+    
+    if favorite:
+        # Unfavorite
+        favorite.delete()
+        favorited = False
+    else:
+        # Favorite
+        FavoriteRecipe.objects.create(user=request.user, recipe=recipe)
+        favorited = True
+    
+    # If AJAX request, return JSON
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'favorited': favorited})
+    
+    # Otherwise redirect back to the recipe
+    return redirect('recipe_detail', recipe_id=recipe_id)
+
+
+@login_required(login_url='/accounts/login/')
+def my_favorite_recipes(request):
+    """View for customers to see their saved favorite recipes."""
+    favorites = FavoriteRecipe.objects.filter(user=request.user).select_related('recipe__producer')
+    
+    return render(request, 'marketplace/my_favorite_recipes.html', {
+        'favorites': favorites,
+    })

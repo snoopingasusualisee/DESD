@@ -22,6 +22,7 @@
                 {% else %}
                     <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
                     <a href="/orders/my-orders/">My Orders</a>
+                    <a href="/browse/favorite-recipes/">My Favorite Recipes</a>
                 {% endif %}
                 <div class="user-menu" onclick="this.classList.toggle('open')">
                     <span class="user-badge">{{ user.username }} ({{ user.role }})</span>

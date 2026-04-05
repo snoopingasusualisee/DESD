@@ -5,12 +5,13 @@ Author: TJ
 
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Product
+from .models import Product, Recipe, FarmStory
 from .services.validators import (
     validate_lead_time,
     validate_uk_postcode,
     validate_product_data,
     validate_status_transition,
+    validate_content_moderation,
 )
 
 
@@ -298,3 +299,126 @@ class OrderStatusForm(forms.Form):
                 raise ValidationError(str(e))
 
         return new_status
+
+# Lines 303-424 by Alex McBride
+class RecipeForm(forms.ModelForm):
+    """Form for producers to create and edit recipes."""
+    
+    class Meta:
+        model = Recipe
+        fields = [
+            'title',
+            'description',
+            'ingredients',
+            'instructions',
+            'image',
+            'seasonal_tag',
+            'is_published',
+        ]
+        widgets = {
+            'description': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Brief description or introduction to the recipe...'
+            }),
+            'ingredients': forms.Textarea(attrs={
+                'rows': 6,
+                'placeholder': 'List all ingredients, e.g.:\n- 500g Carrots\n- 300g Parsnips\n- 2 Potatoes'
+            }),
+            'instructions': forms.Textarea(attrs={
+                'rows': 8,
+                'placeholder': 'Step-by-step cooking instructions...'
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['title'].help_text = 'Enter a descriptive recipe title'
+        self.fields['seasonal_tag'].help_text = 'Tag helps customers find seasonal recipes'
+        self.fields['is_published'].help_text = 'Publish this recipe to make it visible to customers'
+    
+    def clean_title(self):
+        """Validate recipe title is not empty and appropriate."""
+        title = self.cleaned_data.get('title')
+        if not title or not title.strip():
+            raise ValidationError("Recipe title is required")
+        
+        # Apply content moderation
+        validate_content_moderation(title, "Recipe title")
+        
+        return title.strip()
+    
+    def clean_description(self):
+        """Validate description is appropriate if provided."""
+        description = self.cleaned_data.get('description', '')
+        if description and description.strip():
+            validate_content_moderation(description, "Recipe description")
+        return description.strip() if description else ''
+    
+    def clean_ingredients(self):
+        """Validate ingredients list is not empty and appropriate."""
+        ingredients = self.cleaned_data.get('ingredients')
+        if not ingredients or not ingredients.strip():
+            raise ValidationError("Ingredients list is required")
+        
+        # Apply content moderation
+        validate_content_moderation(ingredients, "Ingredients list")
+        
+        return ingredients.strip()
+    
+    def clean_instructions(self):
+        """Validate cooking instructions are not empty and appropriate."""
+        instructions = self.cleaned_data.get('instructions')
+        if not instructions or not instructions.strip():
+            raise ValidationError("Cooking instructions are required")
+        
+        # Apply content moderation
+        validate_content_moderation(instructions, "Cooking instructions")
+        
+        return instructions.strip()
+
+
+class FarmStoryForm(forms.ModelForm):
+    """Form for producers to create and edit farm stories."""
+    
+    class Meta:
+        model = FarmStory
+        fields = [
+            'title',
+            'content',
+            'image',
+            'is_published',
+        ]
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'rows': 10,
+                'placeholder': 'Share your farm story...'
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['title'].help_text = 'Enter a title for your farm story'
+        self.fields['content'].help_text = 'Write your story - share insights about your farm, harvest season, or farming practices'
+        self.fields['is_published'].help_text = 'Publish this story to make it visible to customers'
+    
+    def clean_title(self):
+        """Validate story title is not empty and appropriate."""
+        title = self.cleaned_data.get('title')
+        if not title or not title.strip():
+            raise ValidationError("Story title is required")
+        
+        # Apply content moderation
+        validate_content_moderation(title, "Story title")
+        
+        return title.strip()
+    
+    def clean_content(self):
+        """Validate story content is not empty and appropriate."""
+        content = self.cleaned_data.get('content')
+        if not content or not content.strip():
+            raise ValidationError("Story content is required")
+        
+        # Apply content moderation
+        validate_content_moderation(content, "Story content")
+        
+        return content.strip()

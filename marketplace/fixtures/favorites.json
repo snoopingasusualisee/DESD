@@ -1,0 +1,11 @@
+[
+{
+  "model": "marketplace.favoriterecipe",
+  "pk": 1,
+  "fields": {
+    "user": 4,
+    "recipe": 1,
+    "saved_at": "2026-04-05T16:43:54.629Z"
+  }
+}
+]

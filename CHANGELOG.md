@@ -196,3 +196,32 @@
 - Products automatically marked as unavailable when stock reaches 0
 - Added stock validation to prevent orders when insufficient stock available
 - Stock updates performed within database transaction to prevent race conditions
+# V1.0.28 - Alex McBride
+- Implemented test case 20
+- Created FarmStory model with title, content, images, and publish status
+- Created RecipeProduct model for many-to-many relationship between recipes and products
+- Created FavoriteRecipe model for customers to save favorite recipes
+- Added RecipeForm and FarmStoryForm with comprehensive validation
+- Implemented content moderation system in marketplace/services/validators.py
+- Created 18+ templates for recipe and story management:
+  - add_recipe.html, edit_recipe.html, my_recipes.html, recipe_detail.html
+  - add_story.html, edit_story.html, my_stories.html, story_detail.html
+  - browse_recipes.html, browse_stories.html, favorite_recipes.html
+  - Updated producers.html to display producer content
+- Implemented full CRUD operations for recipes and stories:
+  - add_recipe, edit_recipe, delete_recipe, recipe_detail views
+  - add_story, edit_story, delete_story, story_detail views
+  - my_recipes, my_stories, favorite_recipes views
+  - browse_recipes, browse_stories views with filtering
+  - toggle_favorite_recipe view for saving/unsaving recipes
+- Linked recipes to products - recipes appear on linked product detail pages
+- Added navigation links across all templates for recipes, stories, and favorites
+- Registered Recipe, FarmStory, RecipeProduct, and FavoriteRecipe in Django admin
+- Fixed UI styling issues:
+  - Standardised image display (title before image, 140px height, object-fit: cover)
+  - Fixed seasonal tag display to use get_seasonal_tag_display() method
+  - Added consistent button styling with .btn-primary class
+  - Added vertical-align and line-height to button classes for proper alignment
+  - Updated general button selector to button:not([class]) to prevent style conflicts
+- Added cancel buttons to all product, recipe, and story forms (add/edit pages)
+- Updated URLs in marketplace/urls.py for all recipe and story endpoints

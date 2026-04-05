@@ -11,15 +11,21 @@
     <header>
         <h1><a href="/" class="brand-link">Bristol Regional Food Network</a></h1>
         <nav>
-            <a href="/browse/">Browse</a>
+            <a href="/browse/">Browse Products</a>
+            <a href="/browse/recipes/">Recipes</a>
+            <a href="/browse/stories/">Farm Stories</a>
             <a href="/browse/producers/">Producers</a>
             {% if user.is_authenticated %}
                 {% if user.role == 'producer' %}
                     <a href="/browse/add-product/">Add Product</a>
+                    <a href="/browse/my-products/">My Products</a>
+                    <a href="/browse/my-recipes/">My Recipes</a>
+                    <a href="/browse/my-stories/">My Stories</a>
                     <a href="/orders/manage/">Manage Orders</a>
                 {% else %}
                     <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
                     <a href="/orders/my-orders/">My Orders</a>
+                    <a href="/browse/favorite-recipes/">My Favorite Recipes</a>
                 {% endif %}
                 <div class="user-menu" onclick="this.classList.toggle('open')">
                     <span class="user-badge">{{ user.username }} ({{ user.role }})</span>
@@ -52,10 +58,13 @@
                 {% for producer in producers %}
                     <div class="producer-card">
                         <div>
-                            <h3>{{ producer.username }}</h3>
-                            <p>{{ producer.email }}</p>
+                            <h3><a href="/browse/producer/{{ producer.id }}/" style="color: inherit; text-decoration: none;">{{ producer.first_name }} {{ producer.last_name }}</a></h3>
+                            <p style="color: #666; font-size: 0.9rem;">@{{ producer.username }}</p>
                         </div>
-                        <a class="btn" href="/browse/?producer={{ producer.username }}">View Products</a>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a class="btn" href="/browse/producer/{{ producer.id }}/">View Profile</a>
+                            <a class="btn" href="/browse/?producer={{ producer.username }}">View Products</a>
+                        </div>
                     </div>
                 {% endfor %}
             </div>

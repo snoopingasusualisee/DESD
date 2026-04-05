@@ -1,7 +1,8 @@
 from django.contrib import admin
 from .models import (
     Category, Product, Basket, BasketItem, 
-    Order, OrderItem, Transaction, Commission, AuditLog
+    Order, OrderItem, Transaction, Commission, AuditLog,
+    Recipe, RecipeProduct, FarmStory, FavoriteRecipe
 )
 
 
@@ -64,3 +65,30 @@ class AuditLogAdmin(admin.ModelAdmin):
     list_filter = ("action", "model_name", "timestamp")
     search_fields = ("user__username", "model_name", "object_id")
     readonly_fields = ("user", "action", "model_name", "object_id", "details", "ip_address", "timestamp")
+
+
+class RecipeProductInline(admin.TabularInline):
+    model = RecipeProduct
+    extra = 1
+
+
+@admin.register(Recipe)
+class RecipeAdmin(admin.ModelAdmin):
+    list_display = ("title", "producer", "seasonal_tag", "is_published", "created_at")
+    list_filter = ("is_published", "seasonal_tag", "created_at")
+    search_fields = ("title", "producer__username", "ingredients", "instructions")
+    inlines = [RecipeProductInline]
+
+
+@admin.register(FarmStory)
+class FarmStoryAdmin(admin.ModelAdmin):
+    list_display = ("title", "producer", "is_published", "created_at")
+    list_filter = ("is_published", "created_at")
+    search_fields = ("title", "producer__username", "content")
+
+
+@admin.register(FavoriteRecipe)
+class FavoriteRecipeAdmin(admin.ModelAdmin):
+    list_display = ("user", "recipe", "saved_at")
+    list_filter = ("saved_at",)
+    search_fields = ("user__username", "recipe__title")

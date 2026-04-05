@@ -148,3 +148,81 @@ def validate_status_transition(current_status, new_status):
         )
     
     return True
+
+# Lines 152-228 by Alex McBride
+def validate_content_moderation(text, field_name="Content"):
+    """
+    Validate user-generated content for inappropriate material.
+    
+    Checks for:
+    - Prohibited words and phrases
+    - Excessive repetition (spam patterns)
+    - Suspicious link patterns
+    
+    Args:
+        text (str): The content to validate
+        field_name (str): Name of the field being validated (for error messages)
+        
+    Returns:
+        bool: True if content is appropriate
+        
+    Raises:
+        ValidationError: If content contains inappropriate material
+    """
+    if not text or not isinstance(text, str):
+        return True
+    
+    text_lower = text.lower()
+    
+    # Not exhaustive, sample of common spam/inappropriate phrases
+    prohibited_words = [
+        'get rich quick', 'make money fast', 'click here now',
+        'limited time offer only', 'buy now cheap', 'fuck', 'shit', 'bitch',
+    ]
+    
+    # Check for prohibited words
+    for word in prohibited_words:
+        if word in text_lower:
+            raise ValidationError(
+                f"{field_name} contains inappropriate or prohibited content. "
+                f"Please ensure your content is family-friendly and appropriate for all audiences."
+            )
+    
+    # Check for excessive repetition (spam pattern)
+    # Look for the same word repeated more than 10 times
+    words = text_lower.split()
+    word_count = {}
+    for word in words:
+        if len(word) >= 3:  # Check words 3 characters or longer
+            word_count[word] = word_count.get(word, 0) + 1
+            if word_count[word] > 10:
+                raise ValidationError(
+                    f"{field_name} appears to contain spam (excessive word repetition). "
+                    f"Please write natural, meaningful content."
+                )
+    
+    # Check for excessive URL patterns (more than 5 links is suspicious)
+    url_patterns = ['http://', 'https://', 'www.', '.com', '.net', '.org']
+    url_count = sum(1 for pattern in url_patterns if pattern in text_lower)
+    if url_count > 5:
+        raise ValidationError(
+            f"{field_name} contains too many links. "
+            f"Please limit external links and focus on your content."
+        )
+    
+    # Check for excessive capitalisation
+    if len(text) > 20:
+        uppercase_ratio = sum(1 for c in text if c.isupper()) / len(text)
+        if uppercase_ratio > 0.7:
+            raise ValidationError(
+                f"{field_name} contains excessive capitalisation. "
+                f"Please use normal sentence case."
+            )
+    
+    # Check minimum content length for meaningful posts
+    if len(text.strip()) < 10:
+        raise ValidationError(
+            f"{field_name} is too short. Please provide more detailed information."
+        )
+    
+    return True

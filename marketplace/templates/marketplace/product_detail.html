@@ -13,16 +13,21 @@
     <header>
         <h1><a href="/" class="brand-link">Bristol Regional Food Network</a></h1>
         <nav>
-            <a href="/browse/">Browse</a>
+            <a href="/browse/">Browse Products</a>
+            <a href="/browse/recipes/">Recipes</a>
+            <a href="/browse/stories/">Farm Stories</a>
             <a href="/browse/producers/">Producers</a>
             {% if user.is_authenticated %}
             {% if user.role == 'producer' %}
             <a href="/browse/add-product/">Add Product</a>
             <a href="/browse/my-products/">My Products</a>
+            <a href="/browse/my-recipes/">My Recipes</a>
+            <a href="/browse/my-stories/">My Stories</a>
             <a href="/orders/manage/">Manage Orders</a>
             {% else %}
             <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
             <a href="/orders/my-orders/">My Orders</a>
+            <a href="/browse/favorite-recipes/">My Favorite Recipes</a>
             {% endif %}
             <div class="user-menu" onclick="this.classList.toggle('open')">
                 <span class="user-badge">{{ user.username }} ({{ user.role }})</span>
@@ -70,7 +75,7 @@
             {% endif %}
 
             <h2 style="margin: 0.5rem 0;">{{ product.name }}</h2>
-            <p class="producer">By {{ product.producer.username }}</p>
+            <p class="producer">By <a href="/browse/producer/{{ product.producer.id }}/" style="color: #333; text-decoration: underline;">{{ product.producer.first_name }} {{ product.producer.last_name }}</a></p>
 
             {% if product.description %}
             <p class="description">{{ product.description }}</p>
@@ -134,6 +139,24 @@
             </div>
             {% endif %}
         </div>
+
+        {% if linked_recipes %}
+        <div style="max-width: 700px; margin-top: 2rem; padding: 1.5rem; background: #f8f9fa; border-radius: 8px;">
+            <h3 style="margin-top: 0;">Recipe Suggestions</h3>
+            <p style="color: #666; margin-bottom: 1rem;">Try these recipes that use {{ product.name }}:</p>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                {% for recipe in linked_recipes %}
+                <div style="background: white; padding: 1rem; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>{{ recipe.title }}</strong>
+                        <p style="margin: 0; color: #666; font-size: 0.9rem;">{{ recipe.seasonal_tag|title }}</p>
+                    </div>
+                    <a href="/browse/recipe/{{ recipe.id }}/" class="btn-primary" style="font-size: 0.9rem;">View Recipe</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <footer>&copy; 2026 Bristol Regional Food Network</footer>

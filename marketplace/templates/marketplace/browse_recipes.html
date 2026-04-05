@@ -1,0 +1,86 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Recipes – BRFN</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+
+<body class="app-body">
+    <header>
+        <h1><a href="/" class="brand-link">Bristol Regional Food Network</a></h1>
+        <nav>
+            <a href="/browse/">Browse Products</a>
+            <a href="/browse/recipes/">Recipes</a>
+            <a href="/browse/stories/">Farm Stories</a>
+            <a href="/browse/producers/">Producers</a>
+            {% if user.is_authenticated %}
+            {% if user.role == 'producer' %}
+            <a href="/browse/add-product/">Add Product</a>
+            <a href="/browse/my-products/">My Products</a>
+            <a href="/browse/my-recipes/">My Recipes</a>
+            <a href="/browse/my-stories/">My Stories</a>
+            <a href="/orders/manage/">Manage Orders</a>
+            {% else %}
+            <a href="/orders/cart/">Cart</a>
+            <a href="/orders/my-orders/">My Orders</a>
+            <a href="/browse/favorite-recipes/">My Favorite Recipes</a>
+            {% endif %}
+            <div class="user-menu" onclick="this.classList.toggle('open')">
+                <span class="user-badge">{{ user.username }}</span>
+                <div class="user-dropdown">
+                    <form method="post" action="/accounts/logout/" style="display:inline;margin:0;padding:0">{% csrf_token %}<button type="submit" style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:inherit;">Log Out</button></form>
+                </div>
+            </div>
+            {% else %}
+            <a href="/accounts/login/">Log In</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <div class="page page-wide">
+        <h2>Browse Recipes</h2>
+
+        <form method="get" class="filters">
+            <select name="season" onchange="this.form.submit()">
+                <option value="">All Seasons</option>
+                <option value="spring" {% if request.GET.season == 'spring' %}selected{% endif %}>Spring</option>
+                <option value="summer" {% if request.GET.season == 'summer' %}selected{% endif %}>Summer</option>
+                <option value="autumn_winter" {% if request.GET.season == 'autumn_winter' %}selected{% endif %}>Autumn/Winter</option>
+                <option value="all_season" {% if request.GET.season == 'all_season' %}selected{% endif %}>All Season</option>
+            </select>
+        </form>
+
+        {% if recipes %}
+        <div class="product-grid">
+            {% for recipe in recipes %}
+            <div class="product-card">
+                <h3><a href="/browse/recipe/{{ recipe.id }}/">{{ recipe.title }}</a></h3>
+                {% if recipe.image %}
+                <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}"
+                    style="width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 0.5rem;">
+                {% endif %}
+                <p class="producer">By {{ recipe.producer.first_name }} {{ recipe.producer.last_name }}</p>
+                <span class="category-tag" style="background: #e8f5e9; color: #2e7d32;">{{ recipe.get_seasonal_tag_display }}</span>
+                {% if recipe.description %}
+                <p class="description">{{ recipe.description|truncatewords:15 }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="text-align: center; color: #666; padding: 2rem;">
+            No recipes available yet. Check back soon!
+        </p>
+        {% endif %}
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Bristol Regional Food Network. <a href="/terms/">Terms of Service</a>.</p>
+    </footer>
+</body>
+
+</html>

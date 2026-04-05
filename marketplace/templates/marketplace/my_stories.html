@@ -1,0 +1,84 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Farm Stories – BRFN</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+
+<body class="app-body">
+    <header>
+        <h1><a href="/" class="brand-link">Bristol Regional Food Network</a></h1>
+        <nav>
+            <a href="/browse/">Browse</a>
+            <a href="/browse/producers/">Producers</a>
+            {% if user.is_authenticated %}
+            {% if user.role == 'producer' %}
+            <a href="/browse/add-product/">Add Product</a>
+            <a href="/browse/my-products/">My Products</a>
+            <a href="/browse/add-recipe/">Add Recipe</a>
+            <a href="/browse/my-recipes/">My Recipes</a>
+            <a href="/browse/add-story/">Add Farm Story</a>
+            <a href="/browse/my-stories/">My Stories</a>
+            <a href="/orders/manage/">Manage Orders</a>
+            {% else %}
+            <a href="/orders/cart/">Cart</a>
+            <a href="/orders/my-orders/">My Orders</a>
+            <a href="/browse/favorite-recipes/">My Favorite Recipes</a>
+            {% endif %}
+            <div class="user-menu" onclick="this.classList.toggle('open')">
+                <span class="user-badge">{{ user.username }} ({{ user.role }})</span>
+                <div class="user-dropdown">
+                    <form method="post" action="/accounts/logout/" style="display:inline;margin:0;padding:0">{% csrf_token %}<button type="submit" style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:inherit;">Log Out</button></form>
+                </div>
+            </div>
+            {% else %}
+            <a href="/accounts/login/">Log In</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <div class="page page-wide">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0;">My Farm Stories</h2>
+            <a href="/browse/add-story/" class="btn-primary">Add New Story</a>
+        </div>
+
+        {% if stories %}
+        <div class="product-grid">
+            {% for story in stories %}
+            <div class="product-card">
+                <h3><a href="/browse/story/{{ story.id }}/">{{ story.title }}</a></h3>
+                {% if story.image %}
+                <img src="{{ story.image.url }}" alt="{{ story.title }}"
+                    style="width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 0.5rem;">
+                {% endif %}
+                {% if story.is_published %}
+                <span class="category-tag" style="background: #d4edda; color: #155724;">Published</span>
+                {% else %}
+                <span class="category-tag" style="background: #f1f1f1; color: #666;">Draft</span>
+                {% endif %}
+                <p class="description">{{ story.content|truncatewords:20 }}</p>
+                <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                    <a href="/browse/story/{{ story.id }}/edit/" class="btn">Edit</a>
+                    <a href="/browse/story/{{ story.id }}/delete/" class="btn-delete">Delete</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="text-align: center; color: #666; padding: 2rem;">
+            You haven't created any farm stories yet. <a href="/browse/add-story/">Share your first story</a> with customers!
+        </p>
+        {% endif %}
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Bristol Regional Food Network. <a href="/terms/">Terms of Service</a>.</p>
+    </footer>
+</body>
+
+</html>

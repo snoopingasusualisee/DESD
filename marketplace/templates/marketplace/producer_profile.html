@@ -1,0 +1,118 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ producer.first_name }} {{ producer.last_name }} – Producer Profile – BRFN</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+
+<body class="app-body">
+    <header>
+        <h1><a href="/" class="brand-link">Bristol Regional Food Network</a></h1>
+        <nav>
+            <a href="/browse/">Browse Products</a>
+            <a href="/browse/recipes/">Recipes</a>
+            <a href="/browse/stories/">Farm Stories</a>
+            <a href="/browse/producers/">Producers</a>
+            {% if user.is_authenticated %}
+            {% if user.role == 'producer' %}
+            <a href="/browse/my-products/">My Products</a>
+            <a href="/browse/my-recipes/">My Recipes</a>
+            <a href="/browse/my-stories/">My Stories</a>
+            {% else %}
+            <a href="/orders/cart/">Cart</a>
+            <a href="/orders/my-orders/">My Orders</a>
+            <a href="/browse/favorite-recipes/">My Favorite Recipes</a>
+            {% endif %}
+            <div class="user-menu" onclick="this.classList.toggle('open')">
+                <span class="user-badge">{{ user.username }}</span>
+                <div class="user-dropdown">
+                    <form method="post" action="/accounts/logout/" style="display:inline;margin:0;padding:0">{% csrf_token %}<button type="submit" style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:inherit;">Log Out</button></form>
+                </div>
+            </div>
+            {% else %}
+            <a href="/accounts/login/">Log In</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <div class="page page-wide">
+        <div style="max-width: 1000px;">
+            <h2>{{ producer.first_name }} {{ producer.last_name }}</h2>
+            <p style="color: #666; margin-bottom: 2rem;">@{{ producer.username }}</p>
+
+            {% if stories %}
+            <div style="margin-bottom: 3rem;">
+                <h3>Farm Stories</h3>
+                <div class="product-grid">
+                    {% for story in stories %}
+                    <div class="product-card">
+                        <h4>{{ story.title }}</h4>
+                        {% if story.image %}
+                        <img src="{{ story.image.url }}" alt="{{ story.title }}"
+                            style="width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 0.5rem;">
+                        {% endif %}
+                        <p class="description">{{ story.content|truncatewords:20 }}</p>
+                        <a href="/browse/story/{{ story.id }}/" class="btn">Read Story</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if recipes %}
+            <div style="margin-bottom: 3rem;">
+                <h3>Recipes</h3>
+                <div class="product-grid">
+                    {% for recipe in recipes %}
+                    <div class="product-card">
+                        <h4>{{ recipe.title }}</h4>
+                        {% if recipe.image %}
+                        <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}"
+                            style="width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 0.5rem;">
+                        {% endif %}
+                        <span class="category-tag" style="background: #e8f5e9; color: #2e7d32;">{{ recipe.get_seasonal_tag_display }}</span>
+                        {% if recipe.description %}
+                        <p class="description">{{ recipe.description|truncatewords:15 }}</p>
+                        {% endif %}
+                        <a href="/browse/recipe/{{ recipe.id }}/" class="btn" style="margin-top: 0.5rem;">View Recipe</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if products %}
+            <div style="margin-bottom: 3rem;">
+                <h3>Products</h3>
+                <div class="product-grid">
+                    {% for product in products %}
+                    <div class="product-card">
+                        <h4>{{ product.name }}</h4>
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                            style="width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 0.5rem;">
+                        {% endif %}
+                        <p class="price">£{{ product.price }} / {{ product.unit }}</p>
+                        <a href="/browse/product/{{ product.id }}/" class="btn" style="margin-top: 0.5rem;">View Product</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div style="margin-top: 2rem;">
+                <a href="/browse/producers/" class="btn">Back to Producers</a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Bristol Regional Food Network. <a href="/terms/">Terms of Service</a>.</p>
+    </footer>
+</body>
+
+</html>

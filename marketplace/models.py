@@ -220,3 +220,90 @@ class AuditLog(models.Model):
 
     def __str__(self):
         return f"{self.action} by {self.user} at {self.timestamp}"
+
+
+class Recipe(models.Model):
+    """Recipes created by producers to share with customers."""
+    
+    class SeasonalTag(models.TextChoices):
+        SPRING = "spring", "Spring"
+        SUMMER = "summer", "Summer"
+        AUTUMN_WINTER = "autumn_winter", "Autumn/Winter"
+        ALL_SEASON = "all_season", "All Season"
+    
+    producer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="recipes")
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, help_text="Brief description or introduction")
+    ingredients = models.TextField(help_text="List of ingredients")
+    instructions = models.TextField(help_text="Cooking instructions")
+    image = models.ImageField(
+        upload_to="recipes/",
+        blank=True,
+        null=True,
+        validators=[validate_image_file_extension, validate_image_file_size, validate_image_content_type]
+    )
+    seasonal_tag = models.CharField(
+        max_length=20,
+        choices=SeasonalTag.choices,
+        default=SeasonalTag.ALL_SEASON
+    )
+    is_published = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ["-created_at"]
+    
+    def __str__(self):
+        return f"{self.title} by {self.producer.username}"
+
+
+class RecipeProduct(models.Model):
+    """Links recipes to products from the producer's inventory."""
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="linked_products")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="recipes")
+    
+    class Meta:
+        unique_together = ("recipe", "product")
+    
+    def __str__(self):
+        return f"{self.product.name} in {self.recipe.title}"
+
+
+class FarmStory(models.Model):
+    """Farm stories and educational content shared by producers."""
+    producer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="farm_stories")
+    title = models.CharField(max_length=200)
+    content = models.TextField(help_text="Story content")
+    image = models.ImageField(
+        upload_to="farm_stories/",
+        blank=True,
+        null=True,
+        validators=[validate_image_file_extension, validate_image_file_size, validate_image_content_type]
+    )
+    is_published = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name_plural = "Farm Stories"
+    
+    def __str__(self):
+        return f"{self.title} by {self.producer.username}"
+
+
+class FavoriteRecipe(models.Model):
+    """Tracks recipes saved as favorites by customers."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="favorite_recipes")
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="favorited_by")
+    saved_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ("user", "recipe")
+        ordering = ["-saved_at"]
+    
+    def __str__(self):
+        return f"{self.user.username} saved {self.recipe.title}"

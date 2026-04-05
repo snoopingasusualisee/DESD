@@ -26,7 +26,7 @@
   "pk": 2,
   "fields": {
     "password": "argon2$argon2id$v=19$m=102400,t=2,p=8$cnFFSjNNa0wweW9mbldyZk9sbmJKSA$+UFU0mtrO9eKmFVjAM3BJKHRQzeKc04o/60AdbZGfDs",
-    "last_login": "2026-03-25T19:34:56.240Z",
+    "last_login": "2026-04-05T16:21:23.248Z",
     "is_superuser": false,
     "username": "f33",
     "first_name": "producer",
@@ -61,6 +61,28 @@
     "phone": "08800 1234",
     "delivery_address": "77 Coriander Dr",
     "postcode": "BS32 0DL",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.customuser",
+  "pk": 4,
+  "fields": {
+    "password": "argon2$argon2id$v=19$m=102400,t=2,p=8$Y0dkRWhiWURJZGVsVFZGdGpFcUZXSQ$TTfWaoJlf79+mnVZ9RSljiA206zvK8+/UkaYdvlCSSY",
+    "last_login": "2026-04-05T16:24:00.220Z",
+    "is_superuser": true,
+    "username": "adag",
+    "first_name": "ad",
+    "last_name": "ag",
+    "email": "adag@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-04-05T14:44:43.755Z",
+    "role": "customer",
+    "phone": "1",
+    "delivery_address": "45 Park Street, Bristol",
+    "postcode": "BS1 5JG",
     "groups": [],
     "user_permissions": []
   }

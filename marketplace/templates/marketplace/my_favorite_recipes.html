@@ -1,0 +1,79 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Favorite Recipes – BRFN</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+
+<body class="app-body">
+    <header>
+        <h1><a href="/" class="brand-link">Bristol Regional Food Network</a></h1>
+        <nav>
+            <a href="/browse/">Browse Products</a>
+            <a href="/browse/recipes/">Recipes</a>
+            <a href="/browse/stories/">Farm Stories</a>
+            <a href="/browse/producers/">Producers</a>
+            {% if user.is_authenticated %}
+            {% if user.role == 'producer' %}
+            <a href="/browse/add-product/">Add Product</a>
+            <a href="/browse/my-products/">My Products</a>
+            <a href="/browse/my-recipes/">My Recipes</a>
+            <a href="/browse/my-stories/">My Stories</a>
+            <a href="/orders/manage/">Manage Orders</a>
+            {% else %}
+            <a href="/orders/cart/">Cart</a>
+            <a href="/orders/my-orders/">My Orders</a>
+            <a href="/browse/favorite-recipes/">My Favorite Recipes</a>
+            {% endif %}
+            <div class="user-menu" onclick="this.classList.toggle('open')">
+                <span class="user-badge">{{ user.username }}</span>
+                <div class="user-dropdown">
+                    <form method="post" action="/accounts/logout/" style="display:inline;margin:0;padding:0">{% csrf_token %}<button type="submit" style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:inherit;">Log Out</button></form>
+                </div>
+            </div>
+            {% else %}
+            <a href="/accounts/login/">Log In</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <div class="page page-wide">
+        <h2>My Favorite Recipes</h2>
+        <p style="color: #666; margin-bottom: 1.5rem;">Recipes you've saved for later</p>
+
+        {% if favorites %}
+        <div class="product-grid">
+            {% for favorite in favorites %}
+            <div class="product-card">
+                <h3><a href="/browse/recipe/{{ favorite.recipe.id }}/">{{ favorite.recipe.title }}</a></h3>
+                {% if favorite.recipe.image %}
+                <img src="{{ favorite.recipe.image.url }}" alt="{{ favorite.recipe.title }}"
+                    style="width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 0.5rem;">
+                {% endif %}
+                <p class="producer">By {{ favorite.recipe.producer.first_name }} {{ favorite.recipe.producer.last_name }}</p>
+                <span class="category-tag" style="background: #e8f5e9; color: #2e7d32;">{{ favorite.recipe.get_seasonal_tag_display }}</span>
+                <p style="color: #999; font-size: 0.85rem; margin-top: 0.5rem;">Saved {{ favorite.saved_at|date:"M d, Y" }}</p>
+                <form method="post" action="/browse/recipe/{{ favorite.recipe.id }}/toggle-favorite/" style="margin-top: 0.5rem;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-delete" style="width: 100%;">Remove from Favorites</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="text-align: center; color: #666; padding: 2rem;">
+            You haven't saved any recipes yet. <a href="/browse/recipes/">Browse recipes</a> to find some favorites!
+        </p>
+        {% endif %}
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Bristol Regional Food Network. <a href="/terms/">Terms of Service</a>.</p>
+    </footer>
+</body>
+
+</html>

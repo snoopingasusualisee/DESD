@@ -6,7 +6,7 @@ db.sqlite3
 .venv/
 env/
 venv/
-alex_notes.txt
+x_notes*.txt
 staticfiles/
 .windsurf/
 .env
