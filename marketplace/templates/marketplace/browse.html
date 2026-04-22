@@ -191,13 +191,13 @@
                 {% endif %}
 
                 {% if user.is_authenticated %}
-                <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    <form method="post" action="/orders/cart/add/{{ product.id }}/" style="flex: 1; min-width: 120px;">
+                <div class="product-card-actions">
+                    <form method="post" action="/orders/cart/add/{{ product.id }}/" class="product-card-form">
                         {% csrf_token %}
                         <input type="hidden" name="quantity" value="1">
-                        <button type="submit" style="width: 100%; padding: 0.5rem 0.8rem; font-size: 0.85rem; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Add to Cart</button>
+                        <button type="submit" class="btn-add-to-cart">Add to Cart</button>
                     </form>
-                    <a href="/browse/product/{{ product.id }}/#reviews" style="flex: 1; min-width: 120px; padding: 0.5rem 0.8rem; font-size: 0.85rem; background: #fff; color: #4CAF50; border: 2px solid #4CAF50; border-radius: 4px; text-decoration: none; text-align: center; font-weight: 500; display: inline-block;">
+                    <a href="/browse/product/{{ product.id }}/#reviews" class="btn-view-reviews">
                         View Reviews
                     </a>
                 </div>
@@ -215,6 +215,31 @@
     </div>
 
     <footer>&copy; 2026 Bristol Regional Food Network</footer>
+    
+    <script>
+        // User menu dropdown functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Script loaded');
+            const userMenu = document.querySelector('.user-menu');
+            console.log('User menu element:', userMenu);
+            
+            if (userMenu) {
+                userMenu.addEventListener('click', function(e) {
+                    console.log('User menu clicked');
+                    e.stopPropagation();
+                    this.classList.toggle('open');
+                    console.log('Open class toggled. Classes:', this.className);
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function() {
+                    userMenu.classList.remove('open');
+                });
+            } else {
+                console.error('User menu not found!');
+            }
+        });
+    </script>
 </body>
 
 </html>
