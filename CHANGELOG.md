@@ -333,7 +333,7 @@
   - Anonymous reviews hide customer name but show "Verified Purchase" badge
   - Review submission requires login (@login_required decorators)
 - New URL routes added to marketplace/urls.py
-# V1.0.31 - UI/UX Enhancement Update
+# V1.0.31 - UI/UX Enhancement Update (TJ)
 - Implemented comprehensive UI modernization and visual improvements
 - Added background image system with blur effects:
   - Created blurred produce market backgrounds for hero and browse pages
