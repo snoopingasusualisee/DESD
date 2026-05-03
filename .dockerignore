@@ -42,3 +42,12 @@ Thumbs.db
 
 # Collected static (built inside container)
 staticfiles/
+
+# Terraform / infrastructure (not needed in app image)
+infrastructure/
+.github/
+ecsv2/
+
+# Local env
+.env
+.env.example

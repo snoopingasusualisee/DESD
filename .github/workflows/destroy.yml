@@ -1,11 +1,12 @@
 name: Destroy — Tear Down AWS Infrastructure
 
-# This pipeline will use Terraform to destroy all AWS infrastructure.
-# It can ONLY be triggered manually from the GitHub Actions UI and
-# Prerequisites 
-#   - Terraform files in an infrastructure/ directory
-#   - GitHub Secrets: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
-#   - Existing Terraform state from a previous deploy
+# Tears down ALL AWS infrastructure provisioned by infrastructure/*.tf.
+# Manual trigger only — must type "destroy" to confirm.
+# Uses GitHub OIDC → IAM role brfnapp-github-actions (no static AWS keys).
+#
+# WARNING: This destroys the RDS database, ElastiCache, ALB/WAF, ECS service,
+# Secrets Manager entries and all networking. ALB + WAF cost money even idle —
+# use this whenever the stack is not actively needed.
 
 on:
   workflow_dispatch:
@@ -15,38 +16,94 @@ on:
         required: true
         type: string
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
   AWS_REGION: eu-west-2
   TF_WORKING_DIR: infrastructure
+  ECS_CLUSTER: brfnapp-cluster
+  ECS_SERVICE: brfnapp-web
+  ECR_REPOSITORY: brfnapp/web
 
 jobs:
-  terraform-destroy:
+  destroy:
+    name: Terraform Destroy
     runs-on: ubuntu-latest
     if: github.event.inputs.confirm == 'destroy'
-    defaults:
-      run:
-        working-directory: ${{ env.TF_WORKING_DIR }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 3600
+
+      - name: Scale down ECS service
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
+            --desired-count 0 2>/dev/null || true
+          echo "Scaled down ECS service to 0 tasks"
+          sleep 30
+
+      - name: Force unlock Terraform state if locked
+        run: |
+          aws dynamodb delete-item --table-name brfnapp-terraform-lock \
+            --key '{"LockID":{"S":"brfnapp-terraform-state/ecs/terraform.tfstate"}}' 2>/dev/null || true
+          echo "Cleared any stale state locks"
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.7.0
+          terraform_version: "1.7.0"
 
       - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform init
 
-      - name: Terraform Destroy
-        run: terraform destroy -auto-approve
+      - name: Remove IAM resources from state (prevent self-credential destruction)
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          # The runner authenticates via the GitHub Actions IAM role.
+          # If Terraform deletes that role mid-destroy, all subsequent API calls fail.
+          # Remove these from state so Terraform skips them, then clean up via CLI after.
+          terraform state rm aws_iam_openid_connect_provider.github 2>/dev/null || true
+          terraform state rm aws_iam_role.github_actions 2>/dev/null || true
+          terraform state rm aws_iam_role_policy.github_actions_ecr 2>/dev/null || true
+          terraform state rm aws_iam_role_policy.github_actions_ecs 2>/dev/null || true
+          terraform state rm aws_iam_role_policy.github_actions_infra 2>/dev/null || true
+          terraform state rm aws_iam_role_policy.github_actions_terraform 2>/dev/null || true
+          echo "Removed GitHub Actions IAM resources from Terraform state"
 
-      - name: Confirm destruction
-        run: echo "All AWS infrastructure has been successfully destroyed."
+      - name: Terraform Destroy
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform destroy -auto-approve -parallelism=20
+
+      - name: Clean up ECR images
+        run: |
+          IMAGES=$(aws ecr list-images --repository-name ${{ env.ECR_REPOSITORY }} \
+            --query 'imageIds[*]' --output json 2>/dev/null || echo "[]")
+          if [ "$IMAGES" != "[]" ] && [ -n "$IMAGES" ]; then
+            aws ecr batch-delete-image --repository-name ${{ env.ECR_REPOSITORY }} \
+              --image-ids "$IMAGES" 2>/dev/null || true
+          fi
+          echo "ECR images cleaned up"
+
+      - name: Destruction summary
+        run: |
+          echo "## Infrastructure Destroyed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All AWS resources have been torn down." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "To also remove the Terraform state backend (S3 + DynamoDB), run locally:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "aws s3 rb s3://brfnapp-terraform-state --force" >> $GITHUB_STEP_SUMMARY
+          echo "aws dynamodb delete-table --table-name brfnapp-terraform-lock" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

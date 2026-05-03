@@ -1,3 +1,38 @@
+# V1.0.32 - Zain Malik
+- Added complete AWS ECS Fargate cloud architecture (mirrored from ecsv2 reference)
+- Added 16 Terraform files under infrastructure/ describing:
+  - VPC (2 public + 2 private subnets across 2 AZs, IGW, route tables)
+  - VPC endpoints (S3 gateway + interface endpoints for ECR, CloudWatch Logs, Secrets Manager, SQS) — replaces NAT gateway
+  - Application Load Balancer + target group with /health/ check + HTTP→HTTPS redirect
+  - WAF v2 (AWS Common Rule Set, Known Bad Inputs, SQLi protection, 2000 req/5min rate limit)
+  - ECS cluster + Fargate task definition + service with circuit-breaker rolling deploy
+  - ECR repository with lifecycle policy (keep last 15 images)
+  - RDS MySQL 8.0 (encrypted, private subnets, automated backups)
+  - ElastiCache Redis 7
+  - SQS event queue + dead-letter queue
+  - ACM TLS certificate (wildcard for brfnapp.com) with DNS validation
+  - Route 53 A-records (apex + www) aliasing the ALB
+  - Secrets Manager entries (DB credentials, Django secret key, Stripe keys)
+  - IAM roles: ECS execution, ECS task, GitHub Actions OIDC federation
+- Rewrote .github/workflows/deploy.yml as full CI/CD pipeline:
+  - test job (Django check + migrate + unit tests against MySQL)
+  - check-infrastructure (probes ECS/ECR via AWS CLI, decides whether terraform apply is needed)
+  - terraform-plan on PRs (posts plan as PR comment), terraform-apply on main
+  - build & push Docker image to ECR with buildx registry cache
+  - deploy renders new task definition and rolls the ECS service with stability wait
+  - post-deploy synthetic health + frontend checks against https://brfnapp.com
+  - Authenticates via GitHub OIDC (AWS_ROLE_ARN secret) — no static AWS keys
+- Rewrote .github/workflows/destroy.yml as safe manual teardown:
+  - Confirmation input "destroy" required
+  - Scales ECS to 0, force-unlocks state, removes GitHub Actions IAM resources from state to avoid mid-destroy auth failure
+  - Runs terraform destroy then cleans up ECR images
+- Added /health/ endpoint (brfn_app/views.py + brfn_app/urls.py)
+- Added brfn_app/middleware.py with HealthCheckMiddleware (responds before ALLOWED_HOSTS check so ALB private-IP probes succeed)
+- Added CSRF_TRUSTED_ORIGINS and SECURE_PROXY_SSL_HEADER to brfn_app/settings.py for ALB TLS termination
+- Added infrastructure/terraform.tfvars.example for local Terraform runs
+- Added Terraform artifacts (.terraform/, *.tfstate, terraform.tfvars, plan_output.txt) to .gitignore
+- Excluded infrastructure/, .github/, ecsv2/ from .dockerignore to slim the image
+- Verified: terraform fmt + init + validate all pass; Django manage.py check passes; full unit test suite passes against MySQL
 # V1.0.0 - Alex McBride
 - Initial commit
 - Default Django setup

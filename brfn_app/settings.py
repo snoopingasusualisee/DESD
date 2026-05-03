@@ -32,6 +32,15 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
+# Trust HTTPS origins matching DJANGO_ALLOWED_HOSTS (required for forms behind ALB TLS termination)
+CSRF_TRUSTED_ORIGINS = [
+    f"https://{host.strip()}" for host in os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost').split(',')
+    if host.strip()
+]
+
+# ALB terminates TLS and forwards plaintext; trust the X-Forwarded-Proto header for request.is_secure()
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 # Application definition
 
@@ -50,6 +59,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'brfn_app.middleware.HealthCheckMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
