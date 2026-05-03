@@ -1,3 +1,13 @@
+# V1.0.33 - Zain Malik
+- Fixed gunicorn worker OOM kills during Stripe checkout: bumped Fargate task memory from 512 MiB to 1024 MiB (the next valid step on the 256-CPU plan). Stripe SDK retry buffers + Django + 3 gunicorn workers were exceeding 512 MiB whenever Stripe network calls had to be retried, causing the ALB to return 502/internal-server-error instead of a clean Django response.
+- Added defensive Stripe error handling in orders.views.checkout:
+  - Detects placeholder STRIPE_SECRET_KEY before any HTTPS call and returns a flash-message redirect instead of letting Stripe's authentication failure cascade into an unhandled exception
+  - Catches stripe.error.AuthenticationError and stripe.error.StripeError separately, logs both, and surfaces a friendly user-facing message
+  - Hoisted django.contrib.messages and added a module-level logger; removed redundant per-call imports
+- Fixed the account dropdown not opening on the Browse Products page: marketplace/templates/marketplace/browse.html had both an inline onclick="this.classList.toggle('open')" AND an addEventListener("click") that re-toggled the same class, so every click opened then immediately closed the menu. Removed the broken script and replaced it with a single click-outside-to-close handler.
+- Made the home page visually consistent with the rest of the site: brfn_app/templates/home.html now uses <body class="app-body"> so it picks up the same background image, fixed-position layers, and sticky-header context as every other page; promoted the brand title to the same brand-link anchor used in the other templates.
+- Confirmed the seed_database management command runs on container startup (start.sh) and is idempotent — production logs show 8 categories, 3 producers and 28 products were created on first task boot. Test login: testcustomer / testpass123.
+
 # V1.0.32 - Zain Malik
 - Added complete AWS ECS Fargate cloud architecture (mirrored from ecsv2 reference)
 - Added 16 Terraform files under infrastructure/ describing:

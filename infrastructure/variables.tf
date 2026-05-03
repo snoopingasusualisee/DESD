@@ -53,9 +53,9 @@ variable "cpu" {
 }
 
 variable "memory" {
-  description = "Fargate task memory in MiB"
+  description = "Fargate task memory in MiB (with cpu=256, valid values are 512, 1024, 2048)"
   type        = number
-  default     = 512
+  default     = 1024
 }
 
 variable "desired_count" {

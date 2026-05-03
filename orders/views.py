@@ -1,4 +1,5 @@
 import csv
+import logging
 import math
 import re
 import stripe
@@ -7,6 +8,7 @@ from decimal import Decimal
 from datetime import datetime, date, timedelta
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import Http404, HttpResponse
@@ -16,6 +18,8 @@ from django.utils import timezone
 from marketplace.models import Product, StockAlert
 from .models import Cart, CartItem, Order, OrderItem, StatusUpdate
 from .notifications import send_order_confirmation_email, send_status_update_email
+
+logger = logging.getLogger(__name__)
 
 
 POSTCODE_COORDS = {
@@ -429,11 +433,9 @@ def checkout(request):
     try:
         parsed_date = datetime.strptime(raw_delivery_date, "%Y-%m-%d").date()
         if parsed_date < date.today() + timedelta(days=2):
-            from django.contrib import messages
             messages.error(request, "Delivery date must be at least 48 hours away.")
             return redirect("orders:checkout")
     except ValueError:
-        from django.contrib import messages
         messages.error(request, "Invalid delivery date.")
         return redirect("orders:checkout")
 
@@ -447,7 +449,17 @@ def checkout(request):
         "delivery_date": raw_delivery_date,
     }
 
-    stripe.api_key = settings.STRIPE_SECRET_KEY
+    # Detect placeholder/missing Stripe key early so we never even attempt the network call
+    secret_key = settings.STRIPE_SECRET_KEY or ""
+    if (not secret_key) or "placeholder" in secret_key.lower() or secret_key in ("sk_test_dummy", "sk_test_placeholder"):
+        logger.error("Checkout aborted: Stripe secret key is not configured (got placeholder/empty value)")
+        messages.error(
+            request,
+            "Payments are temporarily unavailable. The site administrator needs to configure the Stripe API key. Please try again later.",
+        )
+        return redirect("orders:checkout")
+
+    stripe.api_key = secret_key
 
     line_items = []
     for item in items:
@@ -460,13 +472,28 @@ def checkout(request):
             "quantity": item.quantity,
         })
 
-    session = stripe.checkout.Session.create(
-        payment_method_types=["card"],
-        line_items=line_items,
-        mode="payment",
-        success_url=request.build_absolute_uri("/orders/checkout/success/") + "?session_id={CHECKOUT_SESSION_ID}",
-        cancel_url=request.build_absolute_uri("/orders/checkout/cancel/"),
-    )
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=line_items,
+            mode="payment",
+            success_url=request.build_absolute_uri("/orders/checkout/success/") + "?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=request.build_absolute_uri("/orders/checkout/cancel/"),
+        )
+    except stripe.error.AuthenticationError:
+        logger.exception("Stripe authentication failed — check STRIPE_SECRET_KEY in AWS Secrets Manager")
+        messages.error(
+            request,
+            "Payments are temporarily unavailable due to an authentication problem. Please contact the site administrator.",
+        )
+        return redirect("orders:checkout")
+    except stripe.error.StripeError as exc:
+        logger.exception("Stripe API call failed: %s", exc)
+        messages.error(
+            request,
+            "We couldn't reach our payment provider. Please try again in a moment.",
+        )
+        return redirect("orders:checkout")
 
     return redirect(session.url)
 

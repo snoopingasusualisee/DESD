@@ -215,29 +215,21 @@
     </div>
 
     <footer>&copy; 2026 Bristol Regional Food Network</footer>
-    
+
+    {# Note: account dropdown toggling is handled by the inline onclick on
+       <div class="user-menu">. A previous version of this template registered
+       a second click listener here that immediately re-toggled the same class,
+       which made the menu open and instantly close again. #}
     <script>
-        // User menu dropdown functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Script loaded');
-            const userMenu = document.querySelector('.user-menu');
-            console.log('User menu element:', userMenu);
-            
-            if (userMenu) {
-                userMenu.addEventListener('click', function(e) {
-                    console.log('User menu clicked');
-                    e.stopPropagation();
-                    this.classList.toggle('open');
-                    console.log('Open class toggled. Classes:', this.className);
-                });
-                
-                // Close dropdown when clicking outside
-                document.addEventListener('click', function() {
+        // Close the account dropdown when the user clicks anywhere outside it.
+        document.addEventListener('DOMContentLoaded', function () {
+            var userMenu = document.querySelector('.user-menu');
+            if (!userMenu) return;
+            document.addEventListener('click', function (event) {
+                if (!userMenu.contains(event.target)) {
                     userMenu.classList.remove('open');
-                });
-            } else {
-                console.error('User menu not found!');
-            }
+                }
+            });
         });
     </script>
 </body>
