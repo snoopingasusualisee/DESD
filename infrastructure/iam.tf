@@ -224,6 +224,8 @@ resource "aws_iam_role_policy" "github_actions_infra" {
           "ec2:*Vpc*", "ec2:*Subnet*", "ec2:*RouteTable*", "ec2:*Route*",
           "ec2:*InternetGateway*", "ec2:*SecurityGroup*", "ec2:*NetworkAcl*",
           "ec2:*VpcEndpoint*", "ec2:*Address*", "ec2:*NetworkInterface*",
+          "ec2:*NatGateway*", "ec2:AllocateAddress", "ec2:ReleaseAddress",
+          "ec2:AssociateAddress", "ec2:DisassociateAddress",
           "ec2:Describe*", "ec2:CreateTags", "ec2:DeleteTags",
         ]
         Resource = "*"
