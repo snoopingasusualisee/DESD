@@ -150,7 +150,7 @@ def validate_status_transition(current_status, new_status):
     return True
 
 # Lines 152-228 by Alex McBride
-def validate_content_moderation(text, field_name="Content"):
+def validate_content_moderation(text, field_name="Content", min_length=10):
     """
     Validate user-generated content for inappropriate material.
     
@@ -220,7 +220,7 @@ def validate_content_moderation(text, field_name="Content"):
             )
     
     # Check minimum content length for meaningful posts
-    if len(text.strip()) < 10:
+    if len(text.strip()) < min_length:
         raise ValidationError(
             f"{field_name} is too short. Please provide more detailed information."
         )

@@ -351,8 +351,8 @@ class RecipeForm(forms.ModelForm):
         if not title or not title.strip():
             raise ValidationError("Recipe title is required")
         
-        # Apply content moderation
-        validate_content_moderation(title, "Recipe title")
+        # Apply content moderation (titles are short by nature, so use min_length=3)
+        validate_content_moderation(title, "Recipe title", min_length=3)
         
         return title.strip()
     
@@ -416,8 +416,8 @@ class FarmStoryForm(forms.ModelForm):
         if not title or not title.strip():
             raise ValidationError("Story title is required")
         
-        # Apply content moderation
-        validate_content_moderation(title, "Story title")
+        # Apply content moderation (titles are short by nature, so use min_length=3)
+        validate_content_moderation(title, "Story title", min_length=3)
         
         return title.strip()
     
@@ -479,8 +479,8 @@ class ProductReviewForm(forms.ModelForm):
         if not title or not title.strip():
             raise ValidationError("Review title is required")
         
-        # Apply content moderation
-        validate_content_moderation(title, "Review title")
+        # Apply content moderation (titles are short by nature, so use min_length=3)
+        validate_content_moderation(title, "Review title", min_length=3)
         
         return title.strip()
     

@@ -1,3 +1,21 @@
+# V1.0.36 - Zain Malik
+- Fixed product rating/review feature being unreachable in practice. Two root causes:
+  - validate_content_moderation in marketplace/services/validators.py rejected any string under 10 characters with a "too short" error. ProductReviewForm.clean_title called this validator on the review TITLE field, so a perfectly normal short title like "Great!" or "Loved it" would fail validation and the form would never save. Same issue affected RecipeForm.clean_title and FarmStoryForm.clean_title.
+  - There were no delivered orders in the database, and the submit_review view requires a delivered order before showing the review button. So even though the page rendered, the "Write a Review" button never appeared and customers couldn't reach the form.
+- Fix:
+  - Added a min_length parameter (default 10) to validate_content_moderation; ProductReviewForm, RecipeForm and FarmStoryForm now pass min_length=3 for their title fields.
+  - Massively expanded the seed_database management command (idempotent) so the demo looks lived-in:
+    - 8 categories (unchanged)
+    - 3 producers (unchanged)
+    - 4 customer accounts (testcustomer, emily_jones, david_smith, sarah_brown — all password testpass123)
+    - 28 products (unchanged)
+    - 8 recipes by producers, each linked to the products it uses
+    - 6 farm stories (welcome notes, growing practices, cheese-making, sourdough lore, etc.)
+    - 8 delivered orders spread across the 4 customers
+    - 18 product reviews with ratings 4-5, a few including producer responses
+    - 8 favourited recipes
+  - All seeding uses get_or_create on stable unique keys so the script is safe to re-run on every container start.
+
 # V1.0.35 - Zain Malik
 - Fixed 504 Gateway Time-out on Stripe checkout. Root cause: ECS tasks run in private subnets whose route table had no default route to the internet. VPC interface endpoints gave the tasks access to AWS services (ECR, Secrets Manager, CloudWatch, SQS) but NOT to the public internet, so every stripe.checkout.Session.create() call hung at the TLS handshake until gunicorn's 60s timeout fired and the ALB returned 504.
 - Added a single NAT Gateway (infrastructure/vpc.tf):
