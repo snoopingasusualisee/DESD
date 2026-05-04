@@ -1,3 +1,9 @@
+# V1.0.34 - Zain Malik
+- Fixed persistent Stripe checkout 500 "internal server error" after replacing placeholder Stripe keys with real test keys. Gunicorn workers were still being SIGKILLed on /orders/checkout/ with "Perhaps out of memory?" because Django + Stripe SDK + the session.create() retry buffers exceeded 1024 MiB when 3 workers were active simultaneously. Two changes:
+  - Bumped Fargate task memory from 1024 MiB to 2048 MiB (infrastructure/variables.tf) — the next valid step on the 256-CPU Fargate plan.
+  - Reduced gunicorn from 3 sync workers to 2 gthread workers with 4 threads each (Dockerfile CMD). Threaded workers share one Python interpreter per process, so memory per worker drops dramatically while concurrency stays the same.
+  - Also added --timeout 60 so slow Stripe network calls don't get reaped by gunicorn before they return.
+
 # V1.0.33 - Zain Malik
 - Fixed gunicorn worker OOM kills during Stripe checkout: bumped Fargate task memory from 512 MiB to 1024 MiB (the next valid step on the 256-CPU plan). Stripe SDK retry buffers + Django + 3 gunicorn workers were exceeding 512 MiB whenever Stripe network calls had to be retried, causing the ALB to return 502/internal-server-error instead of a clean Django response.
 - Added defensive Stripe error handling in orders.views.checkout:

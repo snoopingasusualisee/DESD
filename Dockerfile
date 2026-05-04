@@ -37,4 +37,4 @@ USER django
 EXPOSE 8000
 
 ENTRYPOINT ["/app/start.sh"]
-CMD ["gunicorn", "brfn_app.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+CMD ["gunicorn", "brfn_app.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "4", "--worker-class", "gthread", "--timeout", "60"]
