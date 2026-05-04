@@ -66,10 +66,10 @@ header nav {
     align-items: center;
     gap: 0.25rem;
     flex-wrap: nowrap;
-    justify-content: center;
+    justify-content: flex-end;
     flex: 1;
-    overflow-x: auto;
-    scrollbar-width: none;
+    margin-left: auto;
+    overflow: visible;
 }
 
 header nav::-webkit-scrollbar {
@@ -129,17 +129,69 @@ header nav a:hover {
 }
 
 .user-dropdown {
-    display: none;
+    display: block;
     position: absolute;
     right: 0;
-    top: calc(100% + 0.75rem);
+    top: calc(100% - 1px);
     background: white;
-    border-radius: var(--radius-md);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    min-width: 180px;
+    border-radius: 0 0 24px 24px;
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    min-width: 100%;
     z-index: 10000;
     overflow: hidden;
-    animation: slideDown 0.2s ease;
+    border: 1px solid var(--border-light);
+    border-top: none;
+
+    opacity: 0;
+    transform: translateY(-8px) scaleY(0.85);
+    transform-origin: top;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.user-menu.open .user-badge {
+    border-radius: 24px 24px 0 0;
+    transition: border-radius 0.18s ease;
+}
+
+.user-dropdown form {
+    margin: 0;
+}
+
+.user-dropdown button {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem 0.6rem;
+    color: var(--primary-green-dark) !important;
+    background: white !important;
+    border: none;
+    text-align: left;
+    font-size: 0.8rem !important;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.2;
+    margin: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+    white-space: nowrap;
+}
+
+.user-dropdown button:hover {
+    background: var(--bg-light) !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.user-menu.open .user-dropdown {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    pointer-events: auto;
+}
+
+.user-badge {
+    transition: all 0.18s ease;
 }
 
 @keyframes slideDown {
@@ -961,4 +1013,20 @@ footer {
     .product-grid::after {
         display: none;
     }
+}
+
+.user-dropdown {
+    width: 100%;
+    min-width: 100%;
+    overflow: hidden;
+}
+
+.user-dropdown button {
+    width: 100% !important;
+    padding: 0.5rem 1rem 0.6rem !important;
+    font-size: 0.8rem !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    margin: 0 !important;
 }

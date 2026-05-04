@@ -1,80 +1,3 @@
-# V1.0.36 - Zain Malik
-- Fixed product rating/review feature being unreachable in practice. Two root causes:
-  - validate_content_moderation in marketplace/services/validators.py rejected any string under 10 characters with a "too short" error. ProductReviewForm.clean_title called this validator on the review TITLE field, so a perfectly normal short title like "Great!" or "Loved it" would fail validation and the form would never save. Same issue affected RecipeForm.clean_title and FarmStoryForm.clean_title.
-  - There were no delivered orders in the database, and the submit_review view requires a delivered order before showing the review button. So even though the page rendered, the "Write a Review" button never appeared and customers couldn't reach the form.
-- Fix:
-  - Added a min_length parameter (default 10) to validate_content_moderation; ProductReviewForm, RecipeForm and FarmStoryForm now pass min_length=3 for their title fields.
-  - Massively expanded the seed_database management command (idempotent) so the demo looks lived-in:
-    - 8 categories (unchanged)
-    - 3 producers (unchanged)
-    - 4 customer accounts (testcustomer, emily_jones, david_smith, sarah_brown — all password testpass123)
-    - 28 products (unchanged)
-    - 8 recipes by producers, each linked to the products it uses
-    - 6 farm stories (welcome notes, growing practices, cheese-making, sourdough lore, etc.)
-    - 8 delivered orders spread across the 4 customers
-    - 18 product reviews with ratings 4-5, a few including producer responses
-    - 8 favourited recipes
-  - All seeding uses get_or_create on stable unique keys so the script is safe to re-run on every container start.
-
-# V1.0.35 - Zain Malik
-- Fixed 504 Gateway Time-out on Stripe checkout. Root cause: ECS tasks run in private subnets whose route table had no default route to the internet. VPC interface endpoints gave the tasks access to AWS services (ECR, Secrets Manager, CloudWatch, SQS) but NOT to the public internet, so every stripe.checkout.Session.create() call hung at the TLS handshake until gunicorn's 60s timeout fired and the ALB returned 504.
-- Added a single NAT Gateway (infrastructure/vpc.tf):
-  - aws_eip.nat — Elastic IP for the NAT
-  - aws_nat_gateway.main — placed in public subnet 1
-  - aws_route.private_internet — 0.0.0.0/0 from the private route table to the NAT
-- The ECS security group already allowed all egress, so no SG changes were needed. ECS tasks can now reach api.stripe.com (and any other third-party API, e.g. SMTP providers) over HTTPS.
-
-# V1.0.34 - Zain Malik
-- Fixed persistent Stripe checkout 500 "internal server error" after replacing placeholder Stripe keys with real test keys. Gunicorn workers were still being SIGKILLed on /orders/checkout/ with "Perhaps out of memory?" because Django + Stripe SDK + the session.create() retry buffers exceeded 1024 MiB when 3 workers were active simultaneously. Two changes:
-  - Bumped Fargate task memory from 1024 MiB to 2048 MiB (infrastructure/variables.tf) — the next valid step on the 256-CPU Fargate plan.
-  - Reduced gunicorn from 3 sync workers to 2 gthread workers with 4 threads each (Dockerfile CMD). Threaded workers share one Python interpreter per process, so memory per worker drops dramatically while concurrency stays the same.
-  - Also added --timeout 60 so slow Stripe network calls don't get reaped by gunicorn before they return.
-
-# V1.0.33 - Zain Malik
-- Fixed gunicorn worker OOM kills during Stripe checkout: bumped Fargate task memory from 512 MiB to 1024 MiB (the next valid step on the 256-CPU plan). Stripe SDK retry buffers + Django + 3 gunicorn workers were exceeding 512 MiB whenever Stripe network calls had to be retried, causing the ALB to return 502/internal-server-error instead of a clean Django response.
-- Added defensive Stripe error handling in orders.views.checkout:
-  - Detects placeholder STRIPE_SECRET_KEY before any HTTPS call and returns a flash-message redirect instead of letting Stripe's authentication failure cascade into an unhandled exception
-  - Catches stripe.error.AuthenticationError and stripe.error.StripeError separately, logs both, and surfaces a friendly user-facing message
-  - Hoisted django.contrib.messages and added a module-level logger; removed redundant per-call imports
-- Fixed the account dropdown not opening on the Browse Products page: marketplace/templates/marketplace/browse.html had both an inline onclick="this.classList.toggle('open')" AND an addEventListener("click") that re-toggled the same class, so every click opened then immediately closed the menu. Removed the broken script and replaced it with a single click-outside-to-close handler.
-- Made the home page visually consistent with the rest of the site: brfn_app/templates/home.html now uses <body class="app-body"> so it picks up the same background image, fixed-position layers, and sticky-header context as every other page; promoted the brand title to the same brand-link anchor used in the other templates.
-- Confirmed the seed_database management command runs on container startup (start.sh) and is idempotent — production logs show 8 categories, 3 producers and 28 products were created on first task boot. Test login: testcustomer / testpass123.
-
-# V1.0.32 - Zain Malik
-- Added complete AWS ECS Fargate cloud architecture (mirrored from ecsv2 reference)
-- Added 16 Terraform files under infrastructure/ describing:
-  - VPC (2 public + 2 private subnets across 2 AZs, IGW, route tables)
-  - VPC endpoints (S3 gateway + interface endpoints for ECR, CloudWatch Logs, Secrets Manager, SQS) — replaces NAT gateway
-  - Application Load Balancer + target group with /health/ check + HTTP→HTTPS redirect
-  - WAF v2 (AWS Common Rule Set, Known Bad Inputs, SQLi protection, 2000 req/5min rate limit)
-  - ECS cluster + Fargate task definition + service with circuit-breaker rolling deploy
-  - ECR repository with lifecycle policy (keep last 15 images)
-  - RDS MySQL 8.0 (encrypted, private subnets, automated backups)
-  - ElastiCache Redis 7
-  - SQS event queue + dead-letter queue
-  - ACM TLS certificate (wildcard for brfnapp.com) with DNS validation
-  - Route 53 A-records (apex + www) aliasing the ALB
-  - Secrets Manager entries (DB credentials, Django secret key, Stripe keys)
-  - IAM roles: ECS execution, ECS task, GitHub Actions OIDC federation
-- Rewrote .github/workflows/deploy.yml as full CI/CD pipeline:
-  - test job (Django check + migrate + unit tests against MySQL)
-  - check-infrastructure (probes ECS/ECR via AWS CLI, decides whether terraform apply is needed)
-  - terraform-plan on PRs (posts plan as PR comment), terraform-apply on main
-  - build & push Docker image to ECR with buildx registry cache
-  - deploy renders new task definition and rolls the ECS service with stability wait
-  - post-deploy synthetic health + frontend checks against https://brfnapp.com
-  - Authenticates via GitHub OIDC (AWS_ROLE_ARN secret) — no static AWS keys
-- Rewrote .github/workflows/destroy.yml as safe manual teardown:
-  - Confirmation input "destroy" required
-  - Scales ECS to 0, force-unlocks state, removes GitHub Actions IAM resources from state to avoid mid-destroy auth failure
-  - Runs terraform destroy then cleans up ECR images
-- Added /health/ endpoint (brfn_app/views.py + brfn_app/urls.py)
-- Added brfn_app/middleware.py with HealthCheckMiddleware (responds before ALLOWED_HOSTS check so ALB private-IP probes succeed)
-- Added CSRF_TRUSTED_ORIGINS and SECURE_PROXY_SSL_HEADER to brfn_app/settings.py for ALB TLS termination
-- Added infrastructure/terraform.tfvars.example for local Terraform runs
-- Added Terraform artifacts (.terraform/, *.tfstate, terraform.tfvars, plan_output.txt) to .gitignore
-- Excluded infrastructure/, .github/, ecsv2/ from .dockerignore to slim the image
-- Verified: terraform fmt + init + validate all pass; Django manage.py check passes; full unit test suite passes against MySQL
 # V1.0.0 - Alex McBride
 - Initial commit
 - Default Django setup
@@ -476,3 +399,84 @@
 - All changes maintain backward compatibility with existing functionality
 - No breaking changes to database models or business logic
 - Enhanced user experience across all device sizes (desktop, tablet, mobile)
+# V1.0.32 - Zain Malik
+- Added complete AWS ECS Fargate cloud architecture (mirrored from ecsv2 reference)
+- Added 16 Terraform files under infrastructure/ describing:
+  - VPC (2 public + 2 private subnets across 2 AZs, IGW, route tables)
+  - VPC endpoints (S3 gateway + interface endpoints for ECR, CloudWatch Logs, Secrets Manager, SQS) — replaces NAT gateway
+  - Application Load Balancer + target group with /health/ check + HTTP→HTTPS redirect
+  - WAF v2 (AWS Common Rule Set, Known Bad Inputs, SQLi protection, 2000 req/5min rate limit)
+  - ECS cluster + Fargate task definition + service with circuit-breaker rolling deploy
+  - ECR repository with lifecycle policy (keep last 15 images)
+  - RDS MySQL 8.0 (encrypted, private subnets, automated backups)
+  - ElastiCache Redis 7
+  - SQS event queue + dead-letter queue
+  - ACM TLS certificate (wildcard for brfnapp.com) with DNS validation
+  - Route 53 A-records (apex + www) aliasing the ALB
+  - Secrets Manager entries (DB credentials, Django secret key, Stripe keys)
+  - IAM roles: ECS execution, ECS task, GitHub Actions OIDC federation
+- Rewrote .github/workflows/deploy.yml as full CI/CD pipeline:
+  - test job (Django check + migrate + unit tests against MySQL)
+  - check-infrastructure (probes ECS/ECR via AWS CLI, decides whether terraform apply is needed)
+  - terraform-plan on PRs (posts plan as PR comment), terraform-apply on main
+  - build & push Docker image to ECR with buildx registry cache
+  - deploy renders new task definition and rolls the ECS service with stability wait
+  - post-deploy synthetic health + frontend checks against https://brfnapp.com
+  - Authenticates via GitHub OIDC (AWS_ROLE_ARN secret) — no static AWS keys
+- Rewrote .github/workflows/destroy.yml as safe manual teardown:
+  - Confirmation input "destroy" required
+  - Scales ECS to 0, force-unlocks state, removes GitHub Actions IAM resources from state to avoid mid-destroy auth failure
+  - Runs terraform destroy then cleans up ECR images
+- Added /health/ endpoint (brfn_app/views.py + brfn_app/urls.py)
+- Added brfn_app/middleware.py with HealthCheckMiddleware (responds before ALLOWED_HOSTS check so ALB private-IP probes succeed)
+- Added CSRF_TRUSTED_ORIGINS and SECURE_PROXY_SSL_HEADER to brfn_app/settings.py for ALB TLS termination
+- Added infrastructure/terraform.tfvars.example for local Terraform runs
+- Added Terraform artifacts (.terraform/, *.tfstate, terraform.tfvars, plan_output.txt) to .gitignore
+- Excluded infrastructure/, .github/, ecsv2/ from .dockerignore to slim the image
+- Verified: terraform fmt + init + validate all pass; Django manage.py check passes; full unit test suite passes against MySQL
+
+
+# V1.0.33 - Zain Malik
+- Fixed gunicorn worker OOM kills during Stripe checkout: bumped Fargate task memory from 512 MiB to 1024 MiB (the next valid step on the 256-CPU plan). Stripe SDK retry buffers + Django + 3 gunicorn workers were exceeding 512 MiB whenever Stripe network calls had to be retried, causing the ALB to return 502/internal-server-error instead of a clean Django response.
+- Added defensive Stripe error handling in orders.views.checkout:
+  - Detects placeholder STRIPE_SECRET_KEY before any HTTPS call and returns a flash-message redirect instead of letting Stripe's authentication failure cascade into an unhandled exception
+  - Catches stripe.error.AuthenticationError and stripe.error.StripeError separately, logs both, and surfaces a friendly user-facing message
+  - Hoisted django.contrib.messages and added a module-level logger; removed redundant per-call imports
+- Fixed the account dropdown not opening on the Browse Products page: marketplace/templates/marketplace/browse.html had both an inline onclick="this.classList.toggle('open')" AND an addEventListener("click") that re-toggled the same class, so every click opened then immediately closed the menu. Removed the broken script and replaced it with a single click-outside-to-close handler.
+- Made the home page visually consistent with the rest of the site: brfn_app/templates/home.html now uses <body class="app-body"> so it picks up the same background image, fixed-position layers, and sticky-header context as every other page; promoted the brand title to the same brand-link anchor used in the other templates.
+- Confirmed the seed_database management command runs on container startup (start.sh) and is idempotent — production logs show 8 categories, 3 producers and 28 products were created on first task boot. Test login: testcustomer / testpass123.
+# V1.0.34 - Zain Malik
+- Fixed persistent Stripe checkout 500 "internal server error" after replacing placeholder Stripe keys with real test keys. Gunicorn workers were still being SIGKILLed on /orders/checkout/ with "Perhaps out of memory?" because Django + Stripe SDK + the session.create() retry buffers exceeded 1024 MiB when 3 workers were active simultaneously. Two changes:
+  - Bumped Fargate task memory from 1024 MiB to 2048 MiB (infrastructure/variables.tf) — the next valid step on the 256-CPU Fargate plan.
+  - Reduced gunicorn from 3 sync workers to 2 gthread workers with 4 threads each (Dockerfile CMD). Threaded workers share one Python interpreter per process, so memory per worker drops dramatically while concurrency stays the same.
+  - Also added --timeout 60 so slow Stripe network calls don't get reaped by gunicorn before they return.
+# V1.0.35 - Zain Malik
+- Fixed 504 Gateway Time-out on Stripe checkout. Root cause: ECS tasks run in private subnets whose route table had no default route to the internet. VPC interface endpoints gave the tasks access to AWS services (ECR, Secrets Manager, CloudWatch, SQS) but NOT to the public internet, so every stripe.checkout.Session.create() call hung at the TLS handshake until gunicorn's 60s timeout fired and the ALB returned 504.
+- Added a single NAT Gateway (infrastructure/vpc.tf):
+  - aws_eip.nat — Elastic IP for the NAT
+  - aws_nat_gateway.main — placed in public subnet 1
+  - aws_route.private_internet — 0.0.0.0/0 from the private route table to the NAT
+- The ECS security group already allowed all egress, so no SG changes were needed. ECS tasks can now reach api.stripe.com (and any other third-party API, e.g. SMTP providers) over HTTPS.
+# V1.0.36 - Zain Malik
+- Fixed product rating/review feature being unreachable in practice. Two root causes:
+  - validate_content_moderation in marketplace/services/validators.py rejected any string under 10 characters with a "too short" error. ProductReviewForm.clean_title called this validator on the review TITLE field, so a perfectly normal short title like "Great!" or "Loved it" would fail validation and the form would never save. Same issue affected RecipeForm.clean_title and FarmStoryForm.clean_title.
+  - There were no delivered orders in the database, and the submit_review view requires a delivered order before showing the review button. So even though the page rendered, the "Write a Review" button never appeared and customers couldn't reach the form.
+- Fix:
+  - Added a min_length parameter (default 10) to validate_content_moderation; ProductReviewForm, RecipeForm and FarmStoryForm now pass min_length=3 for their title fields.
+  - Massively expanded the seed_database management command (idempotent) so the demo looks lived-in:
+    - 8 categories (unchanged)
+    - 3 producers (unchanged)
+    - 4 customer accounts (testcustomer, emily_jones, david_smith, sarah_brown — all password testpass123)
+    - 28 products (unchanged)
+    - 8 recipes by producers, each linked to the products it uses
+    - 6 farm stories (welcome notes, growing practices, cheese-making, sourdough lore, etc.)
+    - 8 delivered orders spread across the 4 customers
+    - 18 product reviews with ratings 4-5, a few including producer responses
+    - 8 favourited recipes
+  - All seeding uses get_or_create on stable unique keys so the script is safe to re-run on every container start.
+
+# V1.0.37 - Header navigation and dropdown consistency
+- Updated header navigation alignment so links sit correctly on the right-hand side.
+- Improved logged-in user dropdown styling and behaviour across pages.
+- Made the home page header consistent with the rest of the application.
+- Reordered changelog entries so the newest update is added in the correct position.

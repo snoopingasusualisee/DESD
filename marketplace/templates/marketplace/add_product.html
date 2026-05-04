@@ -34,7 +34,7 @@
             <a href="/browse/favorite-recipes/">My Favorite Recipes</a>
             <a href="/browse/my-reviews/">My Reviews</a>
             {% endif %}
-            <div class="user-menu" onclick="this.classList.toggle('open')">
+            <div class="user-menu">
                 <span class="user-badge">{{ user.username }} ({{ user.role }})</span>
                 <div class="user-dropdown">
                     <form method="post" action="/accounts/logout/" style="display:inline;margin:0;padding:0">{% csrf_token %}<button type="submit" style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:inherit;">Log Out</button></form>
@@ -181,6 +181,21 @@
     </div>
 
     <footer>&copy; 2026 Bristol Regional Food Network</footer>
+    <script>
+    document.addEventListener('click', function (event) {
+        const userMenu = document.querySelector('.user-menu');
+        const userBadge = document.querySelector('.user-badge');
+
+        if (!userMenu || !userBadge) return;
+
+        if (userBadge.contains(event.target)) {
+            event.stopPropagation();
+            userMenu.classList.toggle('open');
+        } else if (!userMenu.contains(event.target)) {
+            userMenu.classList.remove('open');
+        }
+    });
+    </script>
 </body>
 
 </html>
