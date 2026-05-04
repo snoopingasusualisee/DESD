@@ -1,3 +1,11 @@
+# V1.0.35 - Zain Malik
+- Fixed 504 Gateway Time-out on Stripe checkout. Root cause: ECS tasks run in private subnets whose route table had no default route to the internet. VPC interface endpoints gave the tasks access to AWS services (ECR, Secrets Manager, CloudWatch, SQS) but NOT to the public internet, so every stripe.checkout.Session.create() call hung at the TLS handshake until gunicorn's 60s timeout fired and the ALB returned 504.
+- Added a single NAT Gateway (infrastructure/vpc.tf):
+  - aws_eip.nat — Elastic IP for the NAT
+  - aws_nat_gateway.main — placed in public subnet 1
+  - aws_route.private_internet — 0.0.0.0/0 from the private route table to the NAT
+- The ECS security group already allowed all egress, so no SG changes were needed. ECS tasks can now reach api.stripe.com (and any other third-party API, e.g. SMTP providers) over HTTPS.
+
 # V1.0.34 - Zain Malik
 - Fixed persistent Stripe checkout 500 "internal server error" after replacing placeholder Stripe keys with real test keys. Gunicorn workers were still being SIGKILLed on /orders/checkout/ with "Perhaps out of memory?" because Django + Stripe SDK + the session.create() retry buffers exceeded 1024 MiB when 3 workers were active simultaneously. Two changes:
   - Bumped Fargate task memory from 1024 MiB to 2048 MiB (infrastructure/variables.tf) — the next valid step on the 256-CPU Fargate plan.
