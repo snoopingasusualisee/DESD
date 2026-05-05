@@ -55,8 +55,14 @@ POSTCODE_COORDS = {
 
 
 def _is_customer(user):
+    """
+    True for any role that buys from the marketplace: customers, community
+    groups, and restaurants. Producers and admins return False.
+    The function name is kept for backward compatibility with the existing
+    call sites; semantically it's now '_is_buyer'.
+    """
     role = getattr(user, "role", None)
-    return role in (None, "customer")
+    return role in (None, "customer", "community_group", "restaurant")
 
 
 def _get_cart(user):

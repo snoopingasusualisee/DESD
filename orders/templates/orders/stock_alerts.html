@@ -93,7 +93,9 @@
     <header>
         <h1><a href="/" class="brand-link">Bristol Regional Food Network</a></h1>
         <nav>
-            <a href="/browse/">Browse</a>
+            <a href="/browse/">Browse Products</a>
+            <a href="/browse/recipes/">Recipes</a>
+            <a href="/browse/stories/">Farm Stories</a>
             <a href="/browse/producers/">Producers</a>
             {% if user.is_authenticated %}
                 {% if user.role == 'admin' %}
@@ -101,16 +103,22 @@
                     <a href="/orders/admin/monthly-summary/">Monthly Summary</a>
                 {% elif user.role == 'producer' %}
                     <a href="/browse/add-product/">Add Product</a>
+                    <a href="/browse/my-products/">My Products</a>
+                    <a href="/browse/my-recipes/">My Recipes</a>
+                    <a href="/browse/my-stories/">My Stories</a>
                     <a href="/orders/manage/">Manage Orders</a>
                     <a href="/orders/stock-alerts/">Stock Alerts</a>
-                    <a href="/orders/payments/">Payments</a>
+                {% elif user.role == 'community_group' or user.role == 'restaurant' %}
+                    <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
+                    <a href="/orders/my-orders/">My Orders</a>
                 {% else %}
                     <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
                     <a href="/orders/my-orders/">My Orders</a>
                     <a href="/browse/favorite-recipes/">My Favorite Recipes</a>
+                    <a href="/browse/my-reviews/">My Reviews</a>
                 {% endif %}
                 <div class="user-menu" onclick="this.classList.toggle('open')">
-                    <span class="user-badge">{{ user.username }} ({{ user.role }})</span>
+                    <span class="user-badge">{{ user.username }} ({{ user.get_role_display }})</span>
                     <div class="user-dropdown">
                         <form method="post" action="/accounts/logout/" style="display:inline;margin:0;padding:0">{% csrf_token %}<button type="submit" style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:inherit;">Log Out</button></form>
                     </div>
@@ -118,7 +126,8 @@
             {% else %}
                 <a href="/accounts/login/">Log In</a>
             {% endif %}
-        </nav>
+        
+</nav>
     </header>
 
     {% if messages %}
@@ -191,7 +200,7 @@
     </div>
 
     <footer>
-        <p>Bristol Regional Food Network – TC-023 Stock Alerts System</p>
+        <p>&copy; 2026 Bristol Regional Food Network. <a href="/terms/">Terms of Service</a>.</p>
     </footer>
 </body>
 

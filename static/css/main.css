@@ -294,7 +294,6 @@ footer {
     color: var(--text-gray);
     border-top: 1px solid var(--border-light);
     background: white;
-    margin-top: 4rem;
 }
 
 .auth-body {
@@ -1029,4 +1028,42 @@ footer {
     white-space: nowrap !important;
     text-align: left !important;
     margin: 0 !important;
+}
+
+/* =============================================================
+   STICKY FOOTER — must be last in the file so the cascade wins.
+   ============================================================= */
+html, body {
+    height: 100%;
+}
+
+body {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important;
+}
+
+body > footer {
+    margin-top: auto !important;
+    flex-shrink: 0 !important;
+}
+
+
+/* =============================================================
+   HOME PAGE: make the hero fill the viewport between header and
+   footer, and center its content vertically.
+   ============================================================= */
+body > .hero {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+}
+
+/* Inside the hero, keep child elements stacked but centered. */
+body > .hero > * {
+    position: relative;
+    z-index: 2;
 }

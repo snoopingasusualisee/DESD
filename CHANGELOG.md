@@ -475,8 +475,23 @@
     - 8 favourited recipes
   - All seeding uses get_or_create on stable unique keys so the script is safe to re-run on every container start.
 
-# V1.0.37 - Header navigation and dropdown consistency
+# V1.0.37 - Rob Howells
 - Updated header navigation alignment so links sit correctly on the right-hand side.
 - Improved logged-in user dropdown styling and behaviour across pages.
 - Made the home page header consistent with the rest of the application.
 - Reordered changelog entries so the newest update is added in the correct position.
+
+# V1.0.38 - Rob Howells
+- Fixed My Orders 404 for community group and restaurant users by expanding the `_is_customer` helper in orders/views.py to cover all buyer roles.
+- Fixed the cart count badge not appearing for community groups and restaurants — orders/context_processors.py now applies to all buyer roles.
+- Standardised the public navigation links (Browse Products, Recipes, Farm Stories, Producers) across all 42 templates. 17 templates were missing one or more of these.
+- Added explicit role branches for community_group and restaurant in the nav role conditional, instead of silently falling through to the customer view.
+- Standardised the user badge to `{{ user.username }} ({{ user.get_role_display }})` on every page; six templates were missing the role label entirely.
+- Switched the badge from raw role values to display labels, so it now reads `(Community Group)` instead of `(community_group)`, `(Customer)` instead of `(customer)`, and so on.
+- Standardised every footer to `© 2026 Bristol Regional Food Network. Terms of Service.` and added the Terms of Service link to every page (previously only on 14 of 42).
+- Pinned the footer to the bottom of the viewport on short pages. Made `<body>` a flex column with `min-height: 100vh` and `margin-top: auto` on the footer.
+- Made the home page hero stretch to fill the space between header and footer with its content vertically centred.
+- Fixed broken `/browse/my-favorite-recipes/` links in several templates (correct URL is `/browse/favorite-recipes/`).
+- Brought the Terms page and the producer edit/delete pages (edit_recipe, edit_story, delete_recipe, delete_story) in line with the standard role-aware nav. They previously shipped with stripped-down navs missing the user dropdown and most links.
+- Fixed broken logout on the Terms page — replaced the plain anchor with the standard CSRF-protected POST form.
+- Removed a multi-line `{# ... #}` Django comment from browse.html that was rendering as visible text below the footer (Django's `{# #}` doesn't span newlines).
