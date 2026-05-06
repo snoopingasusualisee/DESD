@@ -65,3 +65,37 @@ resource "aws_secretsmanager_secret_version" "stripe_secret" {
 
   lifecycle { ignore_changes = [secret_string] }
 }
+
+# Email SMTP credentials — populated manually in AWS Console / CLI after first apply.
+# Terraform creates empty placeholders; ignore_changes prevents Terraform from
+# overwriting the real values you set in the console on subsequent applies.
+#
+# For Gmail you MUST use an App Password (not your account password). Generate one at:
+#   https://myaccount.google.com/apppasswords  (requires 2FA enabled on the account)
+resource "aws_secretsmanager_secret" "email_host_user" {
+  name                    = "${var.project_name}/email-host-user"
+  recovery_window_in_days = 0
+
+  tags = { Name = "${var.project_name}-email-host-user" }
+}
+
+resource "aws_secretsmanager_secret_version" "email_host_user" {
+  secret_id     = aws_secretsmanager_secret.email_host_user.id
+  secret_string = "placeholder@example.com"
+
+  lifecycle { ignore_changes = [secret_string] }
+}
+
+resource "aws_secretsmanager_secret" "email_host_password" {
+  name                    = "${var.project_name}/email-host-password"
+  recovery_window_in_days = 0
+
+  tags = { Name = "${var.project_name}-email-host-password" }
+}
+
+resource "aws_secretsmanager_secret_version" "email_host_password" {
+  secret_id     = aws_secretsmanager_secret.email_host_password.id
+  secret_string = "placeholder"
+
+  lifecycle { ignore_changes = [secret_string] }
+}

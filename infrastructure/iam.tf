@@ -35,6 +35,8 @@ resource "aws_iam_role_policy" "ecs_execution_secrets" {
         aws_secretsmanager_secret.django_secret_key.arn,
         aws_secretsmanager_secret.stripe_publishable.arn,
         aws_secretsmanager_secret.stripe_secret.arn,
+        aws_secretsmanager_secret.email_host_user.arn,
+        aws_secretsmanager_secret.email_host_password.arn,
       ]
     }]
   })

@@ -48,6 +48,13 @@ resource "aws_ecs_task_definition" "web" {
       { name = "DJANGO_ALLOWED_HOSTS", value = "${var.domain_name},www.${var.domain_name}" },
       { name = "REDIS_URL", value = "redis://${aws_elasticache_cluster.main.cache_nodes[0].address}:6379/0" },
       { name = "SQS_QUEUE_URL", value = aws_sqs_queue.main.url },
+      # Email — switch Django from console backend to real SMTP delivery.
+      # Credentials themselves come from Secrets Manager (see `secrets` block).
+      { name = "EMAIL_BACKEND", value = "smtp" },
+      { name = "EMAIL_HOST", value = "smtp.gmail.com" },
+      { name = "EMAIL_PORT", value = "587" },
+      { name = "EMAIL_USE_TLS", value = "True" },
+      { name = "DEFAULT_FROM_EMAIL", value = "no-reply@${var.domain_name}" },
     ]
 
     secrets = [
@@ -56,6 +63,8 @@ resource "aws_ecs_task_definition" "web" {
       { name = "DJANGO_SECRET_KEY", valueFrom = aws_secretsmanager_secret.django_secret_key.arn },
       { name = "STRIPE_PUBLISHABLE_KEY", valueFrom = aws_secretsmanager_secret.stripe_publishable.arn },
       { name = "STRIPE_SECRET_KEY", valueFrom = aws_secretsmanager_secret.stripe_secret.arn },
+      { name = "EMAIL_HOST_USER", valueFrom = aws_secretsmanager_secret.email_host_user.arn },
+      { name = "EMAIL_HOST_PASSWORD", valueFrom = aws_secretsmanager_secret.email_host_password.arn },
     ]
 
     logConfiguration = {

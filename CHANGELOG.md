@@ -603,3 +603,28 @@
   - Tests analytics track food waste reduction impact (15 items saved in test scenario)
   - Validates complete workflow: producer marks surplus → customer purchases → waste prevented
   - All 25 tests passing - confirms producers can reduce food waste through last-minute discounts
+
+# V1.1.43 - Zain Malik
+- **Fix: order confirmation emails now actually deliver in production**
+  - Root cause: ECS task definition never wired email env vars, so `EMAIL_BACKEND` was unset in production → Django fell back to the console backend → emails were written to CloudWatch logs instead of being sent
+  - `infrastructure/ecs.tf`: added `EMAIL_BACKEND=smtp`, `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, `DEFAULT_FROM_EMAIL` env vars and wired `EMAIL_HOST_USER`/`EMAIL_HOST_PASSWORD` from Secrets Manager
+  - `infrastructure/secrets.tf`: added `email_host_user` and `email_host_password` Secrets Manager resources with `lifecycle.ignore_changes` (placeholders that you populate manually via AWS Console after first apply, same pattern as Stripe keys)
+  - `infrastructure/iam.tf`: granted ECS execution role `secretsmanager:GetSecretValue` on the new secrets — without this the task fails to start with AccessDenied
+- **Fix: silent SMTP failures**
+  - `orders/notifications.py`: flipped `send_mail(..., fail_silently=True)` → `False` so credential errors and connection issues are actually caught and logged instead of disappearing into the void; switched `logger.error` → `logger.exception` for stack traces in CloudWatch
+  - The outer `try/except Exception` around `send_mail` still catches everything, so a Gmail outage cannot 500 the user's checkout flow
+- **Improvement: loud startup warning when misconfigured**
+  - `brfn_app/settings.py`: emits a `RuntimeWarning` at import time if `EMAIL_BACKEND=smtp` but `EMAIL_HOST_USER`/`EMAIL_HOST_PASSWORD` are empty, so the misconfiguration is visible in CloudWatch on container startup instead of only at first send attempt
+  - Made `EMAIL_HOST`, `EMAIL_PORT`, and `EMAIL_USE_TLS` configurable via env vars (still defaults to Gmail) so we can swap providers later without code changes
+- **Test coverage**
+  - `orders/tests.py`: added 16 unit tests covering `send_order_confirmation_email`, `send_status_update_email`, and `sanitize_email_content`
+  - Tests use Django's `locmem` email backend (`mail.outbox`) so they're hermetic — no SMTP, no Gmail credentials needed in CI
+  - Coverage includes: email is sent, recipient is correct, subject contains order id, from address respects `DEFAULT_FROM_EMAIL`, body contains receipt + commission breakdown + delivery details, SMTP failures don't propagate, header-injection attacks are sanitised, status-update notes are conditionally included
+  - All 16 tests passing
+- **Documentation**
+  - `.env.example`: clarified that the default console backend prints to terminal (not a bug), and that Gmail SMTP requires an **App Password** (not the account password) generated at https://myaccount.google.com/apppasswords with 2FA enabled
+
+**To activate in production after this is merged and deployed:**
+1. Run `terraform apply` to create the new Secrets Manager entries
+2. Manually update `brfnapp/email-host-user` and `brfnapp/email-host-password` in the AWS Console with a real Gmail address and App Password
+3. Force a new ECS deployment so the task picks up the new env vars (or wait for the next CI/CD cycle)

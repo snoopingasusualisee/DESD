@@ -225,15 +225,27 @@ STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', 'sk_test_dummy')
 
 # Email Configuration
 # Default: console backend (prints emails to terminal, no setup needed)
-# Set EMAIL_BACKEND=smtp in .env to use Gmail SMTP for real emails
+# Set EMAIL_BACKEND=smtp in .env to use SMTP for real email delivery (Gmail by default)
 if os.environ.get('EMAIL_BACKEND') == 'smtp':
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
     EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
     EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
     DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+
+    # Loud startup warning if SMTP was selected but credentials are missing.
+    # Without this, the only symptom is silent SMTPAuthenticationError later,
+    # which is brutal to debug in CloudWatch.
+    if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
+        import warnings
+        warnings.warn(
+            "EMAIL_BACKEND=smtp but EMAIL_HOST_USER and/or EMAIL_HOST_PASSWORD "
+            "are empty. Order confirmation emails will fail to send. "
+            "Set both in your environment / Secrets Manager.",
+            RuntimeWarning,
+        )
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     DEFAULT_FROM_EMAIL = 'noreply@brfn.local'
