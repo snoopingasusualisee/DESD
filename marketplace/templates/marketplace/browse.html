@@ -1,65 +1,8 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Browse Produce – BRFN</title>
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
-</head>
-
-<body class="app-body">
-    <header>
-        <h1><a href="/" class="brand-link">Bristol Regional Food Network</a></h1>
-        <nav>
-            <a href="/browse/">Browse Products</a>
-            <a href="/browse/recipes/">Recipes</a>
-            <a href="/browse/stories/">Farm Stories</a>
-            <a href="/browse/producers/">Producers</a>
-            {% if user.is_authenticated %}
-            {% if user.role == 'admin' %}
-                <a href="/orders/admin/financial-reports/">Financial Reports</a>
-                <a href="/orders/admin/monthly-summary/">Monthly Summary</a>
-            {% elif user.role == 'producer' %}
-                <a href="/browse/add-product/">Add Product</a>
-                <a href="/browse/my-products/">My Products</a>
-                <a href="/browse/my-recipes/">My Recipes</a>
-                <a href="/browse/my-stories/">My Stories</a>
-                <a href="/orders/manage/">Manage Orders</a>
-                <a href="/orders/stock-alerts/">Stock Alerts</a>
-            {% elif user.role == 'community_group' or user.role == 'restaurant' %}
-                <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
-                <a href="/orders/my-orders/">My Orders</a>
-            {% else %}
-                <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
-                <a href="/orders/my-orders/">My Orders</a>
-                <a href="/browse/favorite-recipes/">My Favorite Recipes</a>
-                <a href="/browse/my-reviews/">My Reviews</a>
-            {% endif %}
-            <div class="user-menu" onclick="this.classList.toggle('open')">
-                <span class="user-badge">{{ user.username }} ({{ user.get_role_display }})</span>
-                <div class="user-dropdown">
-                    <form method="post" action="/accounts/logout/" style="display:inline;margin:0;padding:0">{% csrf_token %}<button type="submit" style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:inherit;">Log Out</button></form>
-                </div>
-            </div>
-            {% else %}
-            <a href="/accounts/login/">Log In</a>
-            {% endif %}
-        
-</nav>
-    </header>
-
-    {% if messages %}
-    <div style="max-width: 1200px; margin: 1rem auto; padding: 0 2rem;">
-        {% for message in messages %}
-        <div style="background:#d4edda; color:#155724; padding:0.75rem 1rem; text-align:center; border-radius:4px; margin-bottom:0.5rem;">
-            {{ message }}
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
+{% load brfn_extras %}
+{% block title %}Browse Produce – BRFN{% endblock %}
+{% block content %}
     <div class="page page-wide">
         <h2>Browse Produce</h2>
 
@@ -125,14 +68,15 @@
         <div class="product-grid">
             {% for product in products %}
             <div class="product-card">
-                <h3><a href="/browse/product/{{ product.id }}/">{{ product.name }}</a></h3>
-                {% if product.image %}
-                <img src="{{ product.image.url }}" alt="{{ product.name }}"
-                    style="width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 0.5rem;">
-                {% endif %}
+                <a href="/browse/product/{{ product.id }}/" class="product-card__media">
+                    <img src="{% product_image_url product %}" alt="{{ product.name }}" loading="lazy" class="product-card__image">
+                    {% if not product.is_available %}<span class="product-card__badge product-card__badge--soldout">Out of stock</span>{% endif %}
+                </a>
+                <div class="product-card__body">
+                <h3 class="product-card__title"><a href="/browse/product/{{ product.id }}/">{{ product.name }}</a></h3>
                 <p class="producer">Sold by: {{ product.producer.username }}</p>
                 <span class="category-tag">{{ product.category.name }}</span>
-                
+
                 {% if product.is_currently_in_season %}
                 <span class="category-tag" style="background: #e8f5e9; color: #2e7d32;">
                     ✓ {{ product.get_seasonal_date_range_display }}
@@ -154,7 +98,7 @@
                 {% endif %}
 
                 <p class="price">£{{ product.price }} / {{ product.unit }}</p>
-                
+
                 <!-- Rating Display -->
                 <div style="margin: 0.75rem 0; padding: 0.5rem; background: #f9f9f9; border-radius: 4px; border: 1px solid #e0e0e0;">
                     {% if product.review_count > 0 %}
@@ -209,14 +153,15 @@
                         <button type="submit" class="btn-add-to-cart">Add to Cart</button>
                     </form>
                     <a href="/browse/product/{{ product.id }}/#reviews" class="btn-view-reviews">
-                        View Reviews
+                        Reviews
                     </a>
                 </div>
                 {% else %}
-                <div style="margin-top: 0.75rem;">
-                    <a href="/browse/product/{{ product.id }}/" style="width: 100%; display: block; padding: 0.5rem 0.8rem; font-size: 0.85rem; background: #4CAF50; color: white; border: none; border-radius: 4px; text-decoration: none; text-align: center; font-weight: 500;">View Product</a>
+                <div class="product-card-actions">
+                    <a href="/browse/product/{{ product.id }}/" class="btn-add-to-cart">View Product</a>
                 </div>
                 {% endif %}
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -224,23 +169,4 @@
         <p class="empty">No products found. Try a different search or category.</p>
         {% endif %}
     </div>
-
-    <footer>
-        <p>&copy; 2026 Bristol Regional Food Network. <a href="/terms/">Terms of Service</a>.</p>
-    </footer>
-
-    <script>
-        // Close the account dropdown when the user clicks anywhere outside it.
-        document.addEventListener('DOMContentLoaded', function () {
-            var userMenu = document.querySelector('.user-menu');
-            if (!userMenu) return;
-            document.addEventListener('click', function (event) {
-                if (!userMenu.contains(event.target)) {
-                    userMenu.classList.remove('open');
-                }
-            });
-        });
-    </script>
-</body>
-
-</html>
+{% endblock %}

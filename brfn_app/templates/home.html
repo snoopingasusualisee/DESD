@@ -1,76 +1,74 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bristol Regional Food Network</title>
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
-</head>
-
-<body class="app-body">
-
-    <header>
-        <h1><a href="/" class="brand-link">Bristol Regional Food Network</a></h1>
-        <nav>
-            <a href="/browse/">Browse Products</a>
-            <a href="/browse/recipes/">Recipes</a>
-            <a href="/browse/stories/">Farm Stories</a>
-            <a href="/browse/producers/">Producers</a>
-            {% if user.is_authenticated %}
-                {% if user.role == 'admin' %}
-                    <a href="/orders/admin/financial-reports/">Financial Reports</a>
-                    <a href="/orders/admin/monthly-summary/">Monthly Summary</a>
-                {% elif user.role == 'producer' %}
-                    <a href="/browse/add-product/">Add Product</a>
-                    <a href="/browse/my-products/">My Products</a>
-                    <a href="/browse/my-recipes/">My Recipes</a>
-                    <a href="/browse/my-stories/">My Stories</a>
-                    <a href="/orders/manage/">Manage Orders</a>
-                    <a href="/orders/stock-alerts/">Stock Alerts</a>
-                {% elif user.role == 'community_group' or user.role == 'restaurant' %}
-                    <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
-                    <a href="/orders/my-orders/">My Orders</a>
-                {% else %}
-                    <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
-                    <a href="/orders/my-orders/">My Orders</a>
-                    <a href="/browse/favorite-recipes/">My Favorite Recipes</a>
-                    <a href="/browse/my-reviews/">My Reviews</a>
-                {% endif %}
-
-                <div class="user-menu" onclick="this.classList.toggle('open')">
-                    <span class="user-badge">{{ user.username }} ({{ user.get_role_display }})</span>
-                    <div class="user-dropdown">
-                        <form method="post" action="/accounts/logout/" style="display:inline;margin:0;padding:0">
-                            {% csrf_token %}
-                            <button type="submit" style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:inherit;">Log Out</button>
-                        </form>
-                    </div>
-                </div>
-            {% else %}
-                <a href="/accounts/login/">Log In</a>
-            {% endif %}
-        
-</nav>
-    </header>
-
-    {% if messages %}
-        {% for message in messages %}
-            <div style="background:#d4edda;color:#155724;padding:0.75rem 1rem;text-align:center;">{{ message }}</div>
-        {% endfor %}
-    {% endif %}
-
-    <div class="hero">
-        <h2>Fresh Local Produce</h2>
-        <p>Connecting you with local farmers and producers in Bristol. Discover fresh, seasonal, and sustainable food from your community.</p>
-        <a href="/browse/">Browse Produce</a>
+{% block title %}Bristol Regional Food Network{% endblock %}
+{% block content %}
+<section class="hero-marketplace">
+    <div class="hero-marketplace__inner">
+        <div class="hero-marketplace__copy">
+            <span class="hero-marketplace__eyebrow">Bristol · BS1 — BS49</span>
+            <h1 class="hero-marketplace__title">Local food, <span>delivered direct</span> from Bristol farms.</h1>
+            <p class="hero-marketplace__lede">Skip the supermarket. Buy fresh, seasonal produce, dairy, meat and bakes straight from independent producers across Bristol — and know exactly who grew, raised, or baked it.</p>
+            <div class="hero-marketplace__cta">
+                <a href="/browse/" class="btn-cta btn-cta--primary">Browse produce</a>
+                <a href="/browse/producers/" class="btn-cta btn-cta--ghost">Meet our producers</a>
+            </div>
+            <ul class="hero-marketplace__stats">
+                <li><strong>50+</strong> seasonal products</li>
+                <li><strong>5%</strong> network fee — rest goes to producers</li>
+                <li><strong>48hr</strong> lead time</li>
+            </ul>
+        </div>
+        <div class="hero-marketplace__collage" aria-hidden="true">
+            <img src="{% static 'images/products/strawberries.jpg' %}" alt="" class="hero-marketplace__tile hero-marketplace__tile--lg" loading="lazy">
+            <img src="{% static 'images/products/sourdough_loaf.jpg' %}" alt="" class="hero-marketplace__tile" loading="lazy">
+            <img src="{% static 'images/products/eggs.jpg' %}" alt="" class="hero-marketplace__tile" loading="lazy">
+            <img src="{% static 'images/products/honey.jpg' %}" alt="" class="hero-marketplace__tile hero-marketplace__tile--wide" loading="lazy">
+        </div>
     </div>
+</section>
 
-    <footer>
-        <p>&copy; 2026 Bristol Regional Food Network. <a href="/terms/">Terms of Service</a>.</p>
-    </footer>
+<section class="featured-strip">
+    <div class="featured-strip__header">
+        <h2>Shop by category</h2>
+        <a href="/browse/" class="featured-strip__see-all">See everything →</a>
+    </div>
+    <div class="category-grid">
+        <a href="/browse/?category=fruit-vegetables" class="category-card" style="--bg: url('{% static 'images/products/carrots.jpg' %}');">
+            <span>Fruit &amp; Veg</span>
+        </a>
+        <a href="/browse/?category=bakery" class="category-card" style="--bg: url('{% static 'images/products/croissants.jpg' %}');">
+            <span>Bakery</span>
+        </a>
+        <a href="/browse/?category=dairy" class="category-card" style="--bg: url('{% static 'images/products/cheddar.jpg' %}');">
+            <span>Dairy</span>
+        </a>
+        <a href="/browse/?category=meat" class="category-card" style="--bg: url('{% static 'images/products/lamb_chops.jpg' %}');">
+            <span>Meat</span>
+        </a>
+        <a href="/browse/?category=preserves" class="category-card" style="--bg: url('{% static 'images/products/strawberry_jam.jpg' %}');">
+            <span>Preserves</span>
+        </a>
+        <a href="/browse/?category=drinks" class="category-card" style="--bg: url('{% static 'images/products/elderflower_cordial.jpg' %}');">
+            <span>Drinks</span>
+        </a>
+    </div>
+</section>
 
-</body>
-
-</html>
+<section class="value-strip">
+    <article class="value-card">
+        <div class="value-card__icon" aria-hidden="true">●</div>
+        <h3>Direct from the producer</h3>
+        <p>Every order tells you exactly which Bristol farm or kitchen made it. No anonymous middlemen.</p>
+    </article>
+    <article class="value-card">
+        <div class="value-card__icon" aria-hidden="true">●</div>
+        <h3>Seasonal &amp; transparent</h3>
+        <p>We show food miles, harvest dates, allergens, and organic certification on every product.</p>
+    </article>
+    <article class="value-card">
+        <div class="value-card__icon" aria-hidden="true">●</div>
+        <h3>Fair pay for growers</h3>
+        <p>95% of every sale goes straight to the producer. Just a 5% network fee keeps the lights on.</p>
+    </article>
+</section>
+{% endblock %}

@@ -1,70 +1,17 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Reports – BRFN Admin</title>
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
-</head>
-
-<body class="app-body">
-    <header>
-        <h1><a href="/" class="brand-link">Bristol Regional Food Network</a></h1>
-        <nav>
-            <a href="/browse/">Browse Products</a>
-            <a href="/browse/recipes/">Recipes</a>
-            <a href="/browse/stories/">Farm Stories</a>
-            <a href="/browse/producers/">Producers</a>
-            {% if user.is_authenticated %}
-                {% if user.role == 'admin' %}
-                    <a href="/orders/admin/financial-reports/">Financial Reports</a>
-                    <a href="/orders/admin/monthly-summary/">Monthly Summary</a>
-                {% elif user.role == 'producer' %}
-                    <a href="/browse/add-product/">Add Product</a>
-                    <a href="/browse/my-products/">My Products</a>
-                    <a href="/browse/my-recipes/">My Recipes</a>
-                    <a href="/browse/my-stories/">My Stories</a>
-                    <a href="/orders/manage/">Manage Orders</a>
-                    <a href="/orders/stock-alerts/">Stock Alerts</a>
-                {% elif user.role == 'community_group' or user.role == 'restaurant' %}
-                    <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
-                    <a href="/orders/my-orders/">My Orders</a>
-                {% else %}
-                    <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
-                    <a href="/orders/my-orders/">My Orders</a>
-                    <a href="/browse/favorite-recipes/">My Favorite Recipes</a>
-                    <a href="/browse/my-reviews/">My Reviews</a>
-                {% endif %}
-                <div class="user-menu" onclick="this.classList.toggle('open')">
-                    <span class="user-badge">{{ user.username }} ({{ user.get_role_display }})</span>
-                    <div class="user-dropdown">
-                        <form method="post" action="/accounts/logout/" style="display:inline;margin:0;padding:0">
-                            {% csrf_token %}
-                            <button type="submit" style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:inherit;">
-                                Log Out
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            {% else %}
-                <a href="/accounts/login/">Log In</a>
-            {% endif %}
-        
-</nav>
-    </header>
-
+{% block title %}Financial Reports – BRFN Admin{% endblock %}
+{% block content %}
     <main class="main-content" style="max-width: 1400px; margin: 2rem auto; padding: 0 2rem;">
         <h2>Network Commission Financial Reports</h2>
-        
+
         <!-- Date Range Filter -->
         <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
             <h3 style="margin-top: 0;">Date Range Filter</h3>
             <form method="get" style="display: flex; gap: 1rem; align-items: end;">
                 <div>
                     <label for="start_date" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Start Date</label>
-                    <input type="date" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" 
+                    <input type="date" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}"
                            style="padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
                 </div>
                 <div>
@@ -75,7 +22,7 @@
                 <button type="submit" style="padding: 0.5rem 1.5rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
                     Generate Report
                 </button>
-                <a href="?start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" 
+                <a href="?start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}"
                    onclick="event.preventDefault(); window.location.href='/orders/admin/financial-reports/csv/' + window.location.search;"
                    style="padding: 0.5rem 1.5rem; background: #28a745; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">
                     Download CSV
@@ -134,7 +81,7 @@
 
         <!-- Orders Table -->
         <h3>Order Breakdown ({{ start_date|date:'M d, Y' }} – {{ end_date|date:'M d, Y' }})</h3>
-        
+
         {% if orders %}
         <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -165,7 +112,7 @@
                             </span>
                         </td>
                         <td style="padding: 1rem; text-align: center;">
-                            <a href="{% url 'orders:admin_order_detail' order_detail.order.id %}" 
+                            <a href="{% url 'orders:admin_order_detail' order_detail.order.id %}"
                                style="color: #007bff; text-decoration: none;">View Details</a>
                         </td>
                     </tr>
@@ -175,9 +122,9 @@
                             <strong>Multi-vendor order breakdown:</strong><br>
                             {% for producer_data in order_detail.producer_breakdown %}
                             <div style="margin-top: 0.5rem; padding: 0.5rem; background: white; border-left: 3px solid #007bff;">
-                                Producer: <strong>{{ producer_data.producer.username }}</strong> | 
-                                Subtotal: £{{ producer_data.subtotal|floatformat:2 }} | 
-                                Commission: £{{ producer_data.commission|floatformat:2 }} | 
+                                Producer: <strong>{{ producer_data.producer.username }}</strong> |
+                                Subtotal: £{{ producer_data.subtotal|floatformat:2 }} |
+                                Commission: £{{ producer_data.commission|floatformat:2 }} |
                                 Payment: £{{ producer_data.payment|floatformat:2 }}
                             </div>
                             {% endfor %}
@@ -194,10 +141,4 @@
         </p>
         {% endif %}
     </main>
-
-    <footer>
-        <p>&copy; 2026 Bristol Regional Food Network. <a href="/terms/">Terms of Service</a>.</p>
-    </footer>
-</body>
-
-</html>
+{% endblock %}

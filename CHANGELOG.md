@@ -641,3 +641,22 @@
   - Added `EMAIL_TIMEOUT=20` support/configuration to avoid long hangs on SMTP network issues
   - Improved order/status email logging so Django reporting `0` sent messages is logged as an error instead of a false success
   - Updated `.env.example` to document `EMAIL_TIMEOUT` and warn that custom Gmail sender addresses need a verified "Send mail as" alias
+
+# V1.1.46 - Zain Malik
+- **Frontend: bold marketplace UI/UX redesign (zero backend changes)**
+  - **New `templates/base.html`** — extracted the duplicated `<html>`, `<head>`, `<header>`, nav, messages, footer from all 42 templates into a single base template with `{% block title %}`, `{% block extra_head %}`, `{% block content %}`, and `{% block extra_scripts %}`. Future nav/footer changes are now one-file changes, not 42-file changes.
+  - **42 templates refactored** to `{% extends "base.html" %}` via a one-shot script that preserved each page's title, inline `<style>`, inline `<script>`, and body content. Done mechanically to eliminate transcription bugs.
+  - **New custom template tag `product_image_url`** in `marketplace/templatetags/brfn_extras.py`: returns the producer-uploaded image if present, otherwise a slug-matched static image (e.g. product "Bramley Apples" → `static/images/products/bramley_apples.jpg`), otherwise a generic SVG placeholder. Templates now never render an empty `<img>`.
+  - **50 product photos shipped under `static/images/products/`** with normalized lowercase + underscore filenames so the slug fallback matches deterministically.
+  - **`base.html` shell**: pill-shaped sticky header with logo badge, restyled nav with cart badge counter, structured footer with three columns (brand / explore / account) + bottom strip.
+  - **New `home.html`**: bold hero with two-column layout (copy + 4-tile food-photo collage), category strip with dark-overlay tiles using product photos as backgrounds, and a 3-up "value proposition" strip (direct from producer / seasonal / fair pay).
+  - **Browse page** product cards completely restyled: edge-to-edge image with hover zoom, sold-out badge, modern body with title/producer/price/CTA buttons. Filter bar restyled into a single pill-shaped row.
+  - **Product detail page** now leads with a wide hero image of the product (using the same fallback chain), then the existing detail card.
+  - **CSS**: appended a ~600-line "V1.1.46 — BOLD MARKETPLACE REDESIGN" section to `static/css/main.css` introducing a new design-token set (--brfn-bg, --brfn-green-deep, --brfn-accent, --brfn-shadow-card, etc.), and overriding `.product-card`, `.btn-add-to-cart`, `.btn-view-reviews`, `.filters` for the new look. Existing CSS is preserved underneath so inner pages continue to render.
+  - **Decorative SVG placeholder + noise asset** added under `static/images/` so the fallback image is always served from the project, never an external URL.
+- **Tested**:
+  - All 16 existing email/notification tests still pass
+  - `manage.py check` clean
+  - All 43 templates load via Django's template loader without errors
+  - Public pages (home, browse, login, register, terms, recipes, stories, producers) all return HTTP 200 in a smoke test
+- **Constraint respected**: No models, views, URLs, or migrations were touched. Pure templates + CSS + static assets + one new templatetag (read-only).
