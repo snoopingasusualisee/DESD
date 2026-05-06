@@ -531,3 +531,75 @@
   - Cross-year seasonal dates supported (e.g., November-February for winter crops)
   - Producers can set specific date ranges (e.g., June 1 - August 31 for summer strawberries)
   - System automatically determines if product is in season based on current date vs. seasonal dates
+
+# V1.1.40 - TJ
+- **TC-017: Community Group Bulk Orders Test Suite**
+  - Implemented comprehensive test suite for community group bulk ordering functionality (16 tests)
+  - Validates community group account type exists and is selectable during registration
+  - Tests community group registration with organization details (charity/education email format)
+  - Verifies community groups can log in and are distinguished from individual customers
+  - Tests bulk ordering from multiple producers (3 suppliers: vegetables, dairy, produce)
+  - Validates large quantity orders (50 kg potatoes, 30 L milk, 20 kg carrots = 100 total items)
+  - Tests multi-vendor cart management and display
+  - Verifies bulk order total calculations (£197.00 for institutional catering order)
+  - Tests quantities validated against producer capacity/stock levels
+  - Validates multi-vendor checkout flow for bulk orders
+  - Tests order summary shows breakdown by producer
+  - Verifies order confirmation includes all relevant supplier contacts for coordination
+  - Tests system facilitates coordination between multiple suppliers and institution
+  - Validates producers can view bulk order notifications with lead time
+  - Tests delivery information and contact details available for all parties
+  - Confirms complete institutional catering order workflow (St. Mary's School example)
+  - All 16 tests passing - validates community groups can place bulk orders for institutional needs
+
+# V1.1.41 - TJ
+- **TC-018: Recurring Weekly Orders for Restaurants Test Suite**
+  - Implemented comprehensive test suite for restaurant recurring order functionality (19 tests)
+  - Validates restaurant account type exists and business accounts can be created
+  - Tests restaurant login and verification (The Clifton Kitchen example)
+  - Verifies restaurant accounts distinguished from regular customers
+  - Tests multiple products from various producers available (vegetables, dairy, bakery)
+  - Validates restaurant can create initial order with weekly ingredients from 3+ producers
+  - Tests recurring order template concept (maintains product selections and quantities)
+  - Verifies recurrence schedule settings (weekly - Every Monday order, Wednesday delivery)
+  - Tests recurring order summary display and confirmation
+  - Validates automatic order generation concept (creates multiple instances from template)
+  - Tests automatic generation respects producer lead time requirements (minimum 48 hours)
+  - Verifies individual order instances can be modified without affecting template
+  - Tests producers receive advance notice of recurring orders (7 days lead time)
+  - Validates restaurant can pause/modify recurring orders
+  - Tests system handles producer availability changes in recurring orders
+  - Verifies payment processed for each recurring order instance
+  - Tests recurring orders reduce administrative overhead (4 weekly orders from single template)
+  - Validates complete multi-supplier recurring order workflow
+  - All 19 tests passing - confirms restaurants can establish regular weekly orders to simplify sourcing
+
+# V1.1.42 - TJ
+- **TC-019: Surplus Produce Discounts Test Suite**
+  - Implemented comprehensive test suite for surplus produce/food waste reduction (25 tests)
+  - Validates producer login and product management access
+  - Tests producer has products with surplus stock needing quick sale (50 heads lettuce, 3 days shelf life)
+  - Verifies producer can navigate to product management and select surplus products
+  - Tests concept of marking products as 'Surplus' or 'Last Minute Deal'
+  - Validates discount percentage setting with range validation (10-50% accepted)
+  - Tests discount calculations (30% off £2.00 = £1.40 discounted price)
+  - Verifies expiry date setting for deals (48 hours)
+  - Tests adding urgency notes ("Perfect condition, must sell quickly to avoid waste")
+  - Validates surplus listing save and persistence
+  - Tests surplus products appear in customer view/browse
+  - Verifies customer can view 'Surplus Deals' section
+  - Tests discounted products display with clear discount badges
+  - Validates original and discounted prices both displayed (£2.00 → £1.40, save £0.60)
+  - Tests adding surplus items to cart with discount applied
+  - Verifies complete purchase at reduced price
+  - Tests discount correctly calculated and applied at checkout
+  - Validates multiple discount levels (10%, 25%, 30%, 50%)
+  - Tests urgency communication (time remaining, best before dates, harvest dates)
+  - Verifies surplus items maintain all quality and allergen information
+  - Tests deal expiry enforced automatically after specified time
+  - Validates producer can remove surplus status when stock sells out
+  - Tests system supports food waste reduction objectives
+  - Verifies surplus deals highlighted in customer interface
+  - Tests analytics track food waste reduction impact (15 items saved in test scenario)
+  - Validates complete workflow: producer marks surplus → customer purchases → waste prevented
+  - All 25 tests passing - confirms producers can reduce food waste through last-minute discounts
