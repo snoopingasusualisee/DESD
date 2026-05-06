@@ -1,0 +1,12 @@
+Make sure to remove any staged local-only files i.e. shortcut or personal note files like:
+.txt/.md personal notes
+.ps1 or other shortcuts
+etc...
+
+^ BEFORE you commit, put these in .gitignore ^
+
+Any changes that you make, make sure to update CHANGELOG.md to say who authored,
+as well as the changes you made to the system.
+
+Ideally, increment version by 0.0.1 per commit (ex: V1.0.0 --> V1.0.1),
+and make your commit message the version for easy tracking (ex: git commit -m "V1.0.1")

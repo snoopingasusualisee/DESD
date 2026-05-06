@@ -1,0 +1,90 @@
+[
+{
+  "model": "accounts.customuser",
+  "pk": 1,
+  "fields": {
+    "password": "argon2$argon2id$v=19$m=102400,t=2,p=8$U0VQeGtCd0QyUnBNM3l1VTBmTzJYRw$2ZTklSd0uav52Vcjx86SGYP8axgwop2VdDeCOEU6eTo",
+    "last_login": "2026-03-25T20:03:05.503Z",
+    "is_superuser": false,
+    "username": "f22",
+    "first_name": "",
+    "last_name": "",
+    "email": "f22@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-03-10T15:04:42.736Z",
+    "role": "customer",
+    "phone": "",
+    "delivery_address": "6 Market Square",
+    "postcode": "BS16 4LE",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.customuser",
+  "pk": 2,
+  "fields": {
+    "password": "argon2$argon2id$v=19$m=102400,t=2,p=8$cnFFSjNNa0wweW9mbldyZk9sbmJKSA$+UFU0mtrO9eKmFVjAM3BJKHRQzeKc04o/60AdbZGfDs",
+    "last_login": "2026-04-05T16:21:23.248Z",
+    "is_superuser": false,
+    "username": "f33",
+    "first_name": "producer",
+    "last_name": "guy",
+    "email": "f33@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-03-10T15:14:45.455Z",
+    "role": "producer",
+    "phone": "07700 9001",
+    "delivery_address": "13 Queen Square",
+    "postcode": "BS1 4NT",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.customuser",
+  "pk": 3,
+  "fields": {
+    "password": "argon2$argon2id$v=19$m=102400,t=2,p=8$NU9YbEZ5endWRTh1N0pEdkRSODVTWg$D0I4ZdO0XgSbKOTP2NtTAtzNXOQtRP/FNjyVSkuEL8M",
+    "last_login": "2026-03-25T18:49:31.307Z",
+    "is_superuser": false,
+    "username": "f44",
+    "first_name": "yepper",
+    "last_name": "pepper",
+    "email": "f44@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-03-25T17:13:57.409Z",
+    "role": "customer",
+    "phone": "08800 1234",
+    "delivery_address": "77 Coriander Dr",
+    "postcode": "BS32 0DL",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.customuser",
+  "pk": 4,
+  "fields": {
+    "password": "argon2$argon2id$v=19$m=102400,t=2,p=8$Y0dkRWhiWURJZGVsVFZGdGpFcUZXSQ$TTfWaoJlf79+mnVZ9RSljiA206zvK8+/UkaYdvlCSSY",
+    "last_login": "2026-04-05T16:24:00.220Z",
+    "is_superuser": true,
+    "username": "adag",
+    "first_name": "ad",
+    "last_name": "ag",
+    "email": "adag@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-04-05T14:44:43.755Z",
+    "role": "admin",
+    "phone": "1",
+    "delivery_address": "45 Park Street, Bristol",
+    "postcode": "BS1 5JG",
+    "groups": [],
+    "user_permissions": []
+  }
+}
+]

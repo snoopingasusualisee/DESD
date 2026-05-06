@@ -1,0 +1,174 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Order #{{ order.id }} – BRFN</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+
+<body class="app-body">
+    <header>
+        <h1><a href="/" class="brand-link">Bristol Regional Food Network</a></h1>
+        <nav>
+            <a href="/browse/">Browse Products</a>
+            <a href="/browse/recipes/">Recipes</a>
+            <a href="/browse/stories/">Farm Stories</a>
+            <a href="/browse/producers/">Producers</a>
+            {% if user.is_authenticated %}
+                {% if user.role == 'admin' %}
+                    <a href="/orders/admin/financial-reports/">Financial Reports</a>
+                    <a href="/orders/admin/monthly-summary/">Monthly Summary</a>
+                {% elif user.role == 'producer' %}
+                    <a href="/browse/add-product/">Add Product</a>
+                    <a href="/browse/my-products/">My Products</a>
+                    <a href="/browse/my-recipes/">My Recipes</a>
+                    <a href="/browse/my-stories/">My Stories</a>
+                    <a href="/orders/manage/">Manage Orders</a>
+                    <a href="/orders/stock-alerts/">Stock Alerts</a>
+                {% elif user.role == 'community_group' or user.role == 'restaurant' %}
+                    <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
+                    <a href="/orders/my-orders/">My Orders</a>
+                {% else %}
+                    <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
+                    <a href="/orders/my-orders/">My Orders</a>
+                    <a href="/browse/favorite-recipes/">My Favorite Recipes</a>
+                    <a href="/browse/my-reviews/">My Reviews</a>
+                {% endif %}
+                <div class="user-menu" onclick="this.classList.toggle('open')">
+                    <span class="user-badge">{{ user.username }} ({{ user.get_role_display }})</span>
+                    <div class="user-dropdown">
+                        <form method="post" action="/accounts/logout/" style="display:inline;margin:0;padding:0">{% csrf_token %}<button type="submit" style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:inherit;">Log Out</button></form>
+                    </div>
+                </div>
+            {% else %}
+                <a href="/accounts/login/">Log In</a>
+            {% endif %}
+        
+</nav>
+    </header>
+
+    {% if messages %}
+    <div style="max-width: 1200px; margin: 1rem auto; padding: 0 2rem;">
+        {% for message in messages %}
+        <div style="background:#d4edda; color:#155724; padding:0.75rem 1rem; text-align:center; border-radius:4px; margin-bottom:0.5rem;">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="page-wide">
+        <h2>Manage Order #{{ order.id }}</h2>
+
+        <div class="product-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 2rem;">
+            <div class="product-card" style="background: #fff;">
+                <h3>Customer Details</h3>
+                <p><strong>Name:</strong> {{ order.full_name }}</p>
+                <p><strong>Email:</strong> {{ order.email }}</p>
+                
+                <p style="margin-top: 0.5rem;"><strong>Required Delivery Date:</strong></p>
+                <div style="background: #e3f2fd; color: #0d47a1; padding: 0.5rem; border-radius: 4px; display: inline-block; font-weight: bold;">
+                    {{ order.delivery_date|date:"l, d M Y" }}
+                </div>
+
+                <p style="margin-top: 1rem;"><strong>Delivery Address:</strong></p>
+                <p>{{ order.address_line1 }}</p>
+                {% if order.address_line2 %}<p>{{ order.address_line2 }}</p>{% endif %}
+                <p>{{ order.city }}, {{ order.postcode }}</p>
+            </div>
+
+            <div class="product-card" style="background: #fff;">
+                <h3>Update Status</h3>
+                <p style="margin-bottom: 1rem;">Current Status: <strong>{{ order.get_status_display }}</strong></p>
+                
+                <div style="background: #e8f5e9; border-left: 4px solid #4a7c59; padding: 0.75rem; margin-bottom: 1rem; font-size: 0.9rem;">
+                    <strong>Status Flow:</strong><br>
+                    Pending → Confirmed → Ready for Collection → <strong style="color: #4a7c59;">Delivered</strong>
+                </div>
+
+                <form method="post" class="form-group" style="margin-bottom: 0;">
+                    {% csrf_token %}
+                    <div style="margin-bottom: 1rem;">
+                        <label for="{{ form.status.id_for_label }}">New Status</label>
+                        {{ form.status }}
+                        {% if form.status.errors %}<div class="field-error" style="color: #d9534f; font-size: 0.85rem;">
+                            {{ form.status.errors.0 }}</div>{% endif %}
+                        {% if order.status == 'confirmed' %}
+                        <p style="margin-top: 0.25rem; font-size: 0.85rem; color: #666;">
+                            <em>Tip: Mark as "Ready for Collection" when items are prepared, then mark as "Delivered" after customer receives them.</em>
+                        </p>
+                        {% elif order.status == 'ready' %}
+                        <p style="margin-top: 0.25rem; font-size: 0.85rem; color: #4a7c59; font-weight: bold;">
+                            ✓ You can now mark this order as "Delivered"
+                        </p>
+                        {% endif %}
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label for="{{ form.note.id_for_label }}">Note (optional)</label>
+                        {{ form.note }}
+                    </div>
+                    {% if form.non_field_errors %}
+                    <div class="field-error"
+                        style="color: #d9534f; background: #fdf2f2; padding: 0.5rem; border-radius: 4px; margin-bottom: 1rem;">
+                        {{ form.non_field_errors.0 }}
+                    </div>
+                    {% endif %}
+
+                    {% if not order.status == 'delivered' and not order.status == 'cancelled' %}
+                    <button type="submit">Update Order Status</button>
+                    {% else %}
+                    <p style="color: #666; font-style: italic;">This order has reached a terminal state and cannot be
+                        updated further.</p>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+
+        <h3>Your Products in this Order</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid #ddd; text-align: left;">
+                    <th style="padding: 0.75rem;">Product</th>
+                    <th style="padding: 0.75rem;">Price</th>
+                    <th style="padding: 0.75rem;">Qty</th>
+                    <th style="padding: 0.75rem;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 0.75rem;">{{ item.product_name }}</td>
+                    <td style="padding: 0.75rem;">£{{ item.unit_price }}</td>
+                    <td style="padding: 0.75rem;">{{ item.quantity }}</td>
+                    <td style="padding: 0.75rem;"><strong>£{{ item.line_total }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <p class="link" style="margin-top: 1.5rem;"><a href="/orders/manage/">← Back to Manage Orders</a></p>
+
+        {% if status_updates %}
+        <h3 style="margin-top: 2rem;">Status History</h3>
+        <div style="border-left: 3px solid #4a7c59; padding-left: 1.5rem; margin-bottom: 2rem;">
+            {% for update in status_updates %}
+            <div style="margin-bottom: 1.25rem; position: relative;">
+                <div style="position: absolute; left: -1.85rem; top: 0.3rem; width: 10px; height: 10px; background: #4a7c59; border-radius: 50%;"></div>
+                <p style="margin: 0; font-size: 0.85rem; color: #888;">{{ update.created_at|date:"d M Y, H:i" }} — by {{ update.changed_by.username }}</p>
+                <p style="margin: 0.2rem 0 0;"><strong>{{ update.old_status|title }}</strong> → <strong>{{ update.new_status|title }}</strong></p>
+                {% if update.note %}<p style="margin: 0.2rem 0 0; color: #555; font-style: italic;">"{{ update.note }}"</p>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Bristol Regional Food Network. <a href="/terms/">Terms of Service</a>.</p>
+    </footer>
+</body>
+
+</html>

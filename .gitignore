@@ -1,0 +1,22 @@
+# Add any local file dir here to avoid commit of shortcuts etc
+
+__pycache__/
+db.sqlite3
+*.log
+.venv/
+env/
+venv/
+x_notes*.txt
+staticfiles/
+.windsurf/
+.env
+media/
+
+# Terraform — local state, plans and per-environment vars
+infrastructure/.terraform/
+infrastructure/.terraform.lock.hcl
+infrastructure/*.tfstate
+infrastructure/*.tfstate.backup
+infrastructure/tfplan
+infrastructure/terraform.tfvars
+infrastructure/plan_output.txt

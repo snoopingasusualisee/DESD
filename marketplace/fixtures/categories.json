@@ -1,0 +1,12 @@
+[
+{
+  "model": "marketplace.category",
+  "pk": 1,
+  "fields": {
+    "name": "test",
+    "slug": "test",
+    "description": "hi?",
+    "is_active": true
+  }
+}
+]

@@ -1,0 +1,630 @@
+# V1.0.0 - Alex McBride
+- Initial commit
+- Default Django setup
+- Added info files for development
+# V1.0.1 - Sebastian Macfarlane Woodley
+- Added Basic homepage template
+- Configured Template directory
+- Wired homepage url
+# V1.0.2 - Zain Malik
+- Added Dockerfile with multi-stage build for a lightweight production image
+- Added start.sh entrypoint script to handle database readiness, migrations, and static files
+- Added requirements.txt with all project dependencies
+- Configured Gunicorn as the production web server
+# V1.0.3 - Zain Malik
+- Added docker-compose.yml to run the app and MySQL database together
+- Configured MySQL 8.0 service with persistent storage and healthchecks
+- Set up environment variables for database, Django, and Stripe configuration
+- Mapped port 8000 for local development access
+# V1.0.4 - Sebastian Macfarlane Woodley
+- Began Html page design
+- Began linking marketplace and accounts
+# V1.0.5 - Alex McBride
+- Setup view shells under marketplace and accounts. Merged with changes to views from main
+# V1.0.6 - TJ
+- Added marketplace/services/validators.py with 4 core validators
+- Added marketplace/forms.py with ProductForm, CheckoutForm, OrderStatusForm
+- Implemented 48-hour lead time validation
+- Implemented UK postcode validation
+- Implemented product data validation
+- Implemented order status transition validation
+# V1.0.7 - Sebastian Macfarlane Woodley
+- Linked accounts and marketplace with real views and templates
+- Wired up ProductForm and natively rendered Django fields in add_product.html
+- Resolved server-side form validation bypass for pricing and hooked up UI error rendering
+- Resolved silent UI failure by adding missing is_available flag to product form
+- Configured WhiteNoise for static file serving in Docker
+- Created pop_database.py to automatically seed food categories and test users
+# V1.0.8 - Rob Howells
+- Added custom user model for accounts and roles
+- Created CustomUser with role field (customer/producer)
+- Configured AUTH_USER_MODEL in settings
+- Updated Django admin to display/manage user roles
+- Created marketplace core models (Category and Product)
+- Linked Product to producer user (FK relationship)
+- Refactored templates to use shared static/css/main.css
+# V1.0.9 - Rob Howells
+- Created orders app backend (Cart/Checkout foundation)
+- Added models: Cart, CartItem, Order, OrderItem
+- Created and applied initial order migrations
+- Added orders/urls.py and defined cart/checkout/order endpoints
+- Wired orders into project
+- Registered order models in Django admin
+# V1.0.10 - Alex McBride
+- Added Postgres DB integration via migration of structure to sqlite3 for now
+- Added fixture to read/write saved data for population (can be loaded into local sqlite3 via: `Get-ChildItem marketplace/fixtures/*.json | ForEach-Object { python manage.py loaddata $_.FullName }` AFTER running migrate. Saved data can be overwritten via: `python manage.py dumpdata marketplace.Category --indent 2 > marketplace/fixtures/categories.json`, which will take from your local sqlite3 file) (EXTRA NOTE: different db models will have to be dumped separately, e.g. accounts being `python manage.py dumpdata accounts --indent 2 > marketplace/fixtures/accounts.json`.)
+- Added .env.example (environment variable template)
+- Added more migration files for models
+- Extended models
+- Registered models in admin panel
+- Added 1 new dependency in requirements
+# V1.0.11 - Sebastian Macfarlane Woodley
+- Created HTML templates for cart and detail pages including editing and deleting products
+- Added Cart Buttons to browse and product detail page
+- Cart view shows all items with quantities, subtotals, and a total
+- Users can update quantities or remove items
+- Created product_detail view that returns product via product ID
+- Edit view pre-fills product form with existing data. Validates on submit then saves
+- Delete view shows confirm page on GET, Deletes on POST. Currently hard delete need to switch to soft delete
+- Added cart buttons using POST form that sends product ID to add to cart view
+- Cart uses Basket model, each BasketItem stores product and quantities
+- Basket Get Total calculates sums all subtotals
+- Users can remove items with POST requests
+- Removed admin from registration role dropdown for security
+- Added success confirmation message after registration
+# V1.0.12 - Zain Malik
+- Added GitHub Actions workflow files for collaboration and infrastructure pipeline scaffolding
+- Implemented `collab.yml` to validate the Django project on push
+- Configured collaboration workflow to support an easier team pull process using `main`
+- Added placeholder `deploy.yml` workflow for future AWS infrastructure deployment
+- Added placeholder `destroy.yml` workflow for future AWS infrastructure teardown
+# V1.0.13 - Alex McBride
+- Fixed role escalation vulnerability in registration: server-side whitelist now enforces only permitted roles (customer, producer, community_group, restaurant), admin role cannot be self-assigned via any client-side manipulation
+- Added `clean_role` method to `CustomerRegistrationForm`, rejecting any non-whitelisted role at form validation level
+- Fixed CSRF logout vulnerability: `logout_view` now requires POST (`@require_POST`): all logout links across all templates replaced with CSRF-token-protected POST forms (covers all 15 templates: accounts, marketplace, orders)
+- Improved `add_product` access control: non-producers now receive `403 Forbidden` instead of a silent redirect
+- Security review of merged code from main: confirmed all new orders views (`cart`, `checkout`, `order_detail`, `order_list`, `manage_orders`, `manage_order_detail`) are correctly guarded with `@login_required` and role checks (`_is_customer`, `_is_producer`), confirmed `edit_product` and `delete_product` use ownership-scoped `get_object_or_404` preventing cross-producer access
+# V1.0.14 - Sebastian Macfarlane Woodley
+- Expanded product model to match requirements of TC-003 , Seasonal Status, Allergen Info, Harvest Date
+- Added Ability to add images  using pillow to handle image processing. Serves files locally
+- Added My Products html page for producers to make managing stock, editing products and deleting products easier. Created my_products view using login required to ensure only producers can access their products. Code filters products to return products that match request.user. Orders by date
+- Updated produt form to handle new fields  and edit and delete pages support adding images also
+- Updated other templates to show new fields
+# V1.0.15 - TJ
+- Created REST API endpoints for marketplace data
+- Added marketplace/api/serializers.py with ProductSerializer and CategorySerializer
+- Added marketplace/api/views.py with ProductViewSet and CategoryViewSet (read-only)
+- Added marketplace/api/urls.py with API routing using DRF routers
+- Integrated API into main project URLs at /api/
+- Configured REST Framework settings in settings.py (authentication, permissions, pagination)
+- API supports filtering products by category, search term, and producer
+- Implemented pagination (20 items per page) for product listings
+- API endpoints: GET /api/products/, GET /api/categories/
+- Provides JSON data for frontend JavaScript integration
+# V1.0.16 - Rob Howells
+- Added Terms page template
+- Added Terms page view in brfn_app/views.py
+- Added URL route for Terms page
+- Updated registration page to link to Terms page
+- Improved registration form styling in main.css
+- Tidied navigation/page flow for account signup
+# V1.0.17 - Zain Malik
+- Integrated Stripe Checkout test-mode payment flow into the orders app
+- Updated checkout to redirect to Stripe and handle success/cancel return pages
+- Added Stripe configuration to project settings, environment template, and docker-compose
+- Added a database seed command for sample categories, users, and products
+- Populated test data to support end to end checkout testing with sample items
+# V1.0.18 - Alex McBride
+- Added test cases 1-5
+# V1.0.19 - Sebastian Macfarlane Woodley
+- Added test cases 6-10
+# V1.0.20 - Rob Howells
+- Added test cases 11-15
+# V1.0.21 - Rob Howells
+- Updated product edit/update flow so producer stock and availability changes save correctly
+- Fixed inventory update behaviour so unavailable products are hidden from browse and reappear when made available again
+- Improved product form validation for stock updates and allergen information
+- Updated browse search to also match allergen information
+- Added allergen filter to browse page with options for all products/has allergens/no allergens
+- Added allergen information on display browse cards
+- Added clearer allergen warning/no common allergens display on product detail pages
+- Added food miles calculation to browse page for logged-in customers with postcode data
+- Added food miles display to product detail pages
+- Added food miles display per cart item and total food miles summary in cart
+- Updated cart view context to support food miles data used by TC-013 tests
+- Confirmed TC-011, TC-013 and TC-015 now passing
+# V1.0.22 - TJ
+- Created REST API endpoints for shopping cart operations
+- Added orders/api/serializers.py with CartSerializer, CartItemSerializer, OrderSerializer
+- Added orders/api/views.py with CartViewSet and OrderViewSet
+- Added orders/api/urls.py with API routing
+- Integrated cart API into main project URLs at /api/cart/ and /api/orders/
+- API endpoints: GET/POST /api/cart/, POST /api/cart/add_item/, PATCH /api/cart/update_item/{id}/, DELETE /api/cart/remove_item/{id}/, POST /api/cart/clear/
+- API uses same Cart/CartItem models as HTML views, ensuring data consistency
+- All cart API endpoints require authentication
+- Provides JSON interface for frontend JavaScript and mobile app integration
+# V1.0.23 - Rob Howells
+- Added organic certification status to products
+- Let producers set organic certification when creating/editing listings
+- Added organic certification filter on browse page
+- Displayed certification status on browse cards and product detail page
+- Completed TC-014 and got all related tests passing
+# V1.0.24 - Zain Malik
+- Integrated email notifications for order status updates using Django built-in email
+- Created orders/notifications.py with send_order_confirmation_email() and send_status_update_email()
+- Order confirmation email sent to customer after successful Stripe payment
+- Status update email sent to customer when producer changes order status
+- Added email configuration to settings.py with console backend (development) and Gmail SMTP (production)
+- Updated .env.example and docker-compose.yml with email environment variables
+# V1.0.25 - Rob Howells
+- Added producer Payments page
+- Added downloadable CSV payment report
+- Added weekly settlement summary for producers
+- Showed total orders value, commision, producer payment, payment status, and tax year total
+- Limited settlements to delivered orders from the previous completed weel
+- Created payments.html and moved payments page out of raw inline HTML
+- Added Payments link to producer navigation
+- Merged email notification changes with existing orders/views.py work
+- Kept order confirmation and status update email functions in place
+# V1.0.26 - Zain Malik
+- Added dedicated run-tests job to collab.yml CI/CD pipeline
+- Pipeline now runs all 15 unit tests as a separate jobs
+- Merge to main is now gated on test cases passing — code only merges if all tests succeed
+- Restructured pipeline flow: build-and-validate → run-tests → merge-to-main
+# V1.0.27 - Alex McBride
+- Fixed missing image validators - added file extension, size (5MB max), and content-type validation to Product.image field
+- Fixed email injection vulnerability - sanitised all user input in email notifications to prevent header injection attacks
+- Fixed CSV injection vulnerability - sanitised CSV export data to prevent formula execution in Excel
+- Added API rate limiting - anonymous users: 100/hour, authenticated users: 1000/hour
+- Enhanced password hashing - configured Argon2 as primary password hasher (stronger than default PBKDF2)
+- Added security headers - `SESSION_COOKIE_HTTPONLY`, `CSRF_COOKIE_HTTPONLY`, `SECURE_BROWSER_XSS_FILTER`, `SECURE_CONTENT_TYPE_NOSNIFF`, `X_FRAME_OPTIONS`
+- Added `FILE_UPLOAD_MAX_MEMORY_SIZE` limit of 5MB to match image validators
+- Enforced minimum password length of 8 characters
+- Created marketplace/services/file_validators.py with image validation functions
+- Cleaned up duplicate configuration entries in settings.py (`REST_FRAMEWORK`, `STATIC_URL`)
+- Fixed test cases to support Argon2 password hashing (tc_001, tc_002)
+- Added Stripe API mocking to checkout tests (tc_007, tc_008, tc_009) to prevent live API calls during testing
+- All security fixes apply without breaking existing functionality
+- Expanded food miles calculation system with comprehensive postcode database
+- Added 25+ postcode coordinates covering Bristol area (BS1-BS49)
+- Food miles now calculated using Haversine formula for accurate great-circle distance between producer and customer
+- Updated both marketplace/views.py and orders/views.py with expanded `POSTCODE_COORDS` dictionary
+- System falls back to estimates (1 mile same outward, 15 miles same area, 60 miles different areas) for unlisted postcodes
+- Food miles displayed on browse page and product detail page for logged-in customers
+- Fixed stock quantity not updating after orders: corrected field name from 'stock' to 'stock_quantity'
+- Stock now properly decrements when orders are completed through Stripe checkout
+- Products automatically marked as unavailable when stock reaches 0
+- Added stock validation to prevent orders when insufficient stock available
+- Stock updates performed within database transaction to prevent race conditions
+# V1.0.28 - Alex McBride
+- Implemented test case 20
+- Created FarmStory model with title, content, images, and publish status
+- Created RecipeProduct model for many-to-many relationship between recipes and products
+- Created FavoriteRecipe model for customers to save favorite recipes
+- Added RecipeForm and FarmStoryForm with comprehensive validation
+- Implemented content moderation system in marketplace/services/validators.py
+- Created 18+ templates for recipe and story management:
+  - add_recipe.html, edit_recipe.html, my_recipes.html, recipe_detail.html
+  - add_story.html, edit_story.html, my_stories.html, story_detail.html
+  - browse_recipes.html, browse_stories.html, favorite_recipes.html
+  - Updated producers.html to display producer content
+- Implemented full CRUD operations for recipes and stories:
+  - add_recipe, edit_recipe, delete_recipe, recipe_detail views
+  - add_story, edit_story, delete_story, story_detail views
+  - my_recipes, my_stories, favorite_recipes views
+  - browse_recipes, browse_stories views with filtering
+  - toggle_favorite_recipe view for saving/unsaving recipes
+- Linked recipes to products - recipes appear on linked product detail pages
+- Added navigation links across all templates for recipes, stories, and favorites
+- Registered Recipe, FarmStory, RecipeProduct, and FavoriteRecipe in Django admin
+- Fixed UI styling issues:
+  - Standardised image display (title before image, 140px height, object-fit: cover)
+  - Fixed seasonal tag display to use get_seasonal_tag_display() method
+  - Added consistent button styling with .btn-primary class
+  - Added vertical-align and line-height to button classes for proper alignment
+  - Updated general button selector to button:not([class]) to prevent style conflicts
+- Added cancel buttons to all product, recipe, and story forms (add/edit pages)
+- Updated URLs in marketplace/urls.py for all recipe and story endpoints
+# V1.0.29 - Alex McBride
+- Implemented test cases 21, 22, 23
+- Added `Product.low_stock_threshold` field
+- Created StockAlert model with status tracking (ACTIVE, RESOLVED, DISMISSED)
+- Implemented stock alert checking logic:
+  - Created _check_and_create_stock_alert() function in orders/views.py
+  - Automatically creates alerts when stock falls below threshold
+  - Prevents duplicate alerts for same product
+  - Automatically resolves alerts when stock is replenished above threshold
+- Integrated alert checking in checkout process:
+  - Added stock alert check after stock decrement in stripe_success view
+  - Alerts triggered automatically when orders are completed
+- Integrated alert checking in product management
+- Created producer Stock Alerts dashboard:
+  - New stock_alerts view in orders/views.py with producer-only access
+  - Displays active alerts with product details, stock level, and threshold
+  - Shows alert history (last 10 resolved/dismissed alerts)
+  - Dismiss button for producers to acknowledge alerts
+  - "Update Stock" button links directly to product edit page
+  - Added URL route: /orders/stock-alerts/
+- Created orders/templates/orders/stock_alerts.html:
+  - Color-coded alert cards (red for active, green for resolved, grey for dismissed)
+  - Alert badge system showing status
+  - Detailed information display (current stock, threshold, creation date)
+  - Action buttons (dismiss alert, update stock)
+  - Alert history section with resolved/dismissed alerts
+  - Responsive design matching existing UI
+- Added Stock Alerts navigation link to 20+ existing templates
+- Updated ProductForm to include low_stock_threshold field
+- Updated product templates to display threshold field
+- System prevents order fulfillment failures by alerting producers to restock
+- Producers can customise threshold per product based on demand patterns
+- Stock monitoring works automatically across all stock-changing operations
+# V1.0.30 - Alex McBride
+- Implemented test cases 24, 25
+- Created ProductReview model with comprehensive review functionality:
+  - Star rating system (1-5 stars using IntegerChoices)
+  - Review title and detailed review text fields
+  - Anonymous review option to hide customer names
+  - Producer response capability with timestamp
+  - Verified purchase validation via order linkage
+  - Unique constraint: one review per customer per product
+  - Foreign key to orders.Order (resolved model conflict with marketplace.Order)
+- Created ProductReviewForm with 5-star RadioSelect widget
+- Implemented 5 review views with authentication and authorisation
+- Created 6 review templates with consistent UI design
+- Enhanced Product model with review aggregation methods:
+  - get_average_rating(): calculates average star rating across all reviews
+  - get_review_count(): returns total number of reviews for product
+- Updated product_detail.html with comprehensive reviews section
+- Enhanced browse view with review statistics using Django ORM:
+  - Added Avg() and Count() annotations for avg_rating and review_count
+  - Optimised database queries with select_related for producer/category
+  - Review data preloaded for all products to prevent N+1 queries
+- Updated browse.html with star rating display on product cards
+- Added "Write Review" links to order_detail.html for delivered orders
+- Fixed Order model reference conflict:
+  - ProductReview now correctly uses 'orders.Order' (actual order system)
+  - Previously incorrectly referenced marketplace.Order (unused legacy model)
+  - Updated is_verified_purchase property to check Order.STATUS_DELIVERED
+  - Fixed product_detail and submit_review views to query orders.Order
+  - Created migration 0013_alter_productreview_order.py for FK update
+- Fixed URL namespace issues in browse.html:
+  - Changed from {% url 'marketplace:product_detail' %} to hardcoded /browse/product/{id}/
+  - Marketplace app has no namespace configured, hardcoded paths match existing pattern
+  - Applied to all review-related URLs (product detail, review submission)
+- Integrated ProductReview into Django admin
+- Business logic implementation:
+  - Only customers with delivered orders (STATUS_DELIVERED) can submit reviews
+  - System prevents duplicate reviews (unique_together constraint)
+  - Customers can edit and delete their own reviews
+  - Producers can only respond to reviews on their own products
+- Implemented comprehensive admin financial reporting system
+  - Created 4 admin financial reporting views in orders/views.py
+  - Added _is_admin() helper function for role-based access control
+- Created 3 admin financial reporting templates:
+  - admin_financial_reports.html: main dashboard with period summaries, YTD totals, order breakdown table
+  - admin_order_detail.html: detailed order view with commission verification, multi-vendor breakdown
+  - admin_monthly_summary.html: monthly summary with producer-wise statistics
+- Financial reporting features:
+  - Date range filtering (default: last 2 weeks)
+  - Total order value, network commission (5%), producer payment (95%) calculations
+  - Multi-vendor order support with per-producer commission breakdown
+  - Monthly and year-to-date summary statistics
+  - CSV export capability for integration with accounting software
+  - Commission verification with Decimal precision to prevent rounding errors
+  - Audit trail linking all calculations to source orders
+  - Access restricted to admin role only (403 for non-admin users)
+- Added 4 URL routes to orders/urls.py:
+- Updated navigation across all templates
+- Fixed verification calculation precision issue:
+  - Moved calculation from template (using `add` filter) to Python view
+  - Used proper Decimal arithmetic to prevent float conversion and precision loss
+  - Added verification_total to admin_order_detail context
+- Fixed FavoriteRecipe fixture loading issue:
+  - Resolved UNIQUE constraint violation when loading favorites.json
+  - Cleared existing FavoriteRecipe data before fixture reload
+  - Prevented duplicate (user_id, recipe_id) entries
+- Financial compliance features:
+  - 5% network commission consistently applied across all orders
+  - Multi-vendor order commission calculated on total order value
+  - Producer payments calculated per supplier (95% of their subtotal)
+  - All calculations accurate to 2 decimal places
+  - Reports suitable for tax compliance and business accounting
+  - System prevents unauthorised access to financial data
+  - Anonymous reviews hide customer name but show "Verified Purchase" badge
+  - Review submission requires login (@login_required decorators)
+- New URL routes added to marketplace/urls.py
+# V1.0.31 - UI/UX Enhancement Update (TJ)
+- Implemented comprehensive UI modernization and visual improvements
+- Added background image system with blur effects:
+  - Created blurred produce market backgrounds for hero and browse pages
+  - Implemented CSS pseudo-elements (::before, ::after) for layered blur effects
+  - Added white gradient overlays for text readability
+  - Made backgrounds responsive (scroll on mobile, fixed on desktop)
+- Modernized header navigation:
+  - Redesigned header with flexbox layout (Brand | Navigation | User Menu)
+  - Repositioned user badge to top-right corner with pill-shaped design
+  - Added dropdown arrow indicator (▼) to user badge
+  - Implemented JavaScript-powered dropdown menu for logout functionality
+  - Added hover effects and visual feedback for interactive elements
+  - Improved responsive design for mobile devices
+- Enhanced search and filter interface:
+  - Removed white background box from search bar for cleaner look
+  - Made filters transparent to blend with page background
+  - Reduced padding for more compact, modern appearance
+- Improved product card design:
+  - Added internal padding (1.25rem) to prevent content touching edges
+  - Made product cards flexbox containers for better layout control
+  - Implemented symmetric "Add to Cart" and "View Reviews" buttons
+  - Fixed button sizing issues by adding matching 2px borders
+  - Removed inline styles and replaced with CSS classes (.btn-add-to-cart, .btn-view-reviews)
+  - Created .product-card-actions container for button layout
+  - Improved spacing for organic certification and allergen information
+- Button system improvements:
+  - Reduced padding across all button types (.btn, .btn-primary, .btn-secondary, .btn-delete)
+  - Changed from 0.75rem 1.5rem to 0.5rem 1rem for more compact design
+  - Ensured consistent styling across all interactive elements
+- Page title styling updates:
+  - Removed background boxes and excessive padding from page titles
+  - Simplified "Browse Produce" and other page headings
+  - Improved visual hierarchy and readability
+- Fixed allergen information display:
+  - Restored missing allergen information on product cards
+  - Added proper conditional display (shows allergen info if present, otherwise "No common allergens")
+  - Fixed duplicate/broken allergen text in browse.html template
+- JavaScript enhancements:
+  - Added DOMContentLoaded event listener for user menu dropdown
+  - Implemented click-outside-to-close functionality for dropdown
+  - Added console logging for debugging dropdown behavior
+  - Replaced inline onclick handlers with proper event listeners
+- CSS improvements:
+  - Increased z-index for dropdown menu (10000) to ensure visibility
+  - Added user-select: none to prevent text selection on clickable elements
+  - Implemented smooth animations for dropdown (slideDown keyframes)
+  - Added visual states for user menu (hover, open)
+  - Enhanced box shadows and transitions throughout
+- Template updates:
+  - Updated marketplace/templates/marketplace/browse.html with new button classes
+  - Added JavaScript snippet for dropdown functionality
+  - Removed inline styles in favor of CSS classes
+  - Fixed HTML structure for better semantic markup
+- Accessibility improvements:
+  - Added cursor: pointer to clickable elements
+  - Improved keyboard navigation support
+  - Enhanced visual feedback for interactive states
+  - Better color contrast for text readability
+- Performance optimizations:
+  - Used CSS transforms for smooth animations
+  - Implemented efficient event delegation
+  - Minimized DOM queries with cached selectors
+- All changes maintain backward compatibility with existing functionality
+- No breaking changes to database models or business logic
+- Enhanced user experience across all device sizes (desktop, tablet, mobile)
+# V1.0.32 - Zain Malik
+- Added complete AWS ECS Fargate cloud architecture (mirrored from ecsv2 reference)
+- Added 16 Terraform files under infrastructure/ describing:
+  - VPC (2 public + 2 private subnets across 2 AZs, IGW, route tables)
+  - VPC endpoints (S3 gateway + interface endpoints for ECR, CloudWatch Logs, Secrets Manager, SQS) — replaces NAT gateway
+  - Application Load Balancer + target group with /health/ check + HTTP→HTTPS redirect
+  - WAF v2 (AWS Common Rule Set, Known Bad Inputs, SQLi protection, 2000 req/5min rate limit)
+  - ECS cluster + Fargate task definition + service with circuit-breaker rolling deploy
+  - ECR repository with lifecycle policy (keep last 15 images)
+  - RDS MySQL 8.0 (encrypted, private subnets, automated backups)
+  - ElastiCache Redis 7
+  - SQS event queue + dead-letter queue
+  - ACM TLS certificate (wildcard for brfnapp.com) with DNS validation
+  - Route 53 A-records (apex + www) aliasing the ALB
+  - Secrets Manager entries (DB credentials, Django secret key, Stripe keys)
+  - IAM roles: ECS execution, ECS task, GitHub Actions OIDC federation
+- Rewrote .github/workflows/deploy.yml as full CI/CD pipeline:
+  - test job (Django check + migrate + unit tests against MySQL)
+  - check-infrastructure (probes ECS/ECR via AWS CLI, decides whether terraform apply is needed)
+  - terraform-plan on PRs (posts plan as PR comment), terraform-apply on main
+  - build & push Docker image to ECR with buildx registry cache
+  - deploy renders new task definition and rolls the ECS service with stability wait
+  - post-deploy synthetic health + frontend checks against https://brfnapp.com
+  - Authenticates via GitHub OIDC (AWS_ROLE_ARN secret) — no static AWS keys
+- Rewrote .github/workflows/destroy.yml as safe manual teardown:
+  - Confirmation input "destroy" required
+  - Scales ECS to 0, force-unlocks state, removes GitHub Actions IAM resources from state to avoid mid-destroy auth failure
+  - Runs terraform destroy then cleans up ECR images
+- Added /health/ endpoint (brfn_app/views.py + brfn_app/urls.py)
+- Added brfn_app/middleware.py with HealthCheckMiddleware (responds before ALLOWED_HOSTS check so ALB private-IP probes succeed)
+- Added CSRF_TRUSTED_ORIGINS and SECURE_PROXY_SSL_HEADER to brfn_app/settings.py for ALB TLS termination
+- Added infrastructure/terraform.tfvars.example for local Terraform runs
+- Added Terraform artifacts (.terraform/, *.tfstate, terraform.tfvars, plan_output.txt) to .gitignore
+- Excluded infrastructure/, .github/, ecsv2/ from .dockerignore to slim the image
+- Verified: terraform fmt + init + validate all pass; Django manage.py check passes; full unit test suite passes against MySQL
+
+
+# V1.0.33 - Zain Malik
+- Fixed gunicorn worker OOM kills during Stripe checkout: bumped Fargate task memory from 512 MiB to 1024 MiB (the next valid step on the 256-CPU plan). Stripe SDK retry buffers + Django + 3 gunicorn workers were exceeding 512 MiB whenever Stripe network calls had to be retried, causing the ALB to return 502/internal-server-error instead of a clean Django response.
+- Added defensive Stripe error handling in orders.views.checkout:
+  - Detects placeholder STRIPE_SECRET_KEY before any HTTPS call and returns a flash-message redirect instead of letting Stripe's authentication failure cascade into an unhandled exception
+  - Catches stripe.error.AuthenticationError and stripe.error.StripeError separately, logs both, and surfaces a friendly user-facing message
+  - Hoisted django.contrib.messages and added a module-level logger; removed redundant per-call imports
+- Fixed the account dropdown not opening on the Browse Products page: marketplace/templates/marketplace/browse.html had both an inline onclick="this.classList.toggle('open')" AND an addEventListener("click") that re-toggled the same class, so every click opened then immediately closed the menu. Removed the broken script and replaced it with a single click-outside-to-close handler.
+- Made the home page visually consistent with the rest of the site: brfn_app/templates/home.html now uses <body class="app-body"> so it picks up the same background image, fixed-position layers, and sticky-header context as every other page; promoted the brand title to the same brand-link anchor used in the other templates.
+- Confirmed the seed_database management command runs on container startup (start.sh) and is idempotent — production logs show 8 categories, 3 producers and 28 products were created on first task boot. Test login: testcustomer / testpass123.
+# V1.0.34 - Zain Malik
+- Fixed persistent Stripe checkout 500 "internal server error" after replacing placeholder Stripe keys with real test keys. Gunicorn workers were still being SIGKILLed on /orders/checkout/ with "Perhaps out of memory?" because Django + Stripe SDK + the session.create() retry buffers exceeded 1024 MiB when 3 workers were active simultaneously. Two changes:
+  - Bumped Fargate task memory from 1024 MiB to 2048 MiB (infrastructure/variables.tf) — the next valid step on the 256-CPU Fargate plan.
+  - Reduced gunicorn from 3 sync workers to 2 gthread workers with 4 threads each (Dockerfile CMD). Threaded workers share one Python interpreter per process, so memory per worker drops dramatically while concurrency stays the same.
+  - Also added --timeout 60 so slow Stripe network calls don't get reaped by gunicorn before they return.
+# V1.0.35 - Zain Malik
+- Fixed 504 Gateway Time-out on Stripe checkout. Root cause: ECS tasks run in private subnets whose route table had no default route to the internet. VPC interface endpoints gave the tasks access to AWS services (ECR, Secrets Manager, CloudWatch, SQS) but NOT to the public internet, so every stripe.checkout.Session.create() call hung at the TLS handshake until gunicorn's 60s timeout fired and the ALB returned 504.
+- Added a single NAT Gateway (infrastructure/vpc.tf):
+  - aws_eip.nat — Elastic IP for the NAT
+  - aws_nat_gateway.main — placed in public subnet 1
+  - aws_route.private_internet — 0.0.0.0/0 from the private route table to the NAT
+- The ECS security group already allowed all egress, so no SG changes were needed. ECS tasks can now reach api.stripe.com (and any other third-party API, e.g. SMTP providers) over HTTPS.
+# V1.0.36 - Zain Malik
+- Fixed product rating/review feature being unreachable in practice. Two root causes:
+  - validate_content_moderation in marketplace/services/validators.py rejected any string under 10 characters with a "too short" error. ProductReviewForm.clean_title called this validator on the review TITLE field, so a perfectly normal short title like "Great!" or "Loved it" would fail validation and the form would never save. Same issue affected RecipeForm.clean_title and FarmStoryForm.clean_title.
+  - There were no delivered orders in the database, and the submit_review view requires a delivered order before showing the review button. So even though the page rendered, the "Write a Review" button never appeared and customers couldn't reach the form.
+- Fix:
+  - Added a min_length parameter (default 10) to validate_content_moderation; ProductReviewForm, RecipeForm and FarmStoryForm now pass min_length=3 for their title fields.
+  - Massively expanded the seed_database management command (idempotent) so the demo looks lived-in:
+    - 8 categories (unchanged)
+    - 3 producers (unchanged)
+    - 4 customer accounts (testcustomer, emily_jones, david_smith, sarah_brown — all password testpass123)
+    - 28 products (unchanged)
+    - 8 recipes by producers, each linked to the products it uses
+    - 6 farm stories (welcome notes, growing practices, cheese-making, sourdough lore, etc.)
+    - 8 delivered orders spread across the 4 customers
+    - 18 product reviews with ratings 4-5, a few including producer responses
+    - 8 favourited recipes
+  - All seeding uses get_or_create on stable unique keys so the script is safe to re-run on every container start.
+
+# V1.0.37 - Rob Howells
+- Updated header navigation alignment so links sit correctly on the right-hand side.
+- Improved logged-in user dropdown styling and behaviour across pages.
+- Made the home page header consistent with the rest of the application.
+- Reordered changelog entries so the newest update is added in the correct position.
+
+# V1.0.38 - Rob Howells
+- Fixed My Orders 404 for community group and restaurant users by expanding the `_is_customer` helper in orders/views.py to cover all buyer roles.
+- Fixed the cart count badge not appearing for community groups and restaurants — orders/context_processors.py now applies to all buyer roles.
+- Standardised the public navigation links (Browse Products, Recipes, Farm Stories, Producers) across all 42 templates. 17 templates were missing one or more of these.
+- Added explicit role branches for community_group and restaurant in the nav role conditional, instead of silently falling through to the customer view.
+- Standardised the user badge to `{{ user.username }} ({{ user.get_role_display }})` on every page; six templates were missing the role label entirely.
+- Switched the badge from raw role values to display labels, so it now reads `(Community Group)` instead of `(community_group)`, `(Customer)` instead of `(customer)`, and so on.
+- Standardised every footer to `© 2026 Bristol Regional Food Network. Terms of Service.` and added the Terms of Service link to every page (previously only on 14 of 42).
+- Pinned the footer to the bottom of the viewport on short pages. Made `<body>` a flex column with `min-height: 100vh` and `margin-top: auto` on the footer.
+- Made the home page hero stretch to fill the space between header and footer with its content vertically centred.
+- Fixed broken `/browse/my-favorite-recipes/` links in several templates (correct URL is `/browse/favorite-recipes/`).
+- Brought the Terms page and the producer edit/delete pages (edit_recipe, edit_story, delete_recipe, delete_story) in line with the standard role-aware nav. They previously shipped with stripped-down navs missing the user dropdown and most links.
+- Fixed broken logout on the Terms page — replaced the plain anchor with the standard CSRF-protected POST form.
+- Removed a multi-line `{# ... #}` Django comment from browse.html that was rendering as visible text below the footer (Django's `{# #}` doesn't span newlines).
+# V1.0.39 - TJ
+- Implemented test case 16 (TC-016): Seasonal Availability Management
+- Created comprehensive unit_tests/tc_016.py with 18 test cases covering:
+  - Producer ability to set seasonal availability (In Season, Out of Season, All Year, Limited)
+  - Seasonal status display on browse page for customers
+  - Seasonal indicators on producer dashboard
+  - Form validation for seasonal status field
+  - Updating seasonal status as seasons change
+  - Multiple products with different seasonal patterns
+  - Default seasonal status (Available All Year)
+  - Seasonal status persistence across product updates
+- Test cases validate existing seasonal_status field functionality without infrastructure changes
+- All tests work with current Product model (4 seasonal status choices: IN_SEASON, OUT_OF_SEASON, ALL_YEAR, LIMITED)
+- Tests confirm seasonal information educates customers about local food systems
+- Tests verify producers can easily manage seasonal availability through product forms
+- Seasonal status properly displayed with get_seasonal_status_display() method
+- No database migrations or model changes required - uses existing infrastructure
+- TC-016 acceptance criteria met: intuitive seasonal settings, appropriate customer indicators, support for different seasonal patterns
+- **ENHANCED with date-based seasonal system:**
+  - Added seasonal_start_date and seasonal_end_date fields to Product model
+  - Added is_currently_in_season() method for automatic seasonal status calculation
+  - Added get_computed_seasonal_status() method for date-based status display
+  - Added get_seasonal_date_range_display() method for human-readable date ranges (e.g., "June - August")
+  - Updated ProductForm to include seasonal date fields with validation
+  - Form validation ensures both dates are provided together or both left empty
+  - ALL_YEAR products automatically clear seasonal dates
+  - Updated browse.html to show automatic seasonal indicators with date ranges
+  - Green badge "✓ June - August" for in-season products
+  - Orange badge "Out of Season (June - August)" for out-of-season products
+  - Added 8 new test cases covering date-based functionality (total 26 tests)
+  - Tests cover: date setting, date range display, automatic calculation, validation, cross-year seasons
+  - Created migration 0015_product_seasonal_dates.py
+  - System supports both manual status (backward compatible) and automatic date-based calculation
+  - Cross-year seasonal dates supported (e.g., November-February for winter crops)
+  - Producers can set specific date ranges (e.g., June 1 - August 31 for summer strawberries)
+  - System automatically determines if product is in season based on current date vs. seasonal dates
+
+# V1.1.40 - TJ
+- **TC-017: Community Group Bulk Orders Test Suite**
+  - Implemented comprehensive test suite for community group bulk ordering functionality (16 tests)
+  - Validates community group account type exists and is selectable during registration
+  - Tests community group registration with organization details (charity/education email format)
+  - Verifies community groups can log in and are distinguished from individual customers
+  - Tests bulk ordering from multiple producers (3 suppliers: vegetables, dairy, produce)
+  - Validates large quantity orders (50 kg potatoes, 30 L milk, 20 kg carrots = 100 total items)
+  - Tests multi-vendor cart management and display
+  - Verifies bulk order total calculations (£197.00 for institutional catering order)
+  - Tests quantities validated against producer capacity/stock levels
+  - Validates multi-vendor checkout flow for bulk orders
+  - Tests order summary shows breakdown by producer
+  - Verifies order confirmation includes all relevant supplier contacts for coordination
+  - Tests system facilitates coordination between multiple suppliers and institution
+  - Validates producers can view bulk order notifications with lead time
+  - Tests delivery information and contact details available for all parties
+  - Confirms complete institutional catering order workflow (St. Mary's School example)
+  - All 16 tests passing - validates community groups can place bulk orders for institutional needs
+
+# V1.1.41 - TJ
+- **TC-018: Recurring Weekly Orders for Restaurants Test Suite**
+  - Implemented comprehensive test suite for restaurant recurring order functionality (19 tests)
+  - Validates restaurant account type exists and business accounts can be created
+  - Tests restaurant login and verification (The Clifton Kitchen example)
+  - Verifies restaurant accounts distinguished from regular customers
+  - Tests multiple products from various producers available (vegetables, dairy, bakery)
+  - Validates restaurant can create initial order with weekly ingredients from 3+ producers
+  - Tests recurring order template concept (maintains product selections and quantities)
+  - Verifies recurrence schedule settings (weekly - Every Monday order, Wednesday delivery)
+  - Tests recurring order summary display and confirmation
+  - Validates automatic order generation concept (creates multiple instances from template)
+  - Tests automatic generation respects producer lead time requirements (minimum 48 hours)
+  - Verifies individual order instances can be modified without affecting template
+  - Tests producers receive advance notice of recurring orders (7 days lead time)
+  - Validates restaurant can pause/modify recurring orders
+  - Tests system handles producer availability changes in recurring orders
+  - Verifies payment processed for each recurring order instance
+  - Tests recurring orders reduce administrative overhead (4 weekly orders from single template)
+  - Validates complete multi-supplier recurring order workflow
+  - All 19 tests passing - confirms restaurants can establish regular weekly orders to simplify sourcing
+
+# V1.1.42 - TJ
+- **TC-019: Surplus Produce Discounts Test Suite**
+  - Implemented comprehensive test suite for surplus produce/food waste reduction (25 tests)
+  - Validates producer login and product management access
+  - Tests producer has products with surplus stock needing quick sale (50 heads lettuce, 3 days shelf life)
+  - Verifies producer can navigate to product management and select surplus products
+  - Tests concept of marking products as 'Surplus' or 'Last Minute Deal'
+  - Validates discount percentage setting with range validation (10-50% accepted)
+  - Tests discount calculations (30% off £2.00 = £1.40 discounted price)
+  - Verifies expiry date setting for deals (48 hours)
+  - Tests adding urgency notes ("Perfect condition, must sell quickly to avoid waste")
+  - Validates surplus listing save and persistence
+  - Tests surplus products appear in customer view/browse
+  - Verifies customer can view 'Surplus Deals' section
+  - Tests discounted products display with clear discount badges
+  - Validates original and discounted prices both displayed (£2.00 → £1.40, save £0.60)
+  - Tests adding surplus items to cart with discount applied
+  - Verifies complete purchase at reduced price
+  - Tests discount correctly calculated and applied at checkout
+  - Validates multiple discount levels (10%, 25%, 30%, 50%)
+  - Tests urgency communication (time remaining, best before dates, harvest dates)
+  - Verifies surplus items maintain all quality and allergen information
+  - Tests deal expiry enforced automatically after specified time
+  - Validates producer can remove surplus status when stock sells out
+  - Tests system supports food waste reduction objectives
+  - Verifies surplus deals highlighted in customer interface
+  - Tests analytics track food waste reduction impact (15 items saved in test scenario)
+  - Validates complete workflow: producer marks surplus → customer purchases → waste prevented
+  - All 25 tests passing - confirms producers can reduce food waste through last-minute discounts
+
+# V1.1.43 - Zain Malik
+- **Fix: order confirmation emails now actually deliver in production**
+  - Root cause: ECS task definition never wired email env vars, so `EMAIL_BACKEND` was unset in production → Django fell back to the console backend → emails were written to CloudWatch logs instead of being sent
+  - `infrastructure/ecs.tf`: added `EMAIL_BACKEND=smtp`, `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, `DEFAULT_FROM_EMAIL` env vars and wired `EMAIL_HOST_USER`/`EMAIL_HOST_PASSWORD` from Secrets Manager
+  - `infrastructure/secrets.tf`: added `email_host_user` and `email_host_password` Secrets Manager resources with `lifecycle.ignore_changes` (placeholders that you populate manually via AWS Console after first apply, same pattern as Stripe keys)
+  - `infrastructure/iam.tf`: granted ECS execution role `secretsmanager:GetSecretValue` on the new secrets — without this the task fails to start with AccessDenied
+- **Fix: silent SMTP failures**
+  - `orders/notifications.py`: flipped `send_mail(..., fail_silently=True)` → `False` so credential errors and connection issues are actually caught and logged instead of disappearing into the void; switched `logger.error` → `logger.exception` for stack traces in CloudWatch
+  - The outer `try/except Exception` around `send_mail` still catches everything, so a Gmail outage cannot 500 the user's checkout flow
+- **Improvement: loud startup warning when misconfigured**
+  - `brfn_app/settings.py`: emits a `RuntimeWarning` at import time if `EMAIL_BACKEND=smtp` but `EMAIL_HOST_USER`/`EMAIL_HOST_PASSWORD` are empty, so the misconfiguration is visible in CloudWatch on container startup instead of only at first send attempt
+  - Made `EMAIL_HOST`, `EMAIL_PORT`, and `EMAIL_USE_TLS` configurable via env vars (still defaults to Gmail) so we can swap providers later without code changes
+- **Test coverage**
+  - `orders/tests.py`: added 16 unit tests covering `send_order_confirmation_email`, `send_status_update_email`, and `sanitize_email_content`
+  - Tests use Django's `locmem` email backend (`mail.outbox`) so they're hermetic — no SMTP, no Gmail credentials needed in CI
+  - Coverage includes: email is sent, recipient is correct, subject contains order id, from address respects `DEFAULT_FROM_EMAIL`, body contains receipt + commission breakdown + delivery details, SMTP failures don't propagate, header-injection attacks are sanitised, status-update notes are conditionally included
+  - All 16 tests passing
+- **Documentation**
+  - `.env.example`: clarified that the default console backend prints to terminal (not a bug), and that Gmail SMTP requires an **App Password** (not the account password) generated at https://myaccount.google.com/apppasswords with 2FA enabled
+
+**To activate in production after this is merged and deployed:**
+1. Run `terraform apply` to create the new Secrets Manager entries
+2. Manually update `brfnapp/email-host-user` and `brfnapp/email-host-password` in the AWS Console with a real Gmail address and App Password
+3. Force a new ECS deployment so the task picks up the new env vars (or wait for the next CI/CD cycle)

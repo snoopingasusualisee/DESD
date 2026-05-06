@@ -1,0 +1,174 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order #{{ order.id }} – BRFN</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+
+<body class="app-body">
+    <header>
+        <h1><a href="/" class="brand-link">Bristol Regional Food Network</a></h1>
+        <nav>
+            <a href="/browse/">Browse Products</a>
+            <a href="/browse/recipes/">Recipes</a>
+            <a href="/browse/stories/">Farm Stories</a>
+            <a href="/browse/producers/">Producers</a>
+            {% if user.is_authenticated %}
+                {% if user.role == 'admin' %}
+                    <a href="/orders/admin/financial-reports/">Financial Reports</a>
+                    <a href="/orders/admin/monthly-summary/">Monthly Summary</a>
+                {% elif user.role == 'producer' %}
+                    <a href="/browse/add-product/">Add Product</a>
+                    <a href="/browse/my-products/">My Products</a>
+                    <a href="/browse/my-recipes/">My Recipes</a>
+                    <a href="/browse/my-stories/">My Stories</a>
+                    <a href="/orders/manage/">Manage Orders</a>
+                    <a href="/orders/stock-alerts/">Stock Alerts</a>
+                {% elif user.role == 'community_group' or user.role == 'restaurant' %}
+                    <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
+                    <a href="/orders/my-orders/">My Orders</a>
+                {% else %}
+                    <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
+                    <a href="/orders/my-orders/">My Orders</a>
+                    <a href="/browse/favorite-recipes/">My Favorite Recipes</a>
+                    <a href="/browse/my-reviews/">My Reviews</a>
+                {% endif %}
+                <div class="user-menu" onclick="this.classList.toggle('open')">
+                    <span class="user-badge">{{ user.username }} ({{ user.get_role_display }})</span>
+                    <div class="user-dropdown">
+                        <form method="post" action="/accounts/logout/" style="display:inline;margin:0;padding:0">{% csrf_token %}<button type="submit" style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:inherit;">Log Out</button></form>
+                    </div>
+                </div>
+            {% else %}
+                <a href="/accounts/login/">Log In</a>
+            {% endif %}
+        
+</nav>
+    </header>
+
+    {% if messages %}
+    <div style="max-width: 1200px; margin: 1rem auto; padding: 0 2rem;">
+        {% for message in messages %}
+        <div style="background:#d4edda; color:#155724; padding:0.75rem 1rem; text-align:center; border-radius:4px; margin-bottom:0.5rem;">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="page-wide">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2>Order #{{ order.id }}</h2>
+            <div style="display: flex; gap: 1rem;">
+                <a href="/orders/my-orders/{{ order.id }}/receipt/" class="btn" style="background: #6c757d;">Download Receipt</a>
+                {% if order.status == 'delivered' %}
+                <form method="post" action="/orders/my-orders/{{ order.id }}/reorder/" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn" style="background: #4a7c59;">Reorder</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="product-grid" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 1.5rem;">
+            <div class="product-card">
+                <h3>Order Info</h3>
+                <p>Status: <strong>{{ order.get_status_display }}</strong></p>
+                <p>Placed: {{ order.created_at|date:"d M Y, H:i" }}</p>
+                {% if order.delivery_date %}
+                <p>Delivery Date: <strong>{{ order.delivery_date|date:"d M Y" }}</strong></p>
+                {% endif %}
+                <p class="price">Total: £{{ order.total }}</p>
+            </div>
+            <div class="product-card">
+                <h3>Delivery Address</h3>
+                <p>{{ order.full_name }}</p>
+                <p>{{ order.address_line1 }}</p>
+                {% if order.address_line2 %}<p>{{ order.address_line2 }}</p>{% endif %}
+                <p>{{ order.city }}, {{ order.postcode }}</p>
+                <p>{{ order.email }}</p>
+            </div>
+            <div class="product-card">
+                <h3>Payment Information</h3>
+                <p>Method: <strong>Card Payment</strong></p>
+                <p>Card: <strong>•••• •••• •••• ••••</strong></p>
+                <p>Status: <strong style="color: #4a7c59;">Paid</strong></p>
+                <p style="font-size: 0.85rem; color: #666; margin-top: 0.5rem;">Securely processed by Stripe</p>
+            </div>
+        </div>
+
+        <h3>Items</h3>
+        {% for group in grouped_items %}
+        <div style="margin-bottom: 1.5rem; border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden;">
+            <div style="background: #f5f5f5; padding: 0.5rem 1rem; border-bottom: 1px solid #e0e0e0;">
+                <strong>{{ group.producer.username }}</strong>
+            </div>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #ddd; text-align: left;">
+                        <th style="padding: 0.75rem;">Product</th>
+                        <th style="padding: 0.75rem;">Price</th>
+                        <th style="padding: 0.75rem;">Qty</th>
+                        <th style="padding: 0.75rem;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in group.items %}
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 0.75rem;">
+                            {% if item.product %}
+                            <a href="/browse/product/{{ item.product.id }}/" style="color: #333; text-decoration: none;">{{ item.product_name }}</a>
+                            {% if order.status == 'delivered' %}
+                                <br><a href="/browse/product/{{ item.product.id }}/review/" style="font-size: 0.85rem; color: #4a7c59; margin-top: 0.25rem; display: inline-block;">Write Review</a>
+                            {% endif %}
+                            {% else %}
+                            {{ item.product_name }}
+                            {% endif %}
+                        </td>
+                        <td style="padding: 0.75rem;">£{{ item.unit_price }}</td>
+                        <td style="padding: 0.75rem;">{{ item.quantity }}</td>
+                        <td style="padding: 0.75rem;"><strong>£{{ item.line_total }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div style="text-align: right; padding: 0.5rem 1rem; background: #fafafa; border-top: 1px solid #e0e0e0;">
+                <strong>Subtotal: £{{ group.subtotal }}</strong>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if order.commission %}
+        <div style="text-align: right; margin-bottom: 1rem;">
+            <p>Products Total: £{{ order.total }}</p>
+            <p>Network Commission (5%): £{{ order.commission }}</p>
+        </div>
+        {% endif %}
+
+        {% if status_updates %}
+        <h3 style="margin-top: 2rem;">Status History</h3>
+        <div style="border-left: 3px solid #4a7c59; padding-left: 1.5rem; margin-bottom: 2rem;">
+            {% for update in status_updates %}
+            <div style="margin-bottom: 1.25rem; position: relative;">
+                <div style="position: absolute; left: -1.85rem; top: 0.3rem; width: 10px; height: 10px; background: #4a7c59; border-radius: 50%;"></div>
+                <p style="margin: 0; font-size: 0.85rem; color: #888;">{{ update.created_at|date:"d M Y, H:i" }}</p>
+                <p style="margin: 0.2rem 0 0;"><strong>{{ update.old_status|title }}</strong> → <strong>{{ update.new_status|title }}</strong></p>
+                {% if update.note %}<p style="margin: 0.2rem 0 0; color: #555; font-style: italic;">"{{ update.note }}"</p>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <p class="link" style="margin-top: 1.5rem;"><a href="/orders/my-orders/">← Back to My Orders</a></p>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Bristol Regional Food Network. <a href="/terms/">Terms of Service</a>.</p>
+    </footer>
+</body>
+
+</html>

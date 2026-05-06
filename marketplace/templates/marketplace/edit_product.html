@@ -1,0 +1,192 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit {{ product.name }} – BRFN</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+
+<body class="app-body">
+    <header>
+        <h1><a href="/" class="brand-link">Bristol Regional Food Network</a></h1>
+        <nav>
+            <a href="/browse/">Browse Products</a>
+            <a href="/browse/recipes/">Recipes</a>
+            <a href="/browse/stories/">Farm Stories</a>
+            <a href="/browse/producers/">Producers</a>
+            {% if user.is_authenticated %}
+            {% if user.role == 'admin' %}
+                <a href="/orders/admin/financial-reports/">Financial Reports</a>
+                <a href="/orders/admin/monthly-summary/">Monthly Summary</a>
+            {% elif user.role == 'producer' %}
+                <a href="/browse/add-product/">Add Product</a>
+                <a href="/browse/my-products/">My Products</a>
+                <a href="/browse/my-recipes/">My Recipes</a>
+                <a href="/browse/my-stories/">My Stories</a>
+                <a href="/orders/manage/">Manage Orders</a>
+                <a href="/orders/stock-alerts/">Stock Alerts</a>
+            {% elif user.role == 'community_group' or user.role == 'restaurant' %}
+                <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
+                <a href="/orders/my-orders/">My Orders</a>
+            {% else %}
+                <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
+                <a href="/orders/my-orders/">My Orders</a>
+                <a href="/browse/favorite-recipes/">My Favorite Recipes</a>
+                <a href="/browse/my-reviews/">My Reviews</a>
+            {% endif %}
+            <div class="user-menu" onclick="this.classList.toggle('open')">
+                <span class="user-badge">{{ user.username }} ({{ user.get_role_display }})</span>
+                <div class="user-dropdown">
+                    <form method="post" action="/accounts/logout/" style="display:inline;margin:0;padding:0">{%
+                        csrf_token %}<button type="submit"
+                            style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:inherit;">Log
+                            Out</button></form>
+                </div>
+            </div>
+            {% else %}
+            <a href="/accounts/login/">Log In</a>
+            {% endif %}
+        
+</nav>
+    </header>
+
+    {% if messages %}
+    <div style="max-width: 1200px; margin: 1rem auto; padding: 0 2rem;">
+        {% for message in messages %}
+        <div style="background:#d4edda; color:#155724; padding:0.75rem 1rem; text-align:center; border-radius:4px; margin-bottom:0.5rem;">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="page page-form">
+        <h2>Edit Product</h2>
+
+        {% if success %}<p class="alert alert-success">{{ success }}</p>{% endif %}
+        {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="{{ form.name.id_for_label }}">Product Name</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                <div class="field-error" style="color: #d9534f; font-size: 0.85rem;">
+                    {{ form.name.errors.0 }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}">Description</label>
+                {{ form.description }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.category.id_for_label }}">Category</label>
+                {{ form.category }}
+            </div>
+
+            <div class="row">
+                <div class="form-group">
+                    <label for="{{ form.price.id_for_label }}">Price (£)</label>
+                    {{ form.price }}
+                    {% if form.price.errors %}
+                    <div class="field-error" style="color: #d9534f; font-size: 0.85rem;">
+                        {{ form.price.errors.0 }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.unit.id_for_label }}">Unit</label>
+                    {{ form.unit }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.stock_quantity.id_for_label }}">Stock Quantity</label>
+                {{ form.stock_quantity }}
+                {% if form.stock_quantity.errors %}
+                <div class="field-error" style="color: #d9534f; font-size: 0.85rem;">
+                    {{ form.stock_quantity.errors.0 }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.low_stock_threshold.id_for_label }}">Low Stock Alert Threshold</label>
+                {{ form.low_stock_threshold }}
+                <div style="font-size: 0.8rem; color: #888; margin-top: 0.25rem;">
+                    You'll be notified when stock falls below this level (default: 10)
+                </div>
+                {% if form.low_stock_threshold.errors %}
+                <div class="field-error" style="color: #d9534f; font-size: 0.85rem;">
+                    {{ form.low_stock_threshold.errors.0 }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.seasonal_status.id_for_label }}">Seasonal Availability</label>
+                {{ form.seasonal_status }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.organic_certification_status.id_for_label }}">Organic Certification</label>
+                {{ form.organic_certification_status }}
+                {% if form.organic_certification_status.errors %}
+                <div class="field-error" style="color: #d9534f; font-size: 0.85rem;">
+                    {{ form.organic_certification_status.errors.0 }}
+                </div>
+                {% endif %}
+                <div style="font-size: 0.8rem; color: #888; margin-top: 0.25rem;">
+                    Select whether this product is Certified Organic or Not Certified
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.allergen_info.id_for_label }}">Allergen Information</label>
+                {{ form.allergen_info }}
+                <div style="font-size: 0.8rem; color: #888; margin-top: 0.25rem;">List any allergens contained in this
+                    product</div>
+                {% if form.allergen_info.errors %}
+                <div class="field-error" style="color: #d9534f; font-size: 0.85rem; margin-top: 0.25rem;">
+                    {{ form.allergen_info.errors.0 }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.harvest_date.id_for_label }}">Harvest / Production Date</label>
+                {{ form.harvest_date }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.image.id_for_label }}">Product Image (optional)</label>
+                {% if product.image %}<p style="font-size: 0.85rem; color: #666;">Current: {{ product.image.name }}</p>
+                {% endif %}
+                {{ form.image }}
+            </div>
+
+            <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                {{ form.is_available }}
+                <label for="{{ form.is_available.id_for_label }}" style="margin-bottom: 0;">Available for
+                    purchase</label>
+            </div>
+
+            <button type="submit" class="btn-primary">Save Changes</button>
+            <a href="/browse/my-products/" class="btn-primary">Cancel</a>
+        </form>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Bristol Regional Food Network. <a href="/terms/">Terms of Service</a>.</p>
+    </footer>
+</body>
+
+</html>

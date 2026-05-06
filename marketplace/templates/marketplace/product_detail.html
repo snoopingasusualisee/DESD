@@ -1,0 +1,278 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} – BRFN</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+
+<body class="app-body">
+    <header>
+        <h1><a href="/" class="brand-link">Bristol Regional Food Network</a></h1>
+        <nav>
+            <a href="/browse/">Browse Products</a>
+            <a href="/browse/recipes/">Recipes</a>
+            <a href="/browse/stories/">Farm Stories</a>
+            <a href="/browse/producers/">Producers</a>
+            {% if user.is_authenticated %}
+            {% if user.role == 'admin' %}
+                <a href="/orders/admin/financial-reports/">Financial Reports</a>
+                <a href="/orders/admin/monthly-summary/">Monthly Summary</a>
+            {% elif user.role == 'producer' %}
+                <a href="/browse/add-product/">Add Product</a>
+                <a href="/browse/my-products/">My Products</a>
+                <a href="/browse/my-recipes/">My Recipes</a>
+                <a href="/browse/my-stories/">My Stories</a>
+                <a href="/orders/manage/">Manage Orders</a>
+                <a href="/orders/stock-alerts/">Stock Alerts</a>
+            {% elif user.role == 'community_group' or user.role == 'restaurant' %}
+                <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
+                <a href="/orders/my-orders/">My Orders</a>
+            {% else %}
+                <a href="/orders/cart/">Cart{% if cart_item_count %} ({{ cart_item_count }}){% endif %}</a>
+                <a href="/orders/my-orders/">My Orders</a>
+                <a href="/browse/favorite-recipes/">My Favorite Recipes</a>
+                <a href="/browse/my-reviews/">My Reviews</a>
+            {% endif %}
+            <div class="user-menu" onclick="this.classList.toggle('open')">
+                <span class="user-badge">{{ user.username }} ({{ user.get_role_display }})</span>
+                <div class="user-dropdown">
+                    <form method="post" action="/accounts/logout/" style="display:inline;margin:0;padding:0">{% csrf_token %}<button type="submit" style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:inherit;">Log Out</button></form>
+                </div>
+            </div>
+            {% else %}
+            <a href="/accounts/login/">Log In</a>
+            {% endif %}
+        
+</nav>
+    </header>
+
+    {% if messages %}
+    <div style="max-width: 1200px; margin: 1rem auto; padding: 0 2rem;">
+        {% for message in messages %}
+        <div style="background:#d4edda; color:#155724; padding:0.75rem 1rem; text-align:center; border-radius:4px; margin-bottom:0.5rem;">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="page-wide">
+        <p class="link" style="text-align: left; margin-bottom: 1rem;"><a href="/browse/">← Back to Browse</a></p>
+
+        <div class="product-card" style="max-width: 700px;">
+            {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 4px; margin-bottom: 1rem;">
+            {% endif %}
+
+            <span class="category-tag">{{ product.category.name }}</span>
+            <span class="category-tag" style="background: #e8f5e9; color: #2e7d32;">
+                {{ product.get_seasonal_status_display }}
+            </span>
+            {% if product.organic_certification_status == 'certified_organic' %}
+            <span class="category-tag" style="background: #e8f5e9; color: #1b5e20;">
+                Certified Organic
+            </span>
+            {% else %}
+            <span class="category-tag" style="background: #f1f1f1; color: #555;">
+                Not Certified
+            </span>
+            {% endif %}
+
+            <h2 style="margin: 0.5rem 0;">{{ product.name }}</h2>
+            <p class="producer">By <a href="/browse/producer/{{ product.producer.id }}/" style="color: #333; text-decoration: underline;">{{ product.producer.first_name }} {{ product.producer.last_name }}</a></p>
+
+            {% if product.description %}
+            <p class="description">{{ product.description }}</p>
+            {% endif %}
+
+            <p class="price" style="font-size: 1.3rem; margin: 1rem 0;">
+                £{{ product.price }} / {{ product.get_unit_display }}
+            </p>
+
+            <p style="font-size: 0.9rem; color: #666;">
+                Stock: {{ product.stock_quantity }} available
+                {% if not product.is_available %}
+                <span style="color: #c00;"> (Currently unavailable)</span>
+                {% endif %}
+            </p>
+
+            {% if food_miles is not None %}
+            <div
+                style="margin-top: 0.75rem; padding: 0.5rem 0.75rem; background: #eef6ff; border-radius: 4px; font-size: 0.85rem;">
+                <strong>Food miles:</strong> {{ food_miles }} miles
+            </div>
+            {% endif %}
+
+            <div
+                style="margin-top: 0.75rem; padding: 0.5rem 0.75rem; background: #e8f5e9; border-radius: 4px; font-size: 0.85rem;">
+                <strong>Organic Certification:</strong> {{ product.get_organic_certification_status_display }}
+            </div>
+
+            {% if product.allergen_info %}
+            <div
+                style="margin-top: 0.75rem; padding: 0.5rem 0.75rem; background: #fff3e0; border-radius: 4px; font-size: 0.85rem;">
+                <strong>Allergen information:</strong> {{ product.allergen_info }}
+            </div>
+            {% else %}
+            <div
+                style="margin-top: 0.75rem; padding: 0.5rem 0.75rem; background: #e8f5e9; border-radius: 4px; font-size: 0.85rem;">
+                <strong>Allergen information:</strong> No common allergens
+            </div>
+            {% endif %}
+
+            {% if product.harvest_date %}
+            <p style="font-size: 0.85rem; color: #666; margin-top: 0.5rem;">Harvest Date: {{ product.harvest_date }}</p>
+            {% endif %}
+
+            {% if user.is_authenticated and product.is_available %}
+            <form method="post" action="/orders/cart/add/{{ product.id }}/"
+                style="display: flex; gap: 0.5rem; align-items: center; margin-top: 1rem;">
+                {% csrf_token %}
+                <label for="quantity" style="font-size: 0.9rem;">Qty:</label>
+                <input type="number" name="quantity" id="quantity" value="1" min="1"
+                    style="width: 70px; padding: 0.4rem;">
+                <button type="submit" class="btn" style="width: auto;">Add to Cart</button>
+            </form>
+            {% endif %}
+            
+            <!-- Write Review Button - Prominent placement -->
+            {% if user.is_authenticated and user.role == 'customer' %}
+                {% if can_review and not has_reviewed %}
+                <div style="margin-top: 1rem; padding: 1rem; background: #e8f5e9; border: 2px solid #4CAF50; border-radius: 8px;">
+                    <p style="margin: 0 0 0.5rem 0; font-weight: bold; color: #2e7d32;">
+                        ✓ You purchased this product! Share your experience:
+                    </p>
+                    <a href="/browse/product/{{ product.id }}/review/" class="btn" style="background: #4CAF50; color: white; display: inline-block; font-size: 1rem; padding: 0.6rem 1.2rem;">
+                        ⭐ Write a Review
+                    </a>
+                </div>
+                {% elif has_reviewed %}
+                <div style="margin-top: 1rem; padding: 0.75rem; background: #f0f0f0; border-radius: 6px; font-size: 0.9rem;">
+                    <span style="color: #666;">✓ You've already reviewed this product</span>
+                </div>
+                {% endif %}
+            {% endif %}
+
+            {% if user.is_authenticated and user == product.producer %}
+            <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
+                <a href="/browse/product/{{ product.id }}/edit/" class="btn" style="width: auto;">Edit</a>
+                <a href="/browse/product/{{ product.id }}/delete/" class="btn"
+                    style="width: auto; background: #c00;">Delete</a>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if linked_recipes %}
+        <div style="max-width: 700px; margin-top: 2rem; padding: 1.5rem; background: #f8f9fa; border-radius: 8px;">
+            <h3 style="margin-top: 0;">Recipe Suggestions</h3>
+            <p style="color: #666; margin-bottom: 1rem;">Try these recipes that use {{ product.name }}:</p>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                {% for recipe in linked_recipes %}
+                <div style="background: white; padding: 1rem; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>{{ recipe.title }}</strong>
+                        <p style="margin: 0; color: #666; font-size: 0.9rem;">{{ recipe.seasonal_tag|title }}</p>
+                    </div>
+                    <a href="/browse/recipe/{{ recipe.id }}/" class="btn-primary" style="font-size: 0.9rem;">View Recipe</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Reviews Section -->
+        <div style="max-width: 700px; margin-top: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0;">Customer Reviews</h3>
+                {% if can_review and not has_reviewed %}
+                <a href="/browse/product/{{ product.id }}/review/" class="btn" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Write a Review</a>
+                {% endif %}
+            </div>
+
+            {% if average_rating > 0 %}
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="font-size: 2rem; font-weight: bold; color: #f5a623;">{{ average_rating|floatformat:1 }}</div>
+                    <div>
+                        <div style="font-size: 1.5rem; color: #f5a623;">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= average_rating %}★{% else %}☆{% endif %}
+                            {% endfor %}
+                        </div>
+                        <p style="margin: 0; color: #666; font-size: 0.9rem;">Based on {{ review_count }} review{{ review_count|pluralize }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if reviews %}
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                {% for review in reviews %}
+                <div style="background: white; padding: 1.5rem; border: 1px solid #e0e0e0; border-radius: 4px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                        <div>
+                            <div style="color: #f5a623; margin-bottom: 0.25rem;">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                                {% endfor %}
+                            </div>
+                            <p style="margin: 0; font-weight: bold;">{{ review.title }}</p>
+                        </div>
+                        {% if review.is_verified_purchase %}
+                        <span style="background: #e8f5e9; color: #2e7d32; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">✓ Verified Purchase</span>
+                        {% endif %}
+                    </div>
+                    
+                    <p style="margin: 0.5rem 0 1rem 0;">{{ review.review_text }}</p>
+                    
+                    <p style="margin: 0; font-size: 0.85rem; color: #666;">
+                        By {{ review.display_name }} on {{ review.created_at|date:"F d, Y" }}
+                    </p>
+
+                    {% if review.producer_response %}
+                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-top: 1rem; border-left: 3px solid #4caf50;">
+                        <p style="margin: 0 0 0.5rem 0; font-weight: bold; color: #2e7d32;">Producer's Response:</p>
+                        <p style="margin: 0;">{{ review.producer_response }}</p>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: #666;">
+                            {{ review.producer_response_date|date:"F d, Y" }}
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
+                        {% if user == review.customer %}
+                        <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                            <a href="/browse/review/{{ review.id }}/edit/" class="btn-primary" style="font-size: 0.85rem; padding: 0.3rem 0.6rem;">Edit</a>
+                        </div>
+                        {% elif user == product.producer and not review.producer_response %}
+                        <div style="margin-top: 1rem;">
+                            <a href="/browse/review/{{ review.id }}/respond/" class="btn-primary" style="font-size: 0.85rem; padding: 0.3rem 0.6rem;">Respond</a>
+                        </div>
+                        {% elif user == product.producer and review.producer_response %}
+                        <div style="margin-top: 1rem;">
+                            <a href="/browse/review/{{ review.id }}/respond/" class="btn-primary" style="font-size: 0.85rem; padding: 0.3rem 0.6rem;">Edit Response</a>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 2rem; background: #f8f9fa; border-radius: 4px;">
+                <p style="margin: 0; color: #666;">No reviews yet. Be the first to review this product!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Bristol Regional Food Network. <a href="/terms/">Terms of Service</a>.</p>
+    </footer>
+</body>
+
+</html>
