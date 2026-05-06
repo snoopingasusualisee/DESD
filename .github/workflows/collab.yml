@@ -2,7 +2,8 @@ name: Collab — Build, Validate & Merge to Main
 
 on:
   push:
-    branches: ['**']
+    branches-ignore:
+      - main
 
 jobs:
   build-and-validate:

@@ -628,3 +628,9 @@
 1. Run `terraform apply` to create the new Secrets Manager entries
 2. Manually update `brfnapp/email-host-user` and `brfnapp/email-host-password` in the AWS Console with a real Gmail address and App Password
 3. Force a new ECS deployment so the task picks up the new env vars (or wait for the next CI/CD cycle)
+
+# V1.1.44 - Zain Malik
+- **Fix: GitHub Actions push trigger routing**
+  - Updated `.github/workflows/collab.yml` so the collab workflow ignores pushes to `main`
+  - `deploy.yml` remains the workflow responsible for pushes to `main`, so normal production pushes now run the deploy pipeline instead of the collab pipeline
+  - Non-main branch pushes still run the collab workflow, preserving the existing branch validation/merge flow
