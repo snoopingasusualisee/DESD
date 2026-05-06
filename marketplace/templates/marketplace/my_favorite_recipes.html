@@ -1,34 +1,47 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}My Favorite Recipes – BRFN{% endblock %}
+{% load brfn_extras %}
+{% block title %}My Favourite Recipes – BRFN{% endblock %}
 {% block content %}
-    <div class="page page-wide">
-        <h2>My Favorite Recipes</h2>
-        <p style="color: #666; margin-bottom: 1.5rem;">Recipes you've saved for later</p>
+    <header class="page-header">
+        <span class="page-header__eyebrow">My library</span>
+        <h1 class="page-header__title">Favourite recipes</h1>
+        <p class="page-header__subtitle">Recipes you've saved for later — pulled together in one place.</p>
+    </header>
 
+    <div class="page-body">
         {% if favorites %}
-        <div class="product-grid">
-            {% for favorite in favorites %}
-            <div class="product-card">
-                <h3><a href="/browse/recipe/{{ favorite.recipe.id }}/">{{ favorite.recipe.title }}</a></h3>
-                {% if favorite.recipe.image %}
-                <img src="{{ favorite.recipe.image.url }}" alt="{{ favorite.recipe.title }}"
-                    style="width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 0.5rem;">
-                {% endif %}
-                <p class="producer">By {{ favorite.recipe.producer.first_name }} {{ favorite.recipe.producer.last_name }}</p>
-                <span class="category-tag" style="background: #e8f5e9; color: #2e7d32;">{{ favorite.recipe.get_seasonal_tag_display }}</span>
-                <p style="color: #999; font-size: 0.85rem; margin-top: 0.5rem;">Saved {{ favorite.saved_at|date:"M d, Y" }}</p>
-                <form method="post" action="/browse/recipe/{{ favorite.recipe.id }}/toggle-favorite/" style="margin-top: 0.5rem;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-delete" style="width: 100%;">Remove from Favorites</button>
-                </form>
+            <div class="content-grid">
+                {% for favorite in favorites %}
+                    <article class="media-card">
+                        <a href="/browse/recipe/{{ favorite.recipe.id }}/" class="media-card__media">
+                            <img src="{% recipe_image_url favorite.recipe %}" alt="{{ favorite.recipe.title }}"
+                                 loading="lazy" class="media-card__image">
+                            <span class="media-card__chip">{{ favorite.recipe.get_seasonal_tag_display }}</span>
+                        </a>
+                        <div class="media-card__body">
+                            <h3 class="media-card__title"><a href="/browse/recipe/{{ favorite.recipe.id }}/">{{ favorite.recipe.title }}</a></h3>
+                            <p class="media-card__meta">
+                                By {{ favorite.recipe.producer.first_name }} {{ favorite.recipe.producer.last_name }}
+                                · Saved {{ favorite.saved_at|date:"M d, Y" }}
+                            </p>
+                            <div class="media-card__footer">
+                                <form method="post" action="/browse/recipe/{{ favorite.recipe.id }}/toggle-favorite/" style="width: 100%;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-pill btn-pill--danger btn-pill--block" style="padding: 0.5rem 0.9rem; font-size: 0.8rem;">Remove from favourites</button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
         {% else %}
-        <p style="text-align: center; color: #666; padding: 2rem;">
-            You haven't saved any recipes yet. <a href="/browse/recipes/">Browse recipes</a> to find some favorites!
-        </p>
+            <div class="empty-state">
+                <div class="empty-state__icon">⭐</div>
+                <h2 class="empty-state__title">No favourites yet</h2>
+                <p class="empty-state__text">Tap the save button on any recipe to bookmark it here.</p>
+                <a href="/browse/recipes/" class="btn-pill">Browse recipes</a>
+            </div>
         {% endif %}
     </div>
 {% endblock %}

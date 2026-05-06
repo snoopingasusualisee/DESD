@@ -1,49 +1,65 @@
 {% extends "base.html" %}
 {% load static %}
+{% load brfn_extras %}
 {% block title %}My Products – BRFN{% endblock %}
 {% block content %}
-    <div class="page-wide">
-        <h2>My Products</h2>
-        <p class="page-intro">Manage your product listings. <a href="/browse/add-product/">+ Add New Product</a></p>
+    <header class="page-header">
+        <span class="page-header__eyebrow">Producer dashboard</span>
+        <h1 class="page-header__title">My products</h1>
+        <p class="page-header__subtitle">Manage your listings and keep stock levels up to date.</p>
+        <div class="page-header__actions">
+            <a href="/browse/add-product/" class="btn-pill">+ Add new product</a>
+        </div>
+    </header>
 
+    <div class="page-body">
         {% if products %}
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr style="border-bottom: 2px solid #ddd; text-align: left;">
-                    <th style="padding: 0.75rem;">Product</th>
-                    <th style="padding: 0.75rem;">Category</th>
-                    <th style="padding: 0.75rem;">Price</th>
-                    <th style="padding: 0.75rem;">Stock</th>
-                    <th style="padding: 0.75rem;">Status</th>
-                    <th style="padding: 0.75rem;">Season</th>
-                    <th style="padding: 0.75rem;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for product in products %}
-                <tr style="border-bottom: 1px solid #eee;">
-                    <td style="padding: 0.75rem;"><a href="/browse/product/{{ product.id }}/">{{ product.name }}</a>
-                    </td>
-                    <td style="padding: 0.75rem;"><span class="category-tag">{{ product.category.name }}</span></td>
-                    <td style="padding: 0.75rem;">£{{ product.price }} / {{ product.get_unit_display }}</td>
-                    <td style="padding: 0.75rem;">{{ product.stock_quantity }}</td>
-                    <td style="padding: 0.75rem;">{% if product.is_available %}<span
-                            style="color: #060;">Available</span>{% else %}<span
-                            style="color: #c00;">Unavailable</span>{% endif %}</td>
-                    <td style="padding: 0.75rem;">{{ product.get_seasonal_status_display }}</td>
-                    <td style="padding: 0.75rem;">
-                        <a href="/browse/product/{{ product.id }}/edit/" class="btn"
-                            style="margin-right: 0.3rem;">Edit</a>
-                        <a href="/browse/product/{{ product.id }}/delete/" class="btn"
-                            style="background: #c00;">Delete</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th>Season</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td style="display: flex; align-items: center; gap: 0.7rem;">
+                                <img src="{% product_image_url product %}" alt=""
+                                     style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; flex-shrink: 0;">
+                                <a href="/browse/product/{{ product.id }}/" style="color: var(--brfn-ink); font-weight: 600; text-decoration: none;">{{ product.name }}</a>
+                            </td>
+                            <td><span class="category-tag">{{ product.category.name }}</span></td>
+                            <td>£{{ product.price }} / {{ product.get_unit_display }}</td>
+                            <td>{{ product.stock_quantity }}</td>
+                            <td>
+                                {% if product.is_available %}
+                                    <span style="color: var(--brfn-green-deep); font-weight: 600;">● Available</span>
+                                {% else %}
+                                    <span style="color: var(--brfn-accent-deep); font-weight: 600;">● Unavailable</span>
+                                {% endif %}
+                            </td>
+                            <td style="font-size: 0.85rem; color: var(--brfn-ink-soft);">{{ product.get_seasonal_status_display }}</td>
+                            <td style="white-space: nowrap;">
+                                <a href="/browse/product/{{ product.id }}/edit/" class="btn-pill btn-pill--ghost" style="padding: 0.4rem 0.8rem; font-size: 0.78rem;">Edit</a>
+                                <a href="/browse/product/{{ product.id }}/delete/" class="btn-pill btn-pill--danger" style="padding: 0.4rem 0.8rem; font-size: 0.78rem;">Delete</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         {% else %}
-        <p class="empty">You haven't added any products yet. <a href="/browse/add-product/">Add your first product</a>.
-        </p>
+            <div class="empty-state">
+                <div class="empty-state__icon">🌱</div>
+                <h2 class="empty-state__title">No products yet</h2>
+                <p class="empty-state__text">Add your first product to start selling on the network.</p>
+                <a href="/browse/add-product/" class="btn-pill">+ Add your first product</a>
+            </div>
         {% endif %}
     </div>
 {% endblock %}

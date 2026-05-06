@@ -1,62 +1,67 @@
 {% extends "base.html" %}
 {% load static %}
+{% load brfn_extras %}
 {% block title %}My Reviews – BRFN{% endblock %}
 {% block content %}
-    <div class="page-wide">
-        <h2>My Product Reviews</h2>
+    <header class="page-header">
+        <span class="page-header__eyebrow">My library</span>
+        <h1 class="page-header__title">My product reviews</h1>
+        <p class="page-header__subtitle">Reviews you've left on products from local producers.</p>
+    </header>
 
+    <div class="page-body">
         {% if reviews %}
-        <div style="display: grid; gap: 1.5rem; margin-top: 1.5rem;">
-            {% for review in reviews %}
-            <div class="product-card" style="padding: 1.5rem;">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                    <div>
-                        <h3 style="margin: 0 0 0.5rem 0;">
-                            <a href="/browse/product/{{ review.product.id }}/" style="color: #333; text-decoration: none;">{{ review.product.name }}</a>
-                        </h3>
-                        <p style="margin: 0; color: #666; font-size: 0.9rem;">
-                            By {{ review.product.producer.first_name }} {{ review.product.producer.last_name }}
-                        </p>
-                    </div>
-                    <div style="font-size: 1.2rem; color: #f5a623;">
-                        {% for i in "12345" %}
-                            {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
-                        {% endfor %}
-                    </div>
-                </div>
+            <div style="display: grid; gap: 1rem;">
+                {% for review in reviews %}
+                    <article class="surface-card">
+                        <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                            <img src="{% product_image_url review.product %}" alt=""
+                                 style="width: 80px; height: 80px; border-radius: 12px; object-fit: cover; flex-shrink: 0;">
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+                                    <div>
+                                        <h3 style="margin: 0 0 0.25rem; font-size: 1.05rem;">
+                                            <a href="/browse/product/{{ review.product.id }}/" style="color: var(--brfn-ink); text-decoration: none;">{{ review.product.name }}</a>
+                                        </h3>
+                                        <p style="margin: 0; color: var(--brfn-ink-soft); font-size: 0.85rem;">
+                                            By {{ review.product.producer.first_name }} {{ review.product.producer.last_name }}
+                                            · {{ review.created_at|date:"F d, Y" }}{% if review.is_anonymous %} · Anonymous{% endif %}
+                                        </p>
+                                    </div>
+                                    <div style="font-size: 1.05rem; color: #e5a93a; letter-spacing: 0.05em;">
+                                        {% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}
+                                    </div>
+                                </div>
 
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
-                    <p style="margin: 0 0 0.5rem 0; font-weight: bold;">{{ review.title }}</p>
-                    <p style="margin: 0;">{{ review.review_text }}</p>
-                </div>
+                                <div style="background: var(--brfn-bg); padding: 1rem 1.15rem; border-radius: var(--brfn-radius-sm); margin-top: 0.85rem;">
+                                    <p style="margin: 0 0 0.4rem; font-weight: 700;">{{ review.title }}</p>
+                                    <p style="margin: 0; color: var(--brfn-ink-soft); line-height: 1.55;">{{ review.review_text }}</p>
+                                </div>
 
-                <p style="margin: 0 0 1rem 0; font-size: 0.85rem; color: #666;">
-                    Posted on {{ review.created_at|date:"F d, Y" }}
-                    {% if review.is_anonymous %} (Anonymous){% endif %}
-                </p>
+                                {% if review.producer_response %}
+                                    <div style="background: var(--brfn-green-soft); padding: 1rem 1.15rem; border-radius: var(--brfn-radius-sm); margin-top: 0.6rem; border-left: 3px solid var(--brfn-green);">
+                                        <p style="margin: 0 0 0.3rem; font-weight: 700; color: var(--brfn-green-deep); font-size: 0.85rem;">Producer's response</p>
+                                        <p style="margin: 0; color: var(--brfn-ink); line-height: 1.55;">{{ review.producer_response }}</p>
+                                        <p style="margin: 0.5rem 0 0; font-size: 0.78rem; color: var(--brfn-ink-soft);">{{ review.producer_response_date|date:"F d, Y" }}</p>
+                                    </div>
+                                {% endif %}
 
-                {% if review.producer_response %}
-                <div style="background: #e8f5e9; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; border-left: 3px solid #4caf50;">
-                    <p style="margin: 0 0 0.5rem 0; font-weight: bold; color: #2e7d32;">Producer's Response:</p>
-                    <p style="margin: 0;">{{ review.producer_response }}</p>
-                    <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: #666;">
-                        {{ review.producer_response_date|date:"F d, Y" }}
-                    </p>
-                </div>
-                {% endif %}
-
-                <div style="display: flex; gap: 0.5rem;">
-                    <a href="/browse/review/{{ review.id }}/edit/" class="btn" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Edit Review</a>
-                    <a href="/browse/product/{{ review.product.id }}/" class="btn-primary" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">View Product</a>
-                </div>
+                                <div style="display: flex; gap: 0.5rem; margin-top: 0.85rem;">
+                                    <a href="/browse/review/{{ review.id }}/edit/" class="btn-pill btn-pill--ghost" style="padding: 0.4rem 0.9rem; font-size: 0.78rem;">Edit review</a>
+                                    <a href="/browse/product/{{ review.product.id }}/" class="btn-pill btn-pill--soft" style="padding: 0.4rem 0.9rem; font-size: 0.78rem;">View product</a>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
         {% else %}
-        <div style="text-align: center; padding: 3rem; background: #f8f9fa; border-radius: 8px; margin-top: 2rem;">
-            <p style="margin: 0 0 1rem 0; color: #666;">You haven't written any reviews yet.</p>
-            <a href="/browse/" class="btn">Browse Products</a>
-        </div>
+            <div class="empty-state">
+                <div class="empty-state__icon">★</div>
+                <h2 class="empty-state__title">No reviews yet</h2>
+                <p class="empty-state__text">Buy a product and you can leave a review here once it's delivered.</p>
+                <a href="/browse/" class="btn-pill">Browse products</a>
+            </div>
         {% endif %}
     </div>
 {% endblock %}

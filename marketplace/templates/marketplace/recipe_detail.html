@@ -1,75 +1,82 @@
 {% extends "base.html" %}
 {% load static %}
+{% load brfn_extras %}
 {% block title %}{{ recipe.title }} – BRFN{% endblock %}
 {% block content %}
-    <div class="page-wide">
-        <p class="link" style="text-align: left; margin-bottom: 1rem;"><a href="/browse/recipes/">← Back to Recipes</a></p>
-
-        <div style="max-width: 800px;">
-            <h2>{{ recipe.title }}</h2>
-            <p style="color: #666; margin-bottom: 1rem;">
-                By <a href="/browse/producer/{{ recipe.producer.id }}/">{{ recipe.producer.first_name }} {{ recipe.producer.last_name }}</a>
-                • {{ recipe.get_seasonal_tag_display }}
+    <section class="detail-hero">
+        <div class="detail-hero__image">
+            <img src="{% recipe_image_url recipe %}" alt="{{ recipe.title }}">
+        </div>
+        <div class="detail-hero__copy">
+            <span class="page-header__eyebrow">{{ recipe.get_seasonal_tag_display }} recipe</span>
+            <h1>{{ recipe.title }}</h1>
+            <p class="detail-hero__meta">
+                By <a href="/browse/producer/{{ recipe.producer.id }}/" style="color: var(--brfn-green-deep); font-weight: 600; text-decoration: none;">{{ recipe.producer.first_name }} {{ recipe.producer.last_name }}</a>
             </p>
+            {% if recipe.description %}
+                <p>{{ recipe.description|truncatewords:35 }}</p>
+            {% endif %}
 
             {% if user.is_authenticated %}
-            <div style="margin-bottom: 1.5rem;">
                 <form method="post" action="/browse/recipe/{{ recipe.id }}/toggle-favorite/" style="display: inline;">
                     {% csrf_token %}
                     {% if is_favorited %}
-                    <button type="submit" class="btn" style="background: #ffc107; border: none;">
-                        ⭐ Saved to Favorites
-                    </button>
+                        <button type="submit" class="btn-pill btn-pill--soft">★ Saved to favourites</button>
                     {% else %}
-                    <button type="submit" class="btn-primary" style="border: none;">
-                        ☆ Save Recipe
-                    </button>
+                        <button type="submit" class="btn-pill">☆ Save recipe</button>
                     {% endif %}
                 </form>
-            </div>
-            {% endif %}
-
-            {% if recipe.image %}
-            <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}" style="width: 100%; max-height: 400px; object-fit: cover; border-radius: 8px; margin-bottom: 2rem;">
-            {% endif %}
-
-            {% if recipe.description %}
-            <div style="margin-bottom: 2rem;">
-                <h3>About This Recipe</h3>
-                <p>{{ recipe.description|linebreaks }}</p>
-            </div>
-            {% endif %}
-
-            <div style="margin-bottom: 2rem;">
-                <h3>Ingredients</h3>
-                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px;">
-                    {{ recipe.ingredients|linebreaks }}
-                </div>
-            </div>
-
-            <div style="margin-bottom: 2rem;">
-                <h3>Instructions</h3>
-                <div>
-                    {{ recipe.instructions|linebreaks }}
-                </div>
-            </div>
-
-            {% if linked_products %}
-            <div style="margin-bottom: 2rem; padding: 1.5rem; background: #e7f3ff; border-radius: 8px;">
-                <h3 style="margin-top: 0;">Products Used in This Recipe</h3>
-                <div style="display: grid; gap: 1rem;">
-                    {% for recipe_product in linked_products %}
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 1rem; border-radius: 4px;">
-                        <div>
-                            <strong>{{ recipe_product.product.name }}</strong>
-                            <p style="margin: 0; color: #666; font-size: 0.9rem;">£{{ recipe_product.product.price }} / {{ recipe_product.product.unit }}</p>
-                        </div>
-                        <a href="/browse/product/{{ recipe_product.product.id }}/" class="btn">View Product</a>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
             {% endif %}
         </div>
-    </div>
+    </section>
+
+    {% if recipe.description %}
+        <section class="detail-section">
+            <div class="surface-card">
+                <h2 style="margin: 0 0 0.75rem;">About this recipe</h2>
+                <div style="color: var(--brfn-ink-soft); line-height: 1.7;">{{ recipe.description|linebreaks }}</div>
+            </div>
+        </section>
+    {% endif %}
+
+    <section class="detail-section">
+        <div class="layout-with-aside">
+            <div class="surface-card">
+                <h2 style="margin: 0 0 1rem;">Instructions</h2>
+                <div style="color: var(--brfn-ink); line-height: 1.75;">{{ recipe.instructions|linebreaks }}</div>
+            </div>
+
+            <aside class="summary-card">
+                <h2 class="summary-card__title">Ingredients</h2>
+                <div style="color: var(--brfn-ink-soft); line-height: 1.7;">{{ recipe.ingredients|linebreaks }}</div>
+            </aside>
+        </div>
+    </section>
+
+    {% if linked_products %}
+        <section class="detail-section">
+            <h2>Buy the ingredients</h2>
+            <div class="content-grid">
+                {% for recipe_product in linked_products %}
+                    <a href="/browse/product/{{ recipe_product.product.id }}/" class="media-card">
+                        <div class="media-card__media">
+                            <img src="{% product_image_url recipe_product.product %}" alt="{{ recipe_product.product.name }}"
+                                 loading="lazy" class="media-card__image">
+                        </div>
+                        <div class="media-card__body">
+                            <h3 class="media-card__title">{{ recipe_product.product.name }}</h3>
+                            <p class="media-card__meta">£{{ recipe_product.product.price }} / {{ recipe_product.product.unit }}</p>
+                            <div class="media-card__footer">
+                                <span class="btn-pill btn-pill--soft">View product →</span>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
+    <p style="max-width: 1080px; margin: 1.5rem auto 3rem; padding: 0 1.5rem; font-size: 0.9rem;">
+        <a href="/browse/recipes/" style="color: var(--brfn-green-deep); font-weight: 600; text-decoration: none;">← Back to recipes</a>
+    </p>
 {% endblock %}

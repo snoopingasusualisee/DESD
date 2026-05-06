@@ -1,75 +1,103 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}{{ producer.first_name }} {{ producer.last_name }} – Producer Profile – BRFN{% endblock %}
+{% load brfn_extras %}
+{% block title %}{{ producer.first_name }} {{ producer.last_name }} – BRFN{% endblock %}
 {% block content %}
-    <div class="page page-wide">
-        <div style="max-width: 1000px;">
-            <h2>{{ producer.first_name }} {{ producer.last_name }}</h2>
-            <p style="color: #666; margin-bottom: 2rem;">@{{ producer.username }}</p>
-
-            {% if stories %}
-            <div style="margin-bottom: 3rem;">
-                <h3>Farm Stories</h3>
-                <div class="product-grid">
-                    {% for story in stories %}
-                    <div class="product-card">
-                        <h4>{{ story.title }}</h4>
-                        {% if story.image %}
-                        <img src="{{ story.image.url }}" alt="{{ story.title }}"
-                            style="width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 0.5rem;">
-                        {% endif %}
-                        <p class="description">{{ story.content|truncatewords:20 }}</p>
-                        <a href="/browse/story/{{ story.id }}/" class="btn">Read Story</a>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            {% if recipes %}
-            <div style="margin-bottom: 3rem;">
-                <h3>Recipes</h3>
-                <div class="product-grid">
-                    {% for recipe in recipes %}
-                    <div class="product-card">
-                        <h4>{{ recipe.title }}</h4>
-                        {% if recipe.image %}
-                        <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}"
-                            style="width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 0.5rem;">
-                        {% endif %}
-                        <span class="category-tag" style="background: #e8f5e9; color: #2e7d32;">{{ recipe.get_seasonal_tag_display }}</span>
-                        {% if recipe.description %}
-                        <p class="description">{{ recipe.description|truncatewords:15 }}</p>
-                        {% endif %}
-                        <a href="/browse/recipe/{{ recipe.id }}/" class="btn" style="margin-top: 0.5rem;">View Recipe</a>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            {% if products %}
-            <div style="margin-bottom: 3rem;">
-                <h3>Products</h3>
-                <div class="product-grid">
-                    {% for product in products %}
-                    <div class="product-card">
-                        <h4>{{ product.name }}</h4>
-                        {% if product.image %}
-                        <img src="{{ product.image.url }}" alt="{{ product.name }}"
-                            style="width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 0.5rem;">
-                        {% endif %}
-                        <p class="price">£{{ product.price }} / {{ product.unit }}</p>
-                        <a href="/browse/product/{{ product.id }}/" class="btn" style="margin-top: 0.5rem;">View Product</a>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <div style="margin-top: 2rem;">
-                <a href="/browse/producers/" class="btn">Back to Producers</a>
+    <section class="detail-hero">
+        <div class="detail-hero__image">
+            <img src="{% producer_image_url producer %}" alt="{{ producer.first_name }} {{ producer.last_name }}">
+        </div>
+        <div class="detail-hero__copy">
+            <span class="page-header__eyebrow">Local producer</span>
+            <h1>{{ producer.first_name }} {{ producer.last_name }}</h1>
+            <p class="detail-hero__meta">@{{ producer.username }}</p>
+            <p>
+                Browse the products, recipes and stories shared by {{ producer.first_name }}.
+            </p>
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                <a href="/browse/?producer={{ producer.username }}" class="btn-pill">Shop products</a>
+                <a href="/browse/producers/" class="btn-pill btn-pill--ghost">All producers</a>
             </div>
         </div>
-    </div>
+    </section>
+
+    {% if products %}
+        <section class="detail-section">
+            <h2>Products</h2>
+            <div class="content-grid">
+                {% for product in products %}
+                    <a href="/browse/product/{{ product.id }}/" class="media-card">
+                        <div class="media-card__media">
+                            <img src="{% product_image_url product %}" alt="{{ product.name }}"
+                                 loading="lazy" class="media-card__image">
+                            {% if not product.is_available %}
+                                <span class="media-card__chip" style="background: rgba(217, 78, 28, 0.92);">Out of stock</span>
+                            {% endif %}
+                        </div>
+                        <div class="media-card__body">
+                            <h3 class="media-card__title">{{ product.name }}</h3>
+                            <p class="media-card__meta">£{{ product.price }} / {{ product.unit }}</p>
+                            <div class="media-card__footer">
+                                <span class="btn-pill btn-pill--soft">View product →</span>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
+    {% if recipes %}
+        <section class="detail-section">
+            <h2>Recipes</h2>
+            <div class="content-grid">
+                {% for recipe in recipes %}
+                    <a href="/browse/recipe/{{ recipe.id }}/" class="media-card">
+                        <div class="media-card__media">
+                            <img src="{% recipe_image_url recipe %}" alt="{{ recipe.title }}"
+                                 loading="lazy" class="media-card__image">
+                            <span class="media-card__chip">{{ recipe.get_seasonal_tag_display }}</span>
+                        </div>
+                        <div class="media-card__body">
+                            <h3 class="media-card__title">{{ recipe.title }}</h3>
+                            {% if recipe.description %}
+                                <p class="media-card__excerpt">{{ recipe.description|truncatewords:18 }}</p>
+                            {% endif %}
+                            <div class="media-card__footer">
+                                <span class="btn-pill btn-pill--soft">View recipe →</span>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
+    {% if stories %}
+        <section class="detail-section">
+            <h2>Farm stories</h2>
+            <div class="content-grid">
+                {% for story in stories %}
+                    <a href="/browse/story/{{ story.id }}/" class="media-card">
+                        <div class="media-card__media">
+                            <img src="{% story_image_url story %}" alt="{{ story.title }}"
+                                 loading="lazy" class="media-card__image">
+                            <span class="media-card__chip">Story</span>
+                        </div>
+                        <div class="media-card__body">
+                            <h3 class="media-card__title">{{ story.title }}</h3>
+                            <p class="media-card__excerpt">{{ story.content|truncatewords:22 }}</p>
+                            <div class="media-card__footer">
+                                <span class="btn-pill btn-pill--soft">Read story →</span>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
+    <p style="max-width: 1080px; margin: 1.5rem auto 3rem; padding: 0 1.5rem; font-size: 0.9rem;">
+        <a href="/browse/producers/" style="color: var(--brfn-green-deep); font-weight: 600; text-decoration: none;">← Back to producers</a>
+    </p>
 {% endblock %}

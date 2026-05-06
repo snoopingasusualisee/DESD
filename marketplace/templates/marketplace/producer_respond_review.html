@@ -2,11 +2,17 @@
 {% load static %}
 {% block title %}Respond to Review – BRFN{% endblock %}
 {% block content %}
-    <div class="page-wide">
-        <p class="link" style="text-align: left; margin-bottom: 1rem;"><a href="/browse/product/{{ review.product.id }}/">← Back to Product</a></p>
+    <header class="page-header">
+        <span class="page-header__eyebrow">Producer response</span>
+        <h1 class="page-header__title">Respond to a review</h1>
+        <p class="page-header__subtitle">Your response is publicly visible alongside the review.</p>
+    </header>
 
+    <div class="page-body" style="max-width: 720px;">
+        <p style="margin: 0 0 1rem; font-size: 0.9rem;">
+            <a href="/browse/product/{{ review.product.id }}/" style="color: var(--brfn-green-deep); font-weight: 600; text-decoration: none;">← Back to product</a>
+        </p>
         <div class="form-card">
-            <h2>Respond to Review</h2>
 
             <div style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
                 <h3 style="margin: 0 0 0.5rem 0;">{{ review.product.name }}</h3>
@@ -52,7 +58,7 @@
                     <small>This will be publicly visible alongside the review.</small>
                 </div>
 
-                <button type="submit" class="btn">{% if review.producer_response %}Update{% else %}Post{% endif %} Response</button>
+                <button type="submit" class="btn-pill">{% if review.producer_response %}Update{% else %}Post{% endif %} response</button>
             </form>
         </div>
     </div>

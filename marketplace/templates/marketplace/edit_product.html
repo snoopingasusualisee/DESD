@@ -2,8 +2,12 @@
 {% load static %}
 {% block title %}Edit {{ product.name }} – BRFN{% endblock %}
 {% block content %}
+    <header class="page-header">
+        <span class="page-header__eyebrow">Producer dashboard</span>
+        <h1 class="page-header__title">Edit product</h1>
+        <p class="page-header__subtitle">Update pricing, stock or photography for {{ product.name }}.</p>
+    </header>
     <div class="page page-form">
-        <h2>Edit Product</h2>
 
         {% if success %}<p class="alert alert-success">{{ success }}</p>{% endif %}
         {% if error %}<p class="error">{{ error }}</p>{% endif %}

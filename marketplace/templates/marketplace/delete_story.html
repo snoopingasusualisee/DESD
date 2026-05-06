@@ -2,18 +2,22 @@
 {% load static %}
 {% block title %}Delete Story – BRFN{% endblock %}
 {% block content %}
-    <div class="page">
-        <h2>Delete Farm Story</h2>
-        <p>Are you sure you want to delete this farm story?</p>
-        <div style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin: 2rem 0;">
-            <h3 style="margin-top: 0;">{{ story.title }}</h3>
-            <p style="color: #666;">{{ story.content|truncatewords:30 }}</p>
-        </div>
+    <header class="page-header">
+        <span class="page-header__eyebrow" style="background: #fef0f0; color: #b42318;">Confirm delete</span>
+        <h1 class="page-header__title">Delete this farm story?</h1>
+        <p class="page-header__subtitle">This action cannot be undone.</p>
+    </header>
 
-        <form method="post">
-            {% csrf_token %}
-            <button type="submit" class="btn-delete">Yes, Delete Story</button>
-            <a href="/browse/my-stories/" class="btn-secondary">Cancel</a>
-        </form>
+    <div class="page-body" style="max-width: 600px;">
+        <div class="surface-card">
+            <h3 style="margin: 0 0 0.4rem;">{{ story.title }}</h3>
+            <p style="margin: 0 0 1.25rem; color: var(--brfn-ink-soft);">{{ story.content|truncatewords:30 }}</p>
+
+            <form method="post" style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                {% csrf_token %}
+                <button type="submit" class="btn-pill" style="background: var(--brfn-accent-deep);">Yes, delete story</button>
+                <a href="/browse/my-stories/" class="btn-pill btn-pill--ghost">Cancel</a>
+            </form>
+        </div>
     </div>
 {% endblock %}

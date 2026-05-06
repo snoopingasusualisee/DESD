@@ -1,27 +1,31 @@
 {% extends "base.html" %}
 {% load static %}
+{% load brfn_extras %}
 {% block title %}{{ story.title }} – BRFN{% endblock %}
 {% block content %}
-    <div class="page-wide">
-        <p class="link" style="text-align: left; margin-bottom: 1rem;"><a href="/browse/stories/">← Back to Stories</a></p>
-
-        <div style="max-width: 800px;">
-            <h2>{{ story.title }}</h2>
-            <p style="color: #666; margin-bottom: 1rem;">
-                By <a href="/browse/producer/{{ story.producer.id }}/">{{ story.producer.first_name }} {{ story.producer.last_name }}</a>
+    <section class="detail-hero">
+        <div class="detail-hero__image">
+            <img src="{% story_image_url story %}" alt="{{ story.title }}">
+        </div>
+        <div class="detail-hero__copy">
+            <span class="page-header__eyebrow">Farm story</span>
+            <h1>{{ story.title }}</h1>
+            <p class="detail-hero__meta">
+                By <a href="/browse/producer/{{ story.producer.id }}/" style="color: var(--brfn-green-deep); font-weight: 600; text-decoration: none;">{{ story.producer.first_name }} {{ story.producer.last_name }}</a>
             </p>
+            <a href="/browse/producer/{{ story.producer.id }}/" class="btn-pill btn-pill--soft">View producer profile →</a>
+        </div>
+    </section>
 
-            {% if story.image %}
-            <img src="{{ story.image.url }}" alt="{{ story.title }}" style="width: 100%; max-height: 400px; object-fit: cover; border-radius: 8px; margin-bottom: 2rem;">
-            {% endif %}
-
-            <div style="margin-bottom: 2rem; line-height: 1.8;">
+    <section class="detail-section">
+        <div class="surface-card">
+            <div style="color: var(--brfn-ink); line-height: 1.85; font-size: 1.05rem;">
                 {{ story.content|linebreaks }}
             </div>
-
-            <div style="margin-top: 2rem;">
-                <a href="/browse/producer/{{ story.producer.id }}/" class="btn">View Producer Profile</a>
-            </div>
         </div>
-    </div>
+    </section>
+
+    <p style="max-width: 1080px; margin: 1.5rem auto 3rem; padding: 0 1.5rem; font-size: 0.9rem;">
+        <a href="/browse/stories/" style="color: var(--brfn-green-deep); font-weight: 600; text-decoration: none;">← Back to stories</a>
+    </p>
 {% endblock %}

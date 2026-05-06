@@ -2,34 +2,43 @@
 {% load static %}
 {% block title %}Manage Orders – BRFN{% endblock %}
 {% block content %}
-    <div class="page-wide">
-        <h2>Manage Customer Orders</h2>
+    <header class="page-header">
+        <span class="page-header__eyebrow">Producer dashboard</span>
+        <h1 class="page-header__title">Customer orders</h1>
+        <p class="page-header__subtitle">Confirm pending orders and update fulfilment status as they progress.</p>
+    </header>
 
+    <div class="page-body">
         {% if orders %}
-        <div class="producer-list">
             {% for order in orders %}
-            <div class="producer-card">
-                <div>
-                    <h3>Order #{{ order.id }}</h3>
-                    <p>Customer: {{ order.full_name }}</p>
-                    <p>Placed: {{ order.created_at|date:"d M Y, H:i" }}</p>
-                    <p>Delivery: <strong>{{ order.delivery_date|date:"d M Y" }}</strong></p>
-                    <p>Status: <strong>{{ order.get_status_display }}</strong>
+                <article class="order-card">
+                    <div>
+                        <h3 class="order-card__title">Order #{{ order.id }} · {{ order.full_name }}</h3>
+                        <p class="order-card__meta">
+                            Placed {{ order.created_at|date:"d M Y, H:i" }} · Delivery {{ order.delivery_date|date:"d M Y" }}
+                        </p>
+                        {% with status=order.status|lower %}
+                            <span class="order-card__status order-card__status--{% if status == 'delivered' %}delivered{% elif status == 'ready' %}ready{% else %}pending{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        {% endwith %}
                         {% if order.status == 'pending' %}
-                        <span style="font-size: 0.85rem; color: #856404; background: #fff3cd; padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.5rem;">Needs Confirmation</span>
+                            <span class="order-card__status order-card__status--ready" style="margin-left: 0.4rem;">Needs confirmation</span>
                         {% elif order.status == 'ready' %}
-                        <span style="font-size: 0.85rem; color: #155724; background: #d4edda; padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.5rem;">Can Mark as Delivered</span>
+                            <span class="order-card__status order-card__status--delivered" style="margin-left: 0.4rem;">Ready to mark delivered</span>
                         {% endif %}
-                    </p>
-                </div>
-                <div style="text-align: right;">
-                    <a href="/orders/manage/{{ order.id }}/" class="btn">Manage Order</a>
-                </div>
-            </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <a href="/orders/manage/{{ order.id }}/" class="btn-pill">Manage order</a>
+                    </div>
+                </article>
             {% endfor %}
-        </div>
         {% else %}
-        <p class="empty">No customers have placed orders for your products yet.</p>
+            <div class="empty-state">
+                <div class="empty-state__icon">📥</div>
+                <h2 class="empty-state__title">No customer orders yet</h2>
+                <p class="empty-state__text">Once customers place orders for your products, they'll appear here.</p>
+            </div>
         {% endif %}
     </div>
 {% endblock %}

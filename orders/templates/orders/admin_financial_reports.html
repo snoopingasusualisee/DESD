@@ -2,8 +2,13 @@
 {% load static %}
 {% block title %}Financial Reports – BRFN Admin{% endblock %}
 {% block content %}
-    <main class="main-content" style="max-width: 1400px; margin: 2rem auto; padding: 0 2rem;">
-        <h2>Network Commission Financial Reports</h2>
+    <header class="page-header">
+        <span class="page-header__eyebrow">Network admin</span>
+        <h1 class="page-header__title">Financial reports</h1>
+        <p class="page-header__subtitle">Filter by date range, monitor commission and export to CSV.</p>
+    </header>
+
+    <main class="page-body" style="max-width: 1400px;">
 
         <!-- Date Range Filter -->
         <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">

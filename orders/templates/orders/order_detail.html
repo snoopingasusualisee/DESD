@@ -1,110 +1,124 @@
 {% extends "base.html" %}
 {% load static %}
+{% load brfn_extras %}
 {% block title %}Order #{{ order.id }} – BRFN{% endblock %}
 {% block content %}
-    <div class="page-wide">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2>Order #{{ order.id }}</h2>
-            <div style="display: flex; gap: 1rem;">
-                <a href="/orders/my-orders/{{ order.id }}/receipt/" class="btn" style="background: #6c757d;">Download Receipt</a>
-                {% if order.status == 'delivered' %}
+    <header class="page-header">
+        <span class="page-header__eyebrow">Order #{{ order.id }}</span>
+        <h1 class="page-header__title">{{ order.get_status_display }}</h1>
+        <p class="page-header__subtitle">
+            Placed {{ order.created_at|date:"d M Y, H:i" }}
+            {% if order.delivery_date %} · Delivery {{ order.delivery_date|date:"d M Y" }}{% endif %}
+        </p>
+        <div class="page-header__actions">
+            <a href="/orders/my-orders/{{ order.id }}/receipt/" class="btn-pill btn-pill--ghost">Download receipt</a>
+            {% if order.status == 'delivered' %}
                 <form method="post" action="/orders/my-orders/{{ order.id }}/reorder/" style="display: inline;">
                     {% csrf_token %}
-                    <button type="submit" class="btn" style="background: #4a7c59;">Reorder</button>
+                    <button type="submit" class="btn-pill">Reorder</button>
                 </form>
-                {% endif %}
-            </div>
+            {% endif %}
         </div>
+    </header>
 
-        <div class="product-grid" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 1.5rem;">
-            <div class="product-card">
-                <h3>Order Info</h3>
-                <p>Status: <strong>{{ order.get_status_display }}</strong></p>
-                <p>Placed: {{ order.created_at|date:"d M Y, H:i" }}</p>
-                {% if order.delivery_date %}
-                <p>Delivery Date: <strong>{{ order.delivery_date|date:"d M Y" }}</strong></p>
-                {% endif %}
-                <p class="price">Total: £{{ order.total }}</p>
-            </div>
-            <div class="product-card">
-                <h3>Delivery Address</h3>
-                <p>{{ order.full_name }}</p>
-                <p>{{ order.address_line1 }}</p>
-                {% if order.address_line2 %}<p>{{ order.address_line2 }}</p>{% endif %}
-                <p>{{ order.city }}, {{ order.postcode }}</p>
-                <p>{{ order.email }}</p>
-            </div>
-            <div class="product-card">
-                <h3>Payment Information</h3>
-                <p>Method: <strong>Card Payment</strong></p>
-                <p>Card: <strong>•••• •••• •••• ••••</strong></p>
-                <p>Status: <strong style="color: #4a7c59;">Paid</strong></p>
-                <p style="font-size: 0.85rem; color: #666; margin-top: 0.5rem;">Securely processed by Stripe</p>
-            </div>
-        </div>
-
-        <h3>Items</h3>
-        {% for group in grouped_items %}
-        <div style="margin-bottom: 1.5rem; border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden;">
-            <div style="background: #f5f5f5; padding: 0.5rem 1rem; border-bottom: 1px solid #e0e0e0;">
-                <strong>{{ group.producer.username }}</strong>
-            </div>
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="border-bottom: 2px solid #ddd; text-align: left;">
-                        <th style="padding: 0.75rem;">Product</th>
-                        <th style="padding: 0.75rem;">Price</th>
-                        <th style="padding: 0.75rem;">Qty</th>
-                        <th style="padding: 0.75rem;">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in group.items %}
-                    <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 0.75rem;">
-                            {% if item.product %}
-                            <a href="/browse/product/{{ item.product.id }}/" style="color: #333; text-decoration: none;">{{ item.product_name }}</a>
-                            {% if order.status == 'delivered' %}
-                                <br><a href="/browse/product/{{ item.product.id }}/review/" style="font-size: 0.85rem; color: #4a7c59; margin-top: 0.25rem; display: inline-block;">Write Review</a>
-                            {% endif %}
-                            {% else %}
-                            {{ item.product_name }}
-                            {% endif %}
-                        </td>
-                        <td style="padding: 0.75rem;">£{{ item.unit_price }}</td>
-                        <td style="padding: 0.75rem;">{{ item.quantity }}</td>
-                        <td style="padding: 0.75rem;"><strong>£{{ item.line_total }}</strong></td>
-                    </tr>
+    <div class="page-body">
+        <div class="layout-with-aside">
+            <div>
+                <section class="surface-card" style="margin-bottom: 1rem;">
+                    <h2 class="surface-card__title">Items</h2>
+                    {% for group in grouped_items %}
+                        <div style="margin-bottom: 1.25rem;">
+                            <p style="margin: 0 0 0.6rem; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--brfn-ink-soft);">
+                                {{ group.producer.username }}
+                            </p>
+                            {% for item in group.items %}
+                                <div class="cart-row" style="border-bottom: 1px solid var(--brfn-line);">
+                                    <img src="{% if item.product %}{% product_image_url item.product %}{% else %}{% static 'images/products/_placeholder.svg' %}{% endif %}"
+                                         alt="{{ item.product_name }}" class="cart-row__thumb" loading="lazy">
+                                    <div class="cart-row__main">
+                                        <p class="cart-row__name">
+                                            {% if item.product %}
+                                                <a href="/browse/product/{{ item.product.id }}/" style="color: inherit; text-decoration: none;">{{ item.product_name }}</a>
+                                            {% else %}
+                                                {{ item.product_name }}
+                                            {% endif %}
+                                        </p>
+                                        <p class="cart-row__meta">
+                                            £{{ item.unit_price }} × {{ item.quantity }}
+                                            {% if order.status == 'delivered' and item.product %}
+                                                · <a href="/browse/product/{{ item.product.id }}/review/" style="color: var(--brfn-green-deep); font-weight: 600; text-decoration: none;">Write review</a>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    <div></div>
+                                    <div class="cart-row__price">£{{ item.line_total }}</div>
+                                    <div></div>
+                                </div>
+                            {% endfor %}
+                            <div class="cart-group__footer" style="border-top: 1px solid var(--brfn-line); border-radius: 0;">
+                                Subtotal: <strong>£{{ group.subtotal }}</strong>
+                            </div>
+                        </div>
                     {% endfor %}
-                </tbody>
-            </table>
-            <div style="text-align: right; padding: 0.5rem 1rem; background: #fafafa; border-top: 1px solid #e0e0e0;">
-                <strong>Subtotal: £{{ group.subtotal }}</strong>
+                </section>
+
+                {% if status_updates %}
+                    <section class="surface-card">
+                        <h2 class="surface-card__title">Status history</h2>
+                        <div style="border-left: 2px solid var(--brfn-green); padding-left: 1.25rem;">
+                            {% for update in status_updates %}
+                                <div style="margin-bottom: 1.1rem; position: relative;">
+                                    <div style="position: absolute; left: -1.55rem; top: 0.35rem; width: 12px; height: 12px; background: var(--brfn-green); border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 1px var(--brfn-green);"></div>
+                                    <p style="margin: 0; font-size: 0.78rem; color: var(--brfn-ink-soft);">{{ update.created_at|date:"d M Y, H:i" }}</p>
+                                    <p style="margin: 0.2rem 0 0; font-weight: 600;">{{ update.old_status|title }} → {{ update.new_status|title }}</p>
+                                    {% if update.note %}<p style="margin: 0.2rem 0 0; color: var(--brfn-ink-soft); font-style: italic;">"{{ update.note }}"</p>{% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endif %}
             </div>
-        </div>
-        {% endfor %}
 
-        {% if order.commission %}
-        <div style="text-align: right; margin-bottom: 1rem;">
-            <p>Products Total: £{{ order.total }}</p>
-            <p>Network Commission (5%): £{{ order.commission }}</p>
-        </div>
-        {% endif %}
+            <aside class="summary-card">
+                <h2 class="summary-card__title">Delivery</h2>
+                <p style="margin: 0; font-weight: 600; color: var(--brfn-ink);">{{ order.full_name }}</p>
+                <p style="margin: 0.2rem 0 0; color: var(--brfn-ink-soft); font-size: 0.9rem; line-height: 1.5;">
+                    {{ order.address_line1 }}<br>
+                    {% if order.address_line2 %}{{ order.address_line2 }}<br>{% endif %}
+                    {{ order.city }}, {{ order.postcode }}<br>
+                    {{ order.email }}
+                </p>
 
-        {% if status_updates %}
-        <h3 style="margin-top: 2rem;">Status History</h3>
-        <div style="border-left: 3px solid #4a7c59; padding-left: 1.5rem; margin-bottom: 2rem;">
-            {% for update in status_updates %}
-            <div style="margin-bottom: 1.25rem; position: relative;">
-                <div style="position: absolute; left: -1.85rem; top: 0.3rem; width: 10px; height: 10px; background: #4a7c59; border-radius: 50%;"></div>
-                <p style="margin: 0; font-size: 0.85rem; color: #888;">{{ update.created_at|date:"d M Y, H:i" }}</p>
-                <p style="margin: 0.2rem 0 0;"><strong>{{ update.old_status|title }}</strong> → <strong>{{ update.new_status|title }}</strong></p>
-                {% if update.note %}<p style="margin: 0.2rem 0 0; color: #555; font-style: italic;">"{{ update.note }}"</p>{% endif %}
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
+                <div class="summary-divider"></div>
 
-        <p class="link" style="margin-top: 1.5rem;"><a href="/orders/my-orders/">← Back to My Orders</a></p>
+                <h3 style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--brfn-ink-soft); margin: 0 0 0.5rem;">Payment</h3>
+                <p style="margin: 0; color: var(--brfn-ink-soft); font-size: 0.9rem;">
+                    Card · <strong style="color: var(--brfn-green-deep);">Paid</strong><br>
+                    <span style="font-size: 0.75rem;">Securely processed by Stripe</span>
+                </p>
+
+                <div class="summary-divider"></div>
+
+                <div class="summary-row">
+                    <span>Products</span>
+                    <span>£{{ order.total }}</span>
+                </div>
+                {% if order.commission %}
+                    <div class="summary-row">
+                        <span>Network commission</span>
+                        <span>£{{ order.commission }}</span>
+                    </div>
+                {% endif %}
+                <div class="summary-divider"></div>
+                <div class="summary-row summary-row--total">
+                    <span>Total</span>
+                    <strong>£{{ order.total }}</strong>
+                </div>
+            </aside>
+        </div>
+
+        <p style="margin-top: 1.5rem; font-size: 0.9rem;">
+            <a href="/orders/my-orders/" style="color: var(--brfn-green-deep); font-weight: 600; text-decoration: none;">← Back to my orders</a>
+        </p>
     </div>
 {% endblock %}

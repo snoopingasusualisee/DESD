@@ -1,29 +1,47 @@
 {% extends "base.html" %}
 {% load static %}
+{% load brfn_extras %}
 {% block title %}Browse Farm Stories – BRFN{% endblock %}
 {% block content %}
-    <div class="page page-wide">
-        <h2>Farm Stories</h2>
-        <p style="color: #666; margin-bottom: 1.5rem;">Read stories from our local farmers and producers</p>
-
-        {% if stories %}
-        <div class="product-grid">
-            {% for story in stories %}
-            <div class="product-card">
-                <h3><a href="/browse/story/{{ story.id }}/">{{ story.title }}</a></h3>
-                {% if story.image %}
-                <img src="{{ story.image.url }}" alt="{{ story.title }}"
-                    style="width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 0.5rem;">
-                {% endif %}
-                <p class="producer">By {{ story.producer.first_name }} {{ story.producer.last_name }}</p>
-                <p class="description">{{ story.content|truncatewords:20 }}</p>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <p style="text-align: center; color: #666; padding: 2rem;">
-            No farm stories available yet. Check back soon!
+    <header class="page-header">
+        <span class="page-header__eyebrow">Farm stories</span>
+        <h1 class="page-header__title">Meet the people growing your food</h1>
+        <p class="page-header__subtitle">
+            Notes from the field, the bakery and the orchard — first-hand stories from
+            the producers behind every order.
         </p>
+    </header>
+
+    <div class="page-body">
+        {% if stories %}
+            <div class="content-grid">
+                {% for story in stories %}
+                    <a href="/browse/story/{{ story.id }}/" class="media-card">
+                        <div class="media-card__media">
+                            <img src="{% story_image_url story %}" alt="{{ story.title }}"
+                                 loading="lazy" class="media-card__image">
+                            <span class="media-card__chip">Story</span>
+                        </div>
+                        <div class="media-card__body">
+                            <h3 class="media-card__title">{{ story.title }}</h3>
+                            <p class="media-card__meta">By {{ story.producer.first_name }} {{ story.producer.last_name }}</p>
+                            <p class="media-card__excerpt">{{ story.content|truncatewords:22 }}</p>
+                            <div class="media-card__footer">
+                                <span class="btn-pill btn-pill--soft">Read story →</span>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state__icon">🌾</div>
+                <h2 class="empty-state__title">No stories yet</h2>
+                <p class="empty-state__text">
+                    Producers are busy in the fields — check back soon for new stories.
+                </p>
+                <a href="/browse/" class="btn-pill">Browse products</a>
+            </div>
         {% endif %}
     </div>
 {% endblock %}

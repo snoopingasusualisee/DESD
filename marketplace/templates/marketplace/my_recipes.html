@@ -1,40 +1,52 @@
 {% extends "base.html" %}
 {% load static %}
+{% load brfn_extras %}
 {% block title %}My Recipes – BRFN{% endblock %}
 {% block content %}
-    <div class="page page-wide">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="margin: 0;">My Recipes</h2>
-            <a href="/browse/add-recipe/" class="btn-primary">Add New Recipe</a>
+    <header class="page-header">
+        <span class="page-header__eyebrow">Producer dashboard</span>
+        <h1 class="page-header__title">My recipes</h1>
+        <p class="page-header__subtitle">Share recipes with customers using your produce.</p>
+        <div class="page-header__actions">
+            <a href="/browse/add-recipe/" class="btn-pill">+ Add new recipe</a>
         </div>
+    </header>
 
+    <div class="page-body">
         {% if recipes %}
-        <div class="product-grid">
-            {% for recipe in recipes %}
-            <div class="product-card">
-                <h3><a href="/browse/recipe/{{ recipe.id }}/">{{ recipe.title }}</a></h3>
-                {% if recipe.image %}
-                <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}"
-                    style="width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 0.5rem;">
-                {% endif %}
-                <span class="category-tag" style="background: #e8f5e9; color: #2e7d32;">{{ recipe.get_seasonal_tag_display }}</span>
-                {% if recipe.is_published %}
-                <span class="category-tag" style="background: #d4edda; color: #155724;">Published</span>
-                {% else %}
-                <span class="category-tag" style="background: #f1f1f1; color: #666;">Draft</span>
-                {% endif %}
-                <p style="color: #666; font-size: 0.85rem; margin-top: 0.5rem;">Linked Products: {{ recipe.linked_products.count }}</p>
-                <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                    <a href="/browse/recipe/{{ recipe.id }}/edit/" class="btn">Edit</a>
-                    <a href="/browse/recipe/{{ recipe.id }}/delete/" class="btn-delete">Delete</a>
-                </div>
+            <div class="content-grid">
+                {% for recipe in recipes %}
+                    <article class="media-card">
+                        <a href="/browse/recipe/{{ recipe.id }}/" class="media-card__media">
+                            <img src="{% recipe_image_url recipe %}" alt="{{ recipe.title }}"
+                                 loading="lazy" class="media-card__image">
+                            <span class="media-card__chip">{{ recipe.get_seasonal_tag_display }}</span>
+                        </a>
+                        <div class="media-card__body">
+                            <h3 class="media-card__title"><a href="/browse/recipe/{{ recipe.id }}/">{{ recipe.title }}</a></h3>
+                            <p class="media-card__meta">
+                                {% if recipe.is_published %}
+                                    <span style="color: var(--brfn-green-deep); font-weight: 600;">● Published</span>
+                                {% else %}
+                                    <span style="color: var(--brfn-ink-soft); font-weight: 600;">● Draft</span>
+                                {% endif %}
+                                · {{ recipe.linked_products.count }} linked product{{ recipe.linked_products.count|pluralize }}
+                            </p>
+                            <div class="media-card__footer">
+                                <a href="/browse/recipe/{{ recipe.id }}/edit/" class="btn-pill btn-pill--ghost" style="padding: 0.4rem 0.85rem; font-size: 0.78rem;">Edit</a>
+                                <a href="/browse/recipe/{{ recipe.id }}/delete/" class="btn-pill btn-pill--danger" style="padding: 0.4rem 0.85rem; font-size: 0.78rem;">Delete</a>
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
         {% else %}
-        <p style="text-align: center; color: #666; padding: 2rem;">
-            You haven't created any recipes yet. <a href="/browse/add-recipe/">Add your first recipe</a> to share with customers!
-        </p>
+            <div class="empty-state">
+                <div class="empty-state__icon">📝</div>
+                <h2 class="empty-state__title">No recipes yet</h2>
+                <p class="empty-state__text">Add your first recipe to inspire customers and link to your products.</p>
+                <a href="/browse/add-recipe/" class="btn-pill">+ Add your first recipe</a>
+            </div>
         {% endif %}
     </div>
 {% endblock %}

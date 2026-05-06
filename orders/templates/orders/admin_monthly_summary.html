@@ -2,8 +2,13 @@
 {% load static %}
 {% block title %}Monthly Summary – BRFN Admin{% endblock %}
 {% block content %}
-    <main class="main-content" style="max-width: 1200px; margin: 2rem auto; padding: 0 2rem;">
-        <h2>Monthly Commission Summary</h2>
+    <header class="page-header">
+        <span class="page-header__eyebrow">Network admin</span>
+        <h1 class="page-header__title">Monthly commission summary</h1>
+        <p class="page-header__subtitle">Producer payouts and network commission for any given month.</p>
+    </header>
+
+    <main class="page-body" style="max-width: 1200px;">
 
         <!-- Month Selector -->
         <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">

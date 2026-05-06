@@ -2,144 +2,117 @@
 {% load static %}
 {% block title %}Stock Alerts – BRFN{% endblock %}
 {% block extra_head %}
-<style>
+    <style>
         .alert-card {
             background: white;
-            padding: 1.5rem;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 1rem;
-            border-left: 4px solid #dc3545;
+            padding: 1.25rem 1.5rem;
+            border-radius: var(--brfn-radius);
+            border: 1px solid var(--brfn-line);
+            border-left: 4px solid var(--brfn-accent-deep);
+            box-shadow: var(--brfn-shadow-card);
+            margin-bottom: 0.85rem;
         }
-        .alert-card.resolved {
-            border-left-color: #28a745;
-            opacity: 0.7;
-        }
-        .alert-card.dismissed {
-            border-left-color: #6c757d;
-            opacity: 0.6;
-        }
+        .alert-card.resolved { border-left-color: var(--brfn-green); opacity: 0.85; }
+        .alert-card.dismissed { border-left-color: var(--brfn-ink-soft); opacity: 0.7; }
         .alert-header {
             display: flex;
             justify-content: space-between;
             align-items: start;
+            gap: 1rem;
             margin-bottom: 0.5rem;
         }
-        .alert-title {
-            font-weight: 600;
-            font-size: 1.1rem;
-            margin: 0;
-        }
+        .alert-title { font-weight: 700; font-size: 1.05rem; margin: 0; }
         .alert-badge {
             padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            font-weight: 500;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-        .alert-badge.active {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .alert-badge.resolved {
-            background: #d4edda;
-            color: #155724;
-        }
-        .alert-badge.dismissed {
-            background: #e2e3e5;
-            color: #383d41;
-        }
+        .alert-badge.active   { background: #fef0f0; color: #b42318; }
+        .alert-badge.resolved { background: var(--brfn-green-soft); color: var(--brfn-green-deep); }
+        .alert-badge.dismissed { background: var(--brfn-bg); color: var(--brfn-ink-soft); }
         .alert-details {
-            color: #6c757d;
+            color: var(--brfn-ink-soft);
             font-size: 0.9rem;
+            line-height: 1.6;
             margin-bottom: 0.75rem;
         }
-        .alert-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-        .btn-dismiss {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 0.4rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        .btn-dismiss:hover {
-            background: #5a6268;
-        }
         .section-title {
-            font-size: 1.3rem;
-            margin: 2rem 0 1rem 0;
-            font-weight: 600;
+            font-size: 1.15rem;
+            margin: 2rem 0 1rem;
+            font-weight: 700;
+            color: var(--brfn-ink);
         }
         .no-alerts {
-            background: #d4edda;
-            color: #155724;
+            background: var(--brfn-green-soft);
+            color: var(--brfn-green-deep);
             padding: 1.5rem;
-            border-radius: 4px;
+            border-radius: var(--brfn-radius);
             text-align: center;
+            font-weight: 600;
         }
     </style>
 {% endblock %}
 {% block content %}
-    <div class="page-wide">
-        <h1 style="margin-bottom: 1rem;">Stock Alerts</h1>
-        <p style="color: #6c757d; margin-bottom: 2rem;">Monitor low stock levels for your products</p>
+    <header class="page-header">
+        <span class="page-header__eyebrow">Producer dashboard</span>
+        <h1 class="page-header__title">Stock alerts</h1>
+        <p class="page-header__subtitle">Get a heads-up when products fall below their threshold so you can restock in time.</p>
+    </header>
 
-        <h2 class="section-title">Active Alerts ({{ active_alerts.count }})</h2>
+    <div class="page-body">
+        <h2 class="section-title">Active alerts ({{ active_alerts.count }})</h2>
 
         {% if active_alerts %}
             {% for alert in active_alerts %}
-            <div class="alert-card">
-                <div class="alert-header">
-                    <h3 class="alert-title">{{ alert.product.name }}</h3>
-                    <span class="alert-badge active">Active</span>
-                </div>
-                <div class="alert-details">
-                    <strong>Current Stock:</strong> {{ alert.stock_level }} {{ alert.product.unit }}<br>
-                    <strong>Threshold:</strong> {{ alert.threshold }} {{ alert.product.unit }}<br>
-                    <strong>Alert Created:</strong> {{ alert.created_at|date:"M d, Y g:i A" }}
-                </div>
-                <div class="alert-actions">
-                    <form method="post" style="display: inline;">
-                        {% csrf_token %}
-                        <input type="hidden" name="alert_id" value="{{ alert.id }}">
-                        <input type="hidden" name="action" value="dismiss">
-                        <button type="submit" class="btn-dismiss">Dismiss Alert</button>
-                    </form>
-                    <a href="/browse/product/{{ alert.product.id }}/edit/" class="btn-dismiss" style="background: #007bff; text-decoration: none; line-height: 1.5;">Update Stock</a>
-                </div>
-            </div>
+                <article class="alert-card">
+                    <div class="alert-header">
+                        <h3 class="alert-title">{{ alert.product.name }}</h3>
+                        <span class="alert-badge active">Active</span>
+                    </div>
+                    <div class="alert-details">
+                        <strong>Current stock:</strong> {{ alert.stock_level }} {{ alert.product.unit }}<br>
+                        <strong>Threshold:</strong> {{ alert.threshold }} {{ alert.product.unit }}<br>
+                        <strong>Created:</strong> {{ alert.created_at|date:"M d, Y g:i A" }}
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <form method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="alert_id" value="{{ alert.id }}">
+                            <input type="hidden" name="action" value="dismiss">
+                            <button type="submit" class="btn-pill btn-pill--ghost" style="padding: 0.45rem 0.95rem; font-size: 0.8rem;">Dismiss</button>
+                        </form>
+                        <a href="/browse/product/{{ alert.product.id }}/edit/" class="btn-pill" style="padding: 0.45rem 0.95rem; font-size: 0.8rem;">Update stock</a>
+                    </div>
+                </article>
             {% endfor %}
         {% else %}
-            <div class="no-alerts">
-                ✓ No active stock alerts. All products are above their thresholds.
-            </div>
+            <div class="no-alerts">✓ No active stock alerts. All products are above their thresholds.</div>
         {% endif %}
 
-        <h2 class="section-title">Recent History (Last 10)</h2>
+        <h2 class="section-title">Recent history (last 10)</h2>
 
         {% if resolved_alerts %}
             {% for alert in resolved_alerts %}
-            <div class="alert-card {% if alert.status == 'resolved' %}resolved{% else %}dismissed{% endif %}">
-                <div class="alert-header">
-                    <h3 class="alert-title">{{ alert.product.name }}</h3>
-                    <span class="alert-badge {% if alert.status == 'resolved' %}resolved{% else %}dismissed{% endif %}">
-                        {% if alert.status == 'resolved' %}Resolved{% else %}Dismissed{% endif %}
-                    </span>
-                </div>
-                <div class="alert-details">
-                    <strong>Stock Level (at alert):</strong> {{ alert.stock_level }} {{ alert.product.unit }}<br>
-                    <strong>Threshold:</strong> {{ alert.threshold }} {{ alert.product.unit }}<br>
-                    <strong>Created:</strong> {{ alert.created_at|date:"M d, Y" }}<br>
-                    <strong>Updated:</strong> {{ alert.updated_at|date:"M d, Y" }}
-                </div>
-            </div>
+                <article class="alert-card {% if alert.status == 'resolved' %}resolved{% else %}dismissed{% endif %}">
+                    <div class="alert-header">
+                        <h3 class="alert-title">{{ alert.product.name }}</h3>
+                        <span class="alert-badge {% if alert.status == 'resolved' %}resolved{% else %}dismissed{% endif %}">
+                            {% if alert.status == 'resolved' %}Resolved{% else %}Dismissed{% endif %}
+                        </span>
+                    </div>
+                    <div class="alert-details">
+                        <strong>Stock at alert:</strong> {{ alert.stock_level }} {{ alert.product.unit }}<br>
+                        <strong>Threshold:</strong> {{ alert.threshold }} {{ alert.product.unit }}<br>
+                        <strong>Created:</strong> {{ alert.created_at|date:"M d, Y" }} ·
+                        <strong>Updated:</strong> {{ alert.updated_at|date:"M d, Y" }}
+                    </div>
+                </article>
             {% endfor %}
         {% else %}
-            <p style="color: #6c757d; font-style: italic;">No alert history yet.</p>
+            <p style="color: var(--brfn-ink-soft); font-style: italic;">No alert history yet.</p>
         {% endif %}
     </div>
 {% endblock %}

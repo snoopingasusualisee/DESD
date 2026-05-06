@@ -2,8 +2,12 @@
 {% load static %}
 {% block title %}Edit Recipe – BRFN{% endblock %}
 {% block content %}
+    <header class="page-header">
+        <span class="page-header__eyebrow">Producer dashboard</span>
+        <h1 class="page-header__title">Edit recipe</h1>
+        <p class="page-header__subtitle">Updating "{{ recipe.title }}".</p>
+    </header>
     <div class="page page-form">
-        <h2>Edit Recipe: {{ recipe.title }}</h2>
 
         {% if error %}<p class="alert alert-error">{{ error }}</p>{% endif %}
         {% if success %}<p class="alert alert-success">{{ success }}</p>{% endif %}

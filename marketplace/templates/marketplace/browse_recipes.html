@@ -1,41 +1,59 @@
 {% extends "base.html" %}
 {% load static %}
+{% load brfn_extras %}
 {% block title %}Browse Recipes – BRFN{% endblock %}
 {% block content %}
-    <div class="page page-wide">
-        <h2>Browse Recipes</h2>
+    <header class="page-header">
+        <span class="page-header__eyebrow">Seasonal recipes</span>
+        <h1 class="page-header__title">Cook what's in season</h1>
+        <p class="page-header__subtitle">
+            Recipes from our local producers, written for the ingredients growing right
+            now within 20 miles of Bristol.
+        </p>
+    </header>
 
+    <div class="page-body">
         <form method="get" class="filters">
             <select name="season" onchange="this.form.submit()">
                 <option value="">All Seasons</option>
                 <option value="spring" {% if request.GET.season == 'spring' %}selected{% endif %}>Spring</option>
                 <option value="summer" {% if request.GET.season == 'summer' %}selected{% endif %}>Summer</option>
-                <option value="autumn_winter" {% if request.GET.season == 'autumn_winter' %}selected{% endif %}>Autumn/Winter</option>
+                <option value="autumn_winter" {% if request.GET.season == 'autumn_winter' %}selected{% endif %}>Autumn / Winter</option>
                 <option value="all_season" {% if request.GET.season == 'all_season' %}selected{% endif %}>All Season</option>
             </select>
         </form>
 
         {% if recipes %}
-        <div class="product-grid">
-            {% for recipe in recipes %}
-            <div class="product-card">
-                <h3><a href="/browse/recipe/{{ recipe.id }}/">{{ recipe.title }}</a></h3>
-                {% if recipe.image %}
-                <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}"
-                    style="width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 0.5rem;">
-                {% endif %}
-                <p class="producer">By {{ recipe.producer.first_name }} {{ recipe.producer.last_name }}</p>
-                <span class="category-tag" style="background: #e8f5e9; color: #2e7d32;">{{ recipe.get_seasonal_tag_display }}</span>
-                {% if recipe.description %}
-                <p class="description">{{ recipe.description|truncatewords:15 }}</p>
-                {% endif %}
+            <div class="content-grid">
+                {% for recipe in recipes %}
+                    <a href="/browse/recipe/{{ recipe.id }}/" class="media-card">
+                        <div class="media-card__media">
+                            <img src="{% recipe_image_url recipe %}" alt="{{ recipe.title }}"
+                                 loading="lazy" class="media-card__image">
+                            <span class="media-card__chip">{{ recipe.get_seasonal_tag_display }}</span>
+                        </div>
+                        <div class="media-card__body">
+                            <h3 class="media-card__title">{{ recipe.title }}</h3>
+                            <p class="media-card__meta">By {{ recipe.producer.first_name }} {{ recipe.producer.last_name }}</p>
+                            {% if recipe.description %}
+                                <p class="media-card__excerpt">{{ recipe.description|truncatewords:18 }}</p>
+                            {% endif %}
+                            <div class="media-card__footer">
+                                <span class="btn-pill btn-pill--soft">View recipe →</span>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
         {% else %}
-        <p style="text-align: center; color: #666; padding: 2rem;">
-            No recipes available yet. Check back soon!
-        </p>
+            <div class="empty-state">
+                <div class="empty-state__icon">📖</div>
+                <h2 class="empty-state__title">No recipes yet</h2>
+                <p class="empty-state__text">
+                    Producers haven't shared recipes for this season — check back soon.
+                </p>
+                <a href="/browse/" class="btn-pill">Browse products</a>
+            </div>
         {% endif %}
     </div>
 {% endblock %}

@@ -2,11 +2,17 @@
 {% load static %}
 {% block title %}Edit Review – {{ review.product.name }} – BRFN{% endblock %}
 {% block content %}
-    <div class="page-wide">
-        <p class="link" style="text-align: left; margin-bottom: 1rem;"><a href="/browse/product/{{ review.product.id }}/">← Back to Product</a></p>
+    <header class="page-header">
+        <span class="page-header__eyebrow">Customer review</span>
+        <h1 class="page-header__title">Edit your review</h1>
+        <p class="page-header__subtitle">Update your review of {{ review.product.name }}.</p>
+    </header>
 
+    <div class="page-body" style="max-width: 720px;">
+        <p style="margin: 0 0 1rem; font-size: 0.9rem;">
+            <a href="/browse/product/{{ review.product.id }}/" style="color: var(--brfn-green-deep); font-weight: 600; text-decoration: none;">← Back to product</a>
+        </p>
         <div class="form-card">
-            <h2>Edit Your Review</h2>
             <div style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
                 <h3 style="margin: 0 0 0.5rem 0;">{{ review.product.name }}</h3>
                 <p style="margin: 0; color: #666; font-size: 0.9rem;">By {{ review.product.producer.first_name }} {{ review.product.producer.last_name }}</p>
@@ -59,9 +65,9 @@
                     {% endif %}
                 </div>
 
-                <div style="display: flex; gap: 1rem;">
-                    <button type="submit" class="btn">Update Review</button>
-                    <a href="/browse/review/{{ review.id }}/delete/" class="btn" style="background: #c00;">Delete Review</a>
+                <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                    <button type="submit" class="btn-pill">Update review</button>
+                    <a href="/browse/review/{{ review.id }}/delete/" class="btn-pill btn-pill--danger">Delete review</a>
                 </div>
             </form>
         </div>

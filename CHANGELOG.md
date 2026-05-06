@@ -660,3 +660,30 @@
   - All 43 templates load via Django's template loader without errors
   - Public pages (home, browse, login, register, terms, recipes, stories, producers) all return HTTP 200 in a smoke test
 - **Constraint respected**: No models, views, URLs, or migrations were touched. Pure templates + CSS + static assets + one new templatetag (read-only).
+# V1.1.47 - Zain Malik
+- **Frontend: rolled the bold marketplace look out to every other page (zero backend changes)**
+  - **Image fallback rewrite (`marketplace/templatetags/brfn_extras.py`)**:
+    - `_match_filename()` now matches by token (so "Free-range Eggs" → `eggs.jpg`) and by stem-in-slug (so "organic_carrots_500g" → `carrots.jpg`), with a deterministic alternates suffix (`_2`, `_3`) collapse so curated alternates still resolve to the canonical stem. This fixes "some images are not loading" — products whose names didn't exactly match a filename were falling through to the placeholder; they now find the closest match.
+    - New tags: `recipe_image_url`, `story_image_url`, `producer_image_url`. Each picks a **deterministic** food-themed fallback from a curated list (recipes get bakery shots, stories get produce shots, producers get a mix). Same input → same image on every render, so the UI doesn't shuffle on refresh.
+    - New `initials` tag for circular avatar badges (used on the producers grid).
+  - **Reusable design system** added (`static/css/main.css`): `.page-header`, `.page-body`, `.content-grid`, `.media-card`, `.producer-card-v2`, `.avatar`, `.btn-pill` (+ ghost / soft / danger / block variants), `.auth-shell` / `.auth-card`, `.layout-with-aside`, `.surface-card`, `.summary-card`, `.cart-group` / `.cart-row`, `.order-card`, `.data-table`, `.detail-hero`, `.empty-state`. Plus a `.page-form` polish layer that upgrades the existing add/edit forms in place — no per-template form rewrites required.
+  - **Templates restyled** to the new aesthetic (image hero/cards + page-header pattern + sticky summary on side):
+    - `marketplace/browse_recipes.html`, `browse_stories.html`, `producers.html` — image-led card grids with deterministic image fallbacks, no more empty cards when producers haven't uploaded a photo.
+    - `marketplace/recipe_detail.html`, `story_detail.html`, `producer_profile.html` — wide hero image + content layout (instructions on the left, ingredients in a sticky aside for recipes; a richer producer profile that shows products, recipes and stories all using the new media-card).
+    - `marketplace/my_products.html`, `my_recipes.html`, `my_stories.html`, `my_favorite_recipes.html`, `my_reviews.html` — modern producer dashboard cards with status pills + thumbnails.
+    - `marketplace/add_*.html`, `edit_*.html`, `delete_*.html`, `submit_review.html`, `edit_review.html`, `delete_review.html`, `producer_respond_review.html`, `review_error.html` — wrapped in the new page-header pattern; CSS overrides do the visual lift on the existing form markup.
+    - `accounts/login.html`, `register.html` — split-screen `auth-shell` layout: form card on one side, branded photo panel on the other (`strawberries.jpg` / `honey.jpg`).
+    - `orders/cart.html` — image-thumbnail rows grouped by producer, sticky summary card on the right.
+    - `orders/checkout.html` — two-column layout: delivery details on the left, sticky order summary on the right.
+    - `orders/order_list.html`, `order_detail.html` — bold order cards with status pills; detail page has a sticky delivery + payment + totals aside.
+    - `orders/manage_orders.html`, `manage_order_detail.html`, `payments.html`, `stock_alerts.html` — consistent producer dashboard styling with the new page-header.
+    - `orders/admin_order_detail.html`, `admin_monthly_summary.html`, `admin_financial_reports.html` — wrapped in the page-header pattern (table internals left as-is to avoid risk on data-heavy admin views).
+    - `brfn_app/templates/terms.html` — surface-card layout with the page-header eyebrow.
+- **Tested**:
+  - `manage.py check` clean
+  - All 43 templates load via Django's template loader without errors
+  - All 16 existing email / notification tests still pass
+  - Public pages (home, browse, login, register, terms, recipes, stories, producers) all return HTTP 200
+  - Authenticated customer pages (cart, my-orders, favourite-recipes) all return HTTP 200
+  - Authenticated producer pages (my-products, my-recipes, my-stories, my-reviews, manage orders, payments, stock-alerts, add-product / -recipe / -story) all return HTTP 200
+- **Constraint respected**: zero backend changes. No models, views, URL patterns, migrations, forms or settings touched. Everything in this commit is templates, CSS, static assets, and one read-only templatetag module.

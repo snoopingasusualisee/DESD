@@ -2,13 +2,14 @@
 {% load static %}
 {% block title %}Delete Review – BRFN{% endblock %}
 {% block content %}
-    <div class="page-wide">
-        <div class="form-card">
-            <h2>Delete Review?</h2>
+    <header class="page-header">
+        <span class="page-header__eyebrow" style="background: #fef0f0; color: #b42318;">Confirm delete</span>
+        <h1 class="page-header__title">Delete this review?</h1>
+        <p class="page-header__subtitle">Once deleted it can't be recovered.</p>
+    </header>
 
-            <div style="background: #fff3e0; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
-                <p style="margin: 0; font-weight: bold;">Are you sure you want to delete this review?</p>
-            </div>
+    <div class="page-body" style="max-width: 720px;">
+        <div class="form-card">
 
             <div style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
                 <h3 style="margin: 0 0 0.5rem 0;">{{ review.product.name }}</h3>
@@ -22,10 +23,10 @@
                 <p style="margin: 0;">{{ review.review_text|truncatewords:30 }}</p>
             </div>
 
-            <form method="post" style="display: flex; gap: 1rem;">
+            <form method="post" style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
                 {% csrf_token %}
-                <button type="submit" class="btn" style="background: #c00;">Yes, Delete Review</button>
-                <a href="/browse/product/{{ review.product.id }}/" class="btn">Cancel</a>
+                <button type="submit" class="btn-pill" style="background: var(--brfn-accent-deep);">Yes, delete review</button>
+                <a href="/browse/product/{{ review.product.id }}/" class="btn-pill btn-pill--ghost">Cancel</a>
             </form>
         </div>
     </div>

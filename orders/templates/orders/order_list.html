@@ -2,31 +2,44 @@
 {% load static %}
 {% block title %}My Orders – BRFN{% endblock %}
 {% block content %}
-    <div class="page-wide">
-        <h2>My Orders</h2>
+    <header class="page-header">
+        <span class="page-header__eyebrow">Order history</span>
+        <h1 class="page-header__title">My orders</h1>
+        <p class="page-header__subtitle">
+            Every order you've placed, with status updates from each producer.
+        </p>
+    </header>
 
+    <div class="page-body">
         {% if orders %}
-        <div class="producer-list">
             {% for order in orders %}
-            <div class="producer-card">
-                <div>
-                    <h3>Order #{{ order.id }}</h3>
-                    <p>Placed: {{ order.created_at|date:"d M Y, H:i" }}</p>
-                    {% if order.delivery_date %}
-                    <p>Delivery: {{ order.delivery_date|date:"d M Y" }}</p>
-                    {% endif %}
-                    <p>Producers: {{ order.producer_names }}</p>
-                    <p>Status: <strong>{{ order.get_status_display }}</strong></p>
-                </div>
-                <div style="text-align: right;">
-                    <p style="font-size: 1.1rem; font-weight: bold;">£{{ order.total }}</p>
-                    <a href="/orders/my-orders/{{ order.id }}/" class="btn">View Details</a>
-                </div>
-            </div>
+                <article class="order-card">
+                    <div>
+                        <h3 class="order-card__title">Order #{{ order.id }}</h3>
+                        <p class="order-card__meta">
+                            Placed {{ order.created_at|date:"d M Y" }}
+                            {% if order.delivery_date %} · Delivery {{ order.delivery_date|date:"d M Y" }}{% endif %}
+                            · {{ order.producer_names }}
+                        </p>
+                        {% with status=order.status|lower %}
+                            <span class="order-card__status order-card__status--{% if status == 'delivered' %}delivered{% elif status == 'ready' or status == 'shipped' %}ready{% else %}pending{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        {% endwith %}
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="order-card__price">£{{ order.total }}</div>
+                        <a href="/orders/my-orders/{{ order.id }}/" class="btn-pill btn-pill--ghost" style="margin-top: 0.6rem;">View details</a>
+                    </div>
+                </article>
             {% endfor %}
-        </div>
         {% else %}
-        <p class="empty">You haven't placed any orders yet. <a href="/browse/">Browse products</a> to get started.</p>
+            <div class="empty-state">
+                <div class="empty-state__icon">📦</div>
+                <h2 class="empty-state__title">No orders yet</h2>
+                <p class="empty-state__text">When you place your first order it'll show up here.</p>
+                <a href="/browse/" class="btn-pill">Browse products</a>
+            </div>
         {% endif %}
     </div>
 {% endblock %}

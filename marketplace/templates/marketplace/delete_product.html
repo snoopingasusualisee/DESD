@@ -2,13 +2,21 @@
 {% load static %}
 {% block title %}Delete {{ product.name }} – BRFN{% endblock %}
 {% block content %}
-    <div class="page">
-        <h2>Delete Product</h2>
-        <p>Are you sure you want to delete <strong>"{{ product.name }}"</strong>? This action cannot be undone.</p>
-        <form method="post">
-            {% csrf_token %}
-            <button type="submit" style="background: #c00;">Yes, Delete</button>
-        </form>
-        <p class="link"><a href="/browse/product/{{ product.id }}/">← Cancel</a></p>
+    <header class="page-header">
+        <span class="page-header__eyebrow" style="background: #fef0f0; color: #b42318;">Confirm delete</span>
+        <h1 class="page-header__title">Delete this product?</h1>
+        <p class="page-header__subtitle">
+            This will permanently remove <strong>{{ product.name }}</strong> from your catalogue. This action cannot be undone.
+        </p>
+    </header>
+
+    <div class="page-body" style="max-width: 600px;">
+        <div class="surface-card">
+            <form method="post" style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                {% csrf_token %}
+                <button type="submit" class="btn-pill" style="background: var(--brfn-accent-deep);">Yes, delete product</button>
+                <a href="/browse/product/{{ product.id }}/" class="btn-pill btn-pill--ghost">Cancel</a>
+            </form>
+        </div>
     </div>
 {% endblock %}

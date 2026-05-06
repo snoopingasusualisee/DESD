@@ -1,28 +1,44 @@
 {% extends "base.html" %}
 {% load static %}
+{% load brfn_extras %}
 {% block title %}Producers – BRFN{% endblock %}
 {% block content %}
-    <div class="page page-wide">
-        <h2>Our Producers</h2>
-        <p class="page-intro">Local farms and producers within 20 miles of Bristol.</p>
+    <header class="page-header">
+        <span class="page-header__eyebrow">Local producers</span>
+        <h1 class="page-header__title">Our producers</h1>
+        <p class="page-header__subtitle">
+            Every producer here is within 20 miles of Bristol. Click through to read
+            their story or see what they're selling this week.
+        </p>
+    </header>
 
+    <div class="page-body">
         {% if producers %}
-            <div class="producer-list">
+            <div class="content-grid">
                 {% for producer in producers %}
-                    <div class="producer-card">
-                        <div>
-                            <h3><a href="/browse/producer/{{ producer.id }}/" style="color: inherit; text-decoration: none;">{{ producer.first_name }} {{ producer.last_name }}</a></h3>
-                            <p style="color: #666; font-size: 0.9rem;">@{{ producer.username }}</p>
+                    <article class="producer-card-v2">
+                        <div class="avatar avatar--lg">{% initials producer.first_name producer.last_name %}</div>
+                        <div class="producer-card-v2__body">
+                            <h3 class="producer-card-v2__name">
+                                <a href="/browse/producer/{{ producer.id }}/">{{ producer.first_name }} {{ producer.last_name }}</a>
+                            </h3>
+                            <p class="producer-card-v2__handle">@{{ producer.username }}</p>
+                            <div class="producer-card-v2__actions" style="margin-top: 0.85rem;">
+                                <a class="btn-pill btn-pill--soft" href="/browse/producer/{{ producer.id }}/">Profile</a>
+                                <a class="btn-pill btn-pill--ghost" href="/browse/?producer={{ producer.username }}">Products</a>
+                            </div>
                         </div>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <a class="btn" href="/browse/producer/{{ producer.id }}/">View Profile</a>
-                            <a class="btn" href="/browse/?producer={{ producer.username }}">View Products</a>
-                        </div>
-                    </div>
+                    </article>
                 {% endfor %}
             </div>
         {% else %}
-            <p class="empty">No producers registered yet.</p>
+            <div class="empty-state">
+                <div class="empty-state__icon">👨‍🌾</div>
+                <h2 class="empty-state__title">No producers registered yet</h2>
+                <p class="empty-state__text">
+                    Producers will appear here as they join the network.
+                </p>
+            </div>
         {% endif %}
     </div>
 {% endblock %}

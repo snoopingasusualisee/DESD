@@ -2,50 +2,76 @@
 {% load static %}
 {% block title %}Payments – BRFN{% endblock %}
 {% block content %}
-    <div class="page-wide">
-        <h2>Payments</h2>
-        <p style="margin-bottom: 1.5rem; color: #666;">Financial Reports</p>
-
-        <div class="producer-card" style="margin-bottom: 1.5rem;">
-            <h3>Settlement Week</h3>
-            <p>{{ previous_week_start }} to {{ previous_week_end }}</p>
+    <header class="page-header">
+        <span class="page-header__eyebrow">Producer finance</span>
+        <h1 class="page-header__title">Payments &amp; settlements</h1>
+        <p class="page-header__subtitle">Weekly settlement statements, network commission and tax-year totals.</p>
+        <div class="page-header__actions">
+            <a href="/orders/payments/report/csv/" class="btn-pill">Download CSV report</a>
         </div>
+    </header>
 
-        {% if settlement_rows %}
-        <div class="producer-list" style="margin-bottom: 1.5rem;">
-            {% for row in settlement_rows %}
-            <div class="producer-card">
-                <div>
-                    <h3>Order {{ row.order.id }} - {{ row.order.full_name }}</h3>
-                    <p>Customer: {{ row.order.full_name }}</p>
-                    <p>
-                        Items:
-                        {% for item in row.items %}
-                            {{ item.product_name }}{% if not forloop.last %}, {% endif %}
-                        {% endfor %}
-                    </p>
-                </div>
-                <div style="text-align: right;">
-                    <p><strong>Order Total:</strong> £{{ row.order_total }}</p>
-                    <p><strong>Commission:</strong> £{{ row.commission }}</p>
-                    <p><strong>Producer Payment:</strong> £{{ row.producer_payment }}</p>
-                </div>
+    <div class="page-body">
+        <div class="layout-with-aside">
+            <div>
+                <section class="surface-card" style="margin-bottom: 1rem;">
+                    <h2 class="surface-card__title">Settlement week</h2>
+                    <p style="margin: 0; color: var(--brfn-ink-soft);">{{ previous_week_start }} → {{ previous_week_end }}</p>
+                </section>
+
+                {% if settlement_rows %}
+                    {% for row in settlement_rows %}
+                        <article class="surface-card" style="margin-bottom: 0.85rem;">
+                            <div style="display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
+                                <div style="min-width: 0;">
+                                    <h3 style="margin: 0 0 0.3rem; font-size: 1rem;">Order #{{ row.order.id }} · {{ row.order.full_name }}</h3>
+                                    <p style="margin: 0; color: var(--brfn-ink-soft); font-size: 0.85rem;">
+                                        Items:
+                                        {% for item in row.items %}{{ item.product_name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                    </p>
+                                </div>
+                                <div style="text-align: right; font-size: 0.88rem;">
+                                    <p style="margin: 0; color: var(--brfn-ink-soft);">Order: <strong style="color: var(--brfn-ink);">£{{ row.order_total }}</strong></p>
+                                    <p style="margin: 0; color: var(--brfn-ink-soft);">Commission: <strong style="color: var(--brfn-ink);">£{{ row.commission }}</strong></p>
+                                    <p style="margin: 0; color: var(--brfn-green-deep); font-weight: 700;">Producer payment: £{{ row.producer_payment }}</p>
+                                </div>
+                            </div>
+                        </article>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state__icon">💸</div>
+                        <h2 class="empty-state__title">No settlements this week</h2>
+                        <p class="empty-state__text">Once orders complete, weekly settlements will appear here.</p>
+                    </div>
+                {% endif %}
             </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <p class="empty">No weekly settlements found.</p>
-        {% endif %}
 
-        <div class="producer-card" style="margin-bottom: 1.5rem;">
-            <h3>Summary</h3>
-            <p><strong>Total Orders Value:</strong> £{{ total_orders_value }}</p>
-            <p><strong>Commission:</strong> £{{ total_commission }}</p>
-            <p><strong>Producer Payment:</strong> £{{ total_producer_payment }}</p>
-            <p><strong>Payment Status:</strong> {{ payment_status }}</p>
-            <p><strong>Tax Year Total:</strong> £{{ tax_year_total }}</p>
+            <aside class="summary-card">
+                <h2 class="summary-card__title">Summary</h2>
+                <div class="summary-row">
+                    <span>Total orders value</span>
+                    <strong>£{{ total_orders_value }}</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Network commission</span>
+                    <strong>£{{ total_commission }}</strong>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-row summary-row--total">
+                    <span>You receive</span>
+                    <strong>£{{ total_producer_payment }}</strong>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-row">
+                    <span>Payment status</span>
+                    <span style="font-weight: 600; color: var(--brfn-ink);">{{ payment_status }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax year total</span>
+                    <strong>£{{ tax_year_total }}</strong>
+                </div>
+            </aside>
         </div>
-
-        <a href="/orders/payments/report/csv/" class="btn">Download CSV Report</a>
     </div>
 {% endblock %}

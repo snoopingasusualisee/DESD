@@ -2,22 +2,25 @@
 {% load static %}
 {% block title %}Review Error – BRFN{% endblock %}
 {% block content %}
-    <div class="page-wide">
-        <div class="form-card">
-            <h2>Unable to Submit Review</h2>
+    <header class="page-header">
+        <span class="page-header__eyebrow" style="background: #fef0f0; color: #b42318;">Unable to submit review</span>
+        <h1 class="page-header__title">Something went wrong</h1>
+    </header>
 
-            <div style="background: #ffebee; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; color: #c00;">
-                <p style="margin: 0; font-weight: bold;">{{ error_message }}</p>
+    <div class="page-body" style="max-width: 720px;">
+        <div class="form-card">
+            <div style="background: #fff1f0; color: #b42318; border: 1px solid #fee4e2; padding: 1rem 1.15rem; border-radius: var(--brfn-radius-sm); margin-bottom: 1.25rem;">
+                <p style="margin: 0; font-weight: 600;">{{ error_message }}</p>
             </div>
 
             {% if review %}
-            <p>You can view or edit your existing review:</p>
-            <a href="/browse/review/{{ review.id }}/edit/" class="btn">Edit Your Review</a>
+                <p>You can view or edit your existing review:</p>
+                <a href="/browse/review/{{ review.id }}/edit/" class="btn-pill">Edit your review</a>
             {% elif product %}
-            <p>Return to the product page to purchase this item:</p>
-            <a href="/browse/product/{{ product.id }}/" class="btn">View Product</a>
+                <p>Return to the product page to buy this item:</p>
+                <a href="/browse/product/{{ product.id }}/" class="btn-pill">View product</a>
             {% else %}
-            <a href="/browse/" class="btn">Browse Products</a>
+                <a href="/browse/" class="btn-pill">Browse products</a>
             {% endif %}
         </div>
     </div>

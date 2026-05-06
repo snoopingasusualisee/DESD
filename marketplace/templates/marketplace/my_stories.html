@@ -1,39 +1,52 @@
 {% extends "base.html" %}
 {% load static %}
+{% load brfn_extras %}
 {% block title %}My Farm Stories – BRFN{% endblock %}
 {% block content %}
-    <div class="page page-wide">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="margin: 0;">My Farm Stories</h2>
-            <a href="/browse/add-story/" class="btn-primary">Add New Story</a>
+    <header class="page-header">
+        <span class="page-header__eyebrow">Producer dashboard</span>
+        <h1 class="page-header__title">My farm stories</h1>
+        <p class="page-header__subtitle">Tell customers what's happening on the farm this season.</p>
+        <div class="page-header__actions">
+            <a href="/browse/add-story/" class="btn-pill">+ Add new story</a>
         </div>
+    </header>
 
+    <div class="page-body">
         {% if stories %}
-        <div class="product-grid">
-            {% for story in stories %}
-            <div class="product-card">
-                <h3><a href="/browse/story/{{ story.id }}/">{{ story.title }}</a></h3>
-                {% if story.image %}
-                <img src="{{ story.image.url }}" alt="{{ story.title }}"
-                    style="width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 0.5rem;">
-                {% endif %}
-                {% if story.is_published %}
-                <span class="category-tag" style="background: #d4edda; color: #155724;">Published</span>
-                {% else %}
-                <span class="category-tag" style="background: #f1f1f1; color: #666;">Draft</span>
-                {% endif %}
-                <p class="description">{{ story.content|truncatewords:20 }}</p>
-                <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                    <a href="/browse/story/{{ story.id }}/edit/" class="btn">Edit</a>
-                    <a href="/browse/story/{{ story.id }}/delete/" class="btn-delete">Delete</a>
-                </div>
+            <div class="content-grid">
+                {% for story in stories %}
+                    <article class="media-card">
+                        <a href="/browse/story/{{ story.id }}/" class="media-card__media">
+                            <img src="{% story_image_url story %}" alt="{{ story.title }}"
+                                 loading="lazy" class="media-card__image">
+                            <span class="media-card__chip">Story</span>
+                        </a>
+                        <div class="media-card__body">
+                            <h3 class="media-card__title"><a href="/browse/story/{{ story.id }}/">{{ story.title }}</a></h3>
+                            <p class="media-card__meta">
+                                {% if story.is_published %}
+                                    <span style="color: var(--brfn-green-deep); font-weight: 600;">● Published</span>
+                                {% else %}
+                                    <span style="color: var(--brfn-ink-soft); font-weight: 600;">● Draft</span>
+                                {% endif %}
+                            </p>
+                            <p class="media-card__excerpt">{{ story.content|truncatewords:18 }}</p>
+                            <div class="media-card__footer">
+                                <a href="/browse/story/{{ story.id }}/edit/" class="btn-pill btn-pill--ghost" style="padding: 0.4rem 0.85rem; font-size: 0.78rem;">Edit</a>
+                                <a href="/browse/story/{{ story.id }}/delete/" class="btn-pill btn-pill--danger" style="padding: 0.4rem 0.85rem; font-size: 0.78rem;">Delete</a>
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
         {% else %}
-        <p style="text-align: center; color: #666; padding: 2rem;">
-            You haven't created any farm stories yet. <a href="/browse/add-story/">Share your first story</a> with customers!
-        </p>
+            <div class="empty-state">
+                <div class="empty-state__icon">🌾</div>
+                <h2 class="empty-state__title">No stories yet</h2>
+                <p class="empty-state__text">Share what's happening on the farm — customers love a story.</p>
+                <a href="/browse/add-story/" class="btn-pill">+ Share your first story</a>
+            </div>
         {% endif %}
     </div>
 {% endblock %}
