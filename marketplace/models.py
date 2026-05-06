@@ -67,6 +67,16 @@ class Product(models.Model):
     )
     allergen_info = models.TextField(blank=True, help_text="List any allergens, e.g. Contains eggs")
     harvest_date = models.DateField(null=True, blank=True, help_text="Date of harvest or production")
+    seasonal_start_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Start of seasonal availability (e.g., June 1 for summer produce)"
+    )
+    seasonal_end_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="End of seasonal availability (e.g., August 31 for summer produce)"
+    )
     image = models.ImageField(
         upload_to="products/",
         blank=True,
@@ -93,6 +103,63 @@ class Product(models.Model):
     def get_review_count(self):
         """Get the total number of reviews for this product."""
         return self.reviews.count()
+    
+    def is_currently_in_season(self):
+        """
+        Check if product is currently in season based on seasonal dates.
+        Returns True if:
+        - Product is marked as ALL_YEAR
+        - Current date is within seasonal_start_date and seasonal_end_date
+        - No dates set but status is IN_SEASON (manual override)
+        """
+        from datetime import date
+        
+        # All-year products are always in season
+        if self.seasonal_status == self.SeasonalStatus.ALL_YEAR:
+            return True
+        
+        # If no dates set, rely on manual seasonal_status
+        if not self.seasonal_start_date or not self.seasonal_end_date:
+            return self.seasonal_status == self.SeasonalStatus.IN_SEASON
+        
+        today = date.today()
+        
+        # Handle same-year seasons (e.g., June-August)
+        if self.seasonal_start_date <= self.seasonal_end_date:
+            return self.seasonal_start_date <= today <= self.seasonal_end_date
+        
+        # Handle cross-year seasons (e.g., November-February for winter)
+        return today >= self.seasonal_start_date or today <= self.seasonal_end_date
+    
+    def get_computed_seasonal_status(self):
+        """
+        Get the computed seasonal status based on current date and seasonal dates.
+        This is used for display purposes when dates are set.
+        """
+        if self.seasonal_status == self.SeasonalStatus.ALL_YEAR:
+            return self.SeasonalStatus.ALL_YEAR
+        
+        if self.is_currently_in_season():
+            return self.SeasonalStatus.IN_SEASON
+        else:
+            return self.SeasonalStatus.OUT_OF_SEASON
+    
+    def get_seasonal_date_range_display(self):
+        """
+        Returns a human-readable seasonal date range.
+        E.g., "June - August" or "Available All Year"
+        """
+        if self.seasonal_status == self.SeasonalStatus.ALL_YEAR:
+            return "Available All Year"
+        
+        if self.seasonal_start_date and self.seasonal_end_date:
+            start_month = self.seasonal_start_date.strftime("%B")
+            end_month = self.seasonal_end_date.strftime("%B")
+            if start_month == end_month:
+                return start_month
+            return f"{start_month} - {end_month}"
+        
+        return self.get_seasonal_status_display()
 
 
 class Basket(models.Model):

@@ -495,3 +495,39 @@
 - Brought the Terms page and the producer edit/delete pages (edit_recipe, edit_story, delete_recipe, delete_story) in line with the standard role-aware nav. They previously shipped with stripped-down navs missing the user dropdown and most links.
 - Fixed broken logout on the Terms page — replaced the plain anchor with the standard CSRF-protected POST form.
 - Removed a multi-line `{# ... #}` Django comment from browse.html that was rendering as visible text below the footer (Django's `{# #}` doesn't span newlines).
+# V1.0.39 - TJ
+- Implemented test case 16 (TC-016): Seasonal Availability Management
+- Created comprehensive unit_tests/tc_016.py with 18 test cases covering:
+  - Producer ability to set seasonal availability (In Season, Out of Season, All Year, Limited)
+  - Seasonal status display on browse page for customers
+  - Seasonal indicators on producer dashboard
+  - Form validation for seasonal status field
+  - Updating seasonal status as seasons change
+  - Multiple products with different seasonal patterns
+  - Default seasonal status (Available All Year)
+  - Seasonal status persistence across product updates
+- Test cases validate existing seasonal_status field functionality without infrastructure changes
+- All tests work with current Product model (4 seasonal status choices: IN_SEASON, OUT_OF_SEASON, ALL_YEAR, LIMITED)
+- Tests confirm seasonal information educates customers about local food systems
+- Tests verify producers can easily manage seasonal availability through product forms
+- Seasonal status properly displayed with get_seasonal_status_display() method
+- No database migrations or model changes required - uses existing infrastructure
+- TC-016 acceptance criteria met: intuitive seasonal settings, appropriate customer indicators, support for different seasonal patterns
+- **ENHANCED with date-based seasonal system:**
+  - Added seasonal_start_date and seasonal_end_date fields to Product model
+  - Added is_currently_in_season() method for automatic seasonal status calculation
+  - Added get_computed_seasonal_status() method for date-based status display
+  - Added get_seasonal_date_range_display() method for human-readable date ranges (e.g., "June - August")
+  - Updated ProductForm to include seasonal date fields with validation
+  - Form validation ensures both dates are provided together or both left empty
+  - ALL_YEAR products automatically clear seasonal dates
+  - Updated browse.html to show automatic seasonal indicators with date ranges
+  - Green badge "✓ June - August" for in-season products
+  - Orange badge "Out of Season (June - August)" for out-of-season products
+  - Added 8 new test cases covering date-based functionality (total 26 tests)
+  - Tests cover: date setting, date range display, automatic calculation, validation, cross-year seasons
+  - Created migration 0015_product_seasonal_dates.py
+  - System supports both manual status (backward compatible) and automatic date-based calculation
+  - Cross-year seasonal dates supported (e.g., November-February for winter crops)
+  - Producers can set specific date ranges (e.g., June 1 - August 31 for summer strawberries)
+  - System automatically determines if product is in season based on current date vs. seasonal dates

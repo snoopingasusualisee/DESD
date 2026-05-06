@@ -33,6 +33,8 @@ class ProductForm(forms.ModelForm):
             'category',
             'is_available',
             'seasonal_status',
+            'seasonal_start_date',
+            'seasonal_end_date',
             'organic_certification_status',
             'allergen_info',
             'harvest_date',
@@ -64,6 +66,12 @@ class ProductForm(forms.ModelForm):
             'harvest_date': forms.DateInput(attrs={
                 'type': 'date',
             }),
+            'seasonal_start_date': forms.DateInput(attrs={
+                'type': 'date',
+            }),
+            'seasonal_end_date': forms.DateInput(attrs={
+                'type': 'date',
+            }),
         }
 
     def __init__(self, *args, **kwargs):
@@ -79,6 +87,14 @@ class ProductForm(forms.ModelForm):
         # Make low_stock_threshold optional since it has a default value
         self.fields['low_stock_threshold'].required = False
         self.fields['low_stock_threshold'].help_text = 'Alert when stock falls below this level (default: 10)'
+        
+        # Make seasonal dates optional
+        self.fields['seasonal_start_date'].required = False
+        self.fields['seasonal_end_date'].required = False
+        self.fields['seasonal_start_date'].label = 'Seasonal Start Date'
+        self.fields['seasonal_end_date'].label = 'Seasonal End Date'
+        self.fields['seasonal_start_date'].help_text = 'Optional: Set start date for seasonal products (e.g., June 1)'
+        self.fields['seasonal_end_date'].help_text = 'Optional: Set end date for seasonal products (e.g., August 31)'
 
     def clean_price(self):
         """Validate that price is greater than 0."""
@@ -118,6 +134,29 @@ class ProductForm(forms.ModelForm):
                 validate_product_data(price, stock_quantity)
             except ValidationError as e:
                 raise e
+        
+        # Validate seasonal dates
+        seasonal_status = cleaned_data.get('seasonal_status')
+        seasonal_start_date = cleaned_data.get('seasonal_start_date')
+        seasonal_end_date = cleaned_data.get('seasonal_end_date')
+        
+        # If seasonal status is not ALL_YEAR and dates are provided, validate them
+        if seasonal_status != Product.SeasonalStatus.ALL_YEAR:
+            if seasonal_start_date and seasonal_end_date:
+                # Dates can cross year boundary (e.g., Nov-Feb for winter)
+                # So we don't validate start < end
+                pass
+            elif seasonal_start_date or seasonal_end_date:
+                # If one date is provided, both must be provided
+                raise ValidationError(
+                    "Both seasonal start and end dates must be provided, or leave both empty."
+                )
+        
+        # If ALL_YEAR, clear any seasonal dates
+        if seasonal_status == Product.SeasonalStatus.ALL_YEAR:
+            cleaned_data['seasonal_start_date'] = None
+            cleaned_data['seasonal_end_date'] = None
+        
         organic_status = cleaned_data.get('organic_certification_status')
 
         if not organic_status:

@@ -132,9 +132,16 @@
                 {% endif %}
                 <p class="producer">Sold by: {{ product.producer.username }}</p>
                 <span class="category-tag">{{ product.category.name }}</span>
+                
+                {% if product.is_currently_in_season %}
                 <span class="category-tag" style="background: #e8f5e9; color: #2e7d32;">
-                    {{ product.get_seasonal_status_display }}
+                    ✓ {{ product.get_seasonal_date_range_display }}
                 </span>
+                {% else %}
+                <span class="category-tag" style="background: #fff3e0; color: #e65100;">
+                    Out of Season{% if product.seasonal_start_date %} ({{ product.get_seasonal_date_range_display }}){% endif %}
+                </span>
+                {% endif %}
 
                 {% if product.organic_certification_status == 'certified_organic' %}
                 <span class="category-tag" style="background: #e8f5e9; color: #1b5e20;">
