@@ -59,14 +59,17 @@ def send_order_confirmation_email(order):
     )
 
     try:
-        send_mail(
+        sent_count = send_mail(
             subject,
             message,
             settings.DEFAULT_FROM_EMAIL,
             [email],
             fail_silently=False,
         )
-        logger.info(f"Order confirmation email sent for Order #{order.id} to {email}")
+        if sent_count == 1:
+            logger.info(f"Order confirmation email sent for Order #{order.id} to {email}")
+        else:
+            logger.error(f"Order confirmation email for Order #{order.id} to {email} sent {sent_count} messages")
     except Exception as e:
         logger.exception(f"Failed to send order confirmation email for Order #{order.id}: {e}")
 
@@ -97,13 +100,16 @@ def send_status_update_email(order, old_status, new_status, note=""):
     )
 
     try:
-        send_mail(
+        sent_count = send_mail(
             subject,
             message,
             settings.DEFAULT_FROM_EMAIL,
             [email],
             fail_silently=False,
         )
-        logger.info(f"Status update email sent for Order #{order.id} to {email}")
+        if sent_count == 1:
+            logger.info(f"Status update email sent for Order #{order.id} to {email}")
+        else:
+            logger.error(f"Status update email for Order #{order.id} to {email} sent {sent_count} messages")
     except Exception as e:
         logger.exception(f"Failed to send status update email for Order #{order.id}: {e}")

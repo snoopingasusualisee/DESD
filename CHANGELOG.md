@@ -634,3 +634,10 @@
   - Updated `.github/workflows/collab.yml` so the collab workflow ignores pushes to `main`
   - `deploy.yml` remains the workflow responsible for pushes to `main`, so normal production pushes now run the deploy pipeline instead of the collab pipeline
   - Non-main branch pushes still run the collab workflow, preserving the existing branch validation/merge flow
+
+# V1.1.45 - Zain Malik
+- **Fix: production Gmail sender compatibility**
+  - Removed the ECS `DEFAULT_FROM_EMAIL=no-reply@...` override so Django defaults to `EMAIL_HOST_USER`, which Gmail SMTP accepts without requiring a verified custom sender alias
+  - Added `EMAIL_TIMEOUT=20` support/configuration to avoid long hangs on SMTP network issues
+  - Improved order/status email logging so Django reporting `0` sent messages is logged as an error instead of a false success
+  - Updated `.env.example` to document `EMAIL_TIMEOUT` and warn that custom Gmail sender addresses need a verified "Send mail as" alias

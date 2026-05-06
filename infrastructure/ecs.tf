@@ -54,7 +54,7 @@ resource "aws_ecs_task_definition" "web" {
       { name = "EMAIL_HOST", value = "smtp.gmail.com" },
       { name = "EMAIL_PORT", value = "587" },
       { name = "EMAIL_USE_TLS", value = "True" },
-      { name = "DEFAULT_FROM_EMAIL", value = "no-reply@${var.domain_name}" },
+      { name = "EMAIL_TIMEOUT", value = "20" },
     ]
 
     secrets = [
