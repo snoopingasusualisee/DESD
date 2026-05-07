@@ -3,213 +3,226 @@
 {% load brfn_extras %}
 {% block title %}{{ product.name }} – BRFN{% endblock %}
 {% block content %}
-    <div class="page-wide">
-        <p class="link" style="text-align: left; margin-bottom: 1rem;"><a href="/browse/">← Back to Browse</a></p>
+    <header class="page-header">
+        <a href="/browse/" class="page-header__back">← Back to browse</a>
+        <span class="page-header__eyebrow">{{ product.category.name }}</span>
+        <h1 class="page-header__title">{{ product.name }}</h1>
+        <p class="page-header__subtitle">
+            By <a href="/browse/producer/{{ product.producer.id }}/" class="page-header__link">{{ product.producer.first_name }} {{ product.producer.last_name }}</a>
+            (@{{ product.producer.username }})
+        </p>
+    </header>
 
-        <div class="product-detail-hero">
-            <img src="{% product_image_url product %}" alt="{{ product.name }}" class="product-detail-hero__image" loading="lazy">
+    <div class="page-body">
+        <div class="detail-hero detail-hero--full">
+            <div class="detail-hero__image">
+                <img src="{% product_image_url product %}" alt="{{ product.name }}" loading="lazy">
+            </div>
         </div>
 
-        <div class="product-card" style="max-width: 700px;">
-
-            <span class="category-tag">{{ product.category.name }}</span>
-            <span class="category-tag" style="background: #e8f5e9; color: #2e7d32;">
-                {{ product.get_seasonal_status_display }}
-            </span>
-            {% if product.organic_certification_status == 'certified_organic' %}
-            <span class="category-tag" style="background: #e8f5e9; color: #1b5e20;">
-                Certified Organic
-            </span>
-            {% else %}
-            <span class="category-tag" style="background: #f1f1f1; color: #555;">
-                Not Certified
-            </span>
-            {% endif %}
-
-            <h2 style="margin: 0.5rem 0;">{{ product.name }}</h2>
-            <p class="producer">By <a href="/browse/producer/{{ product.producer.id }}/" style="color: #333; text-decoration: underline;">{{ product.producer.first_name }} {{ product.producer.last_name }}</a></p>
-
-            {% if product.description %}
-            <p class="description">{{ product.description }}</p>
-            {% endif %}
-
-            <p class="price" style="font-size: 1.3rem; margin: 1rem 0;">
-                £{{ product.price }} / {{ product.get_unit_display }}
-            </p>
-
-            <p style="font-size: 0.9rem; color: #666;">
-                Stock: {{ product.stock_quantity }} available
-                {% if not product.is_available %}
-                <span style="color: #c00;"> (Currently unavailable)</span>
-                {% endif %}
-            </p>
-
-            {% if food_miles is not None %}
-            <div
-                style="margin-top: 0.75rem; padding: 0.5rem 0.75rem; background: #eef6ff; border-radius: 4px; font-size: 0.85rem;">
-                <strong>Food miles:</strong> {{ food_miles }} miles
-            </div>
-            {% endif %}
-
-            <div
-                style="margin-top: 0.75rem; padding: 0.5rem 0.75rem; background: #e8f5e9; border-radius: 4px; font-size: 0.85rem;">
-                <strong>Organic Certification:</strong> {{ product.get_organic_certification_status_display }}
-            </div>
-
-            {% if product.allergen_info %}
-            <div
-                style="margin-top: 0.75rem; padding: 0.5rem 0.75rem; background: #fff3e0; border-radius: 4px; font-size: 0.85rem;">
-                <strong>Allergen information:</strong> {{ product.allergen_info }}
-            </div>
-            {% else %}
-            <div
-                style="margin-top: 0.75rem; padding: 0.5rem 0.75rem; background: #e8f5e9; border-radius: 4px; font-size: 0.85rem;">
-                <strong>Allergen information:</strong> No common allergens
-            </div>
-            {% endif %}
-
-            {% if product.harvest_date %}
-            <p style="font-size: 0.85rem; color: #666; margin-top: 0.5rem;">Harvest Date: {{ product.harvest_date }}</p>
-            {% endif %}
-
-            {% if user.is_authenticated and product.is_available %}
-            <form method="post" action="/orders/cart/add/{{ product.id }}/"
-                style="display: flex; gap: 0.5rem; align-items: center; margin-top: 1rem;">
-                {% csrf_token %}
-                <label for="quantity" style="font-size: 0.9rem;">Qty:</label>
-                <input type="number" name="quantity" id="quantity" value="1" min="1"
-                    style="width: 70px; padding: 0.4rem;">
-                <button type="submit" class="btn" style="width: auto;">Add to Cart</button>
-            </form>
-            {% endif %}
-
-            <!-- Write Review Button - Prominent placement -->
-            {% if user.is_authenticated and user.role == 'customer' %}
-                {% if can_review and not has_reviewed %}
-                <div style="margin-top: 1rem; padding: 1rem; background: #e8f5e9; border: 2px solid #4CAF50; border-radius: 8px;">
-                    <p style="margin: 0 0 0.5rem 0; font-weight: bold; color: #2e7d32;">
-                        ✓ You purchased this product! Share your experience:
-                    </p>
-                    <a href="/browse/product/{{ product.id }}/review/" class="btn" style="background: #4CAF50; color: white; display: inline-block; font-size: 1rem; padding: 0.6rem 1.2rem;">
-                        ⭐ Write a Review
-                    </a>
+        <div class="layout-with-aside">
+            <div class="surface-card">
+                <div class="product-card__chips" style="margin-bottom: 1.25rem;">
+                    {% if product.is_currently_in_season %}
+                        <span class="brfn-chip brfn-chip--season">In season</span>
+                    {% else %}
+                        <span class="brfn-chip brfn-chip--off">Out of season</span>
+                    {% endif %}
+                    {% if product.organic_certification_status == 'certified_organic' %}
+                        <span class="brfn-chip brfn-chip--organic">Certified organic</span>
+                    {% else %}
+                        <span class="brfn-chip">Not certified</span>
+                    {% endif %}
+                    {% if food_miles is not None %}
+                        <span class="brfn-chip brfn-chip--miles">{{ food_miles }} food miles</span>
+                    {% endif %}
+                    {% if product.allergen_info %}
+                        <span class="brfn-chip brfn-chip--allergen">Allergens</span>
+                    {% endif %}
                 </div>
-                {% elif has_reviewed %}
-                <div style="margin-top: 1rem; padding: 0.75rem; background: #f0f0f0; border-radius: 6px; font-size: 0.9rem;">
-                    <span style="color: #666;">✓ You've already reviewed this product</span>
-                </div>
-                {% endif %}
-            {% endif %}
 
-            {% if user.is_authenticated and user == product.producer %}
-            <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
-                <a href="/browse/product/{{ product.id }}/edit/" class="btn" style="width: auto;">Edit</a>
-                <a href="/browse/product/{{ product.id }}/delete/" class="btn"
-                    style="width: auto; background: #c00;">Delete</a>
+                {% if product.description %}
+                    <h2 class="surface-card__title">About this product</h2>
+                    <p class="product-detail__description">{{ product.description }}</p>
+                {% endif %}
+
+                <dl class="product-detail__facts">
+                    {% if product.allergen_info %}
+                    <div class="product-detail__fact">
+                        <dt>Allergen information</dt>
+                        <dd>{{ product.allergen_info }}</dd>
+                    </div>
+                    {% else %}
+                    <div class="product-detail__fact">
+                        <dt>Allergen information</dt>
+                        <dd>No common allergens.</dd>
+                    </div>
+                    {% endif %}
+
+                    <div class="product-detail__fact">
+                        <dt>Organic certification</dt>
+                        <dd>{{ product.get_organic_certification_status_display }}</dd>
+                    </div>
+
+                    {% if product.harvest_date %}
+                    <div class="product-detail__fact">
+                        <dt>Harvested</dt>
+                        <dd>{{ product.harvest_date }}</dd>
+                    </div>
+                    {% endif %}
+
+                    {% if food_miles is not None %}
+                    <div class="product-detail__fact">
+                        <dt>Food miles</dt>
+                        <dd>{{ food_miles }} miles to your door</dd>
+                    </div>
+                    {% endif %}
+                </dl>
             </div>
-            {% endif %}
+
+            <aside class="summary-card">
+                <p class="summary-card__price">
+                    £{{ product.price }}
+                    <small>/ {{ product.get_unit_display }}</small>
+                </p>
+                <p class="summary-card__stock">
+                    {% if product.is_available %}
+                        <span class="brfn-chip brfn-chip--season">In stock</span>
+                        {{ product.stock_quantity }} available
+                    {% else %}
+                        <span class="brfn-chip brfn-chip--allergen">Currently unavailable</span>
+                    {% endif %}
+                </p>
+
+                {% if user.is_authenticated and product.is_available %}
+                    <form method="post" action="/orders/cart/add/{{ product.id }}/" class="summary-card__form">
+                        {% csrf_token %}
+                        <label for="quantity" class="summary-card__label">Quantity</label>
+                        <input type="number" name="quantity" id="quantity" value="1" min="1" class="summary-card__qty">
+                        <button type="submit" class="btn-pill btn-pill--block">Add to cart</button>
+                    </form>
+                {% elif not user.is_authenticated %}
+                    <a href="/accounts/login/" class="btn-pill btn-pill--block">Sign in to buy</a>
+                {% endif %}
+
+                {% if user.is_authenticated and user.role == 'customer' %}
+                    {% if can_review and not has_reviewed %}
+                        <a href="/browse/product/{{ product.id }}/review/" class="btn-pill btn-pill--ghost btn-pill--block" style="margin-top: 0.75rem;">
+                            ⭐ Write a review
+                        </a>
+                    {% elif has_reviewed %}
+                        <p class="summary-card__hint">You've already reviewed this product.</p>
+                    {% endif %}
+                {% endif %}
+
+                {% if user.is_authenticated and user == product.producer %}
+                    <div class="summary-card__owner-actions">
+                        <a href="/browse/product/{{ product.id }}/edit/" class="btn-pill btn-pill--ghost">Edit</a>
+                        <a href="/browse/product/{{ product.id }}/delete/" class="btn-pill btn-pill--danger">Delete</a>
+                    </div>
+                {% endif %}
+            </aside>
         </div>
 
         {% if linked_recipes %}
-        <div style="max-width: 700px; margin-top: 2rem; padding: 1.5rem; background: #f8f9fa; border-radius: 8px;">
-            <h3 style="margin-top: 0;">Recipe Suggestions</h3>
-            <p style="color: #666; margin-bottom: 1rem;">Try these recipes that use {{ product.name }}:</p>
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                {% for recipe in linked_recipes %}
-                <div style="background: white; padding: 1rem; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <strong>{{ recipe.title }}</strong>
-                        <p style="margin: 0; color: #666; font-size: 0.9rem;">{{ recipe.seasonal_tag|title }}</p>
-                    </div>
-                    <a href="/browse/recipe/{{ recipe.id }}/" class="btn-primary" style="font-size: 0.9rem;">View Recipe</a>
+            <section class="surface-card" style="margin-top: 2rem;">
+                <h2 class="surface-card__title">Recipes that use {{ product.name }}</h2>
+                <div class="recipe-suggestions">
+                    {% for recipe in linked_recipes %}
+                        <a href="/browse/recipe/{{ recipe.id }}/" class="recipe-suggestion">
+                            <img src="{% recipe_image_url recipe %}" alt="" class="recipe-suggestion__thumb" loading="lazy">
+                            <div class="recipe-suggestion__body">
+                                <strong>{{ recipe.title }}</strong>
+                                <span class="recipe-suggestion__meta">{{ recipe.seasonal_tag|title }}</span>
+                            </div>
+                            <span class="recipe-suggestion__chevron" aria-hidden="true">→</span>
+                        </a>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
-        </div>
+            </section>
         {% endif %}
 
-        <!-- Reviews Section -->
-        <div style="max-width: 700px; margin-top: 2rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h3 style="margin: 0;">Customer Reviews</h3>
+        <section class="reviews-section" id="reviews">
+            <header class="reviews-section__header">
+                <div>
+                    <span class="page-header__eyebrow">Customer reviews</span>
+                    <h2>What customers are saying</h2>
+                </div>
                 {% if can_review and not has_reviewed %}
-                <a href="/browse/product/{{ product.id }}/review/" class="btn" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Write a Review</a>
+                    <a href="/browse/product/{{ product.id }}/review/" class="btn-pill">Write a review</a>
                 {% endif %}
-            </div>
+            </header>
 
             {% if average_rating > 0 %}
-            <div style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <div style="font-size: 2rem; font-weight: bold; color: #f5a623;">{{ average_rating|floatformat:1 }}</div>
-                    <div>
-                        <div style="font-size: 1.5rem; color: #f5a623;">
+                <div class="reviews-summary">
+                    <div class="reviews-summary__score">{{ average_rating|floatformat:1 }}</div>
+                    <div class="reviews-summary__meta">
+                        <span class="stars">
                             {% for i in "12345" %}
                                 {% if forloop.counter <= average_rating %}★{% else %}☆{% endif %}
                             {% endfor %}
-                        </div>
-                        <p style="margin: 0; color: #666; font-size: 0.9rem;">Based on {{ review_count }} review{{ review_count|pluralize }}</p>
+                        </span>
+                        <p>Based on {{ review_count }} review{{ review_count|pluralize }}</p>
                     </div>
                 </div>
-            </div>
             {% endif %}
 
             {% if reviews %}
-            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                {% for review in reviews %}
-                <div style="background: white; padding: 1.5rem; border: 1px solid #e0e0e0; border-radius: 4px;">
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-                        <div>
-                            <div style="color: #f5a623; margin-bottom: 0.25rem;">
-                                {% for i in "12345" %}
-                                    {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
-                                {% endfor %}
-                            </div>
-                            <p style="margin: 0; font-weight: bold;">{{ review.title }}</p>
-                        </div>
-                        {% if review.is_verified_purchase %}
-                        <span style="background: #e8f5e9; color: #2e7d32; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">✓ Verified Purchase</span>
-                        {% endif %}
-                    </div>
+                <div class="review-list">
+                    {% for review in reviews %}
+                        <article class="review-card">
+                            <header class="review-card__header">
+                                <div>
+                                    <span class="stars">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                                        {% endfor %}
+                                    </span>
+                                    <h3 class="review-card__title">{{ review.title }}</h3>
+                                </div>
+                                {% if review.is_verified_purchase %}
+                                    <span class="brfn-chip brfn-chip--season">✓ Verified purchase</span>
+                                {% endif %}
+                            </header>
 
-                    <p style="margin: 0.5rem 0 1rem 0;">{{ review.review_text }}</p>
+                            <p class="review-card__text">{{ review.review_text }}</p>
 
-                    <p style="margin: 0; font-size: 0.85rem; color: #666;">
-                        By {{ review.display_name }} on {{ review.created_at|date:"F d, Y" }}
-                    </p>
+                            <p class="review-card__byline">
+                                By {{ review.display_name }} · {{ review.created_at|date:"F d, Y" }}
+                            </p>
 
-                    {% if review.producer_response %}
-                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-top: 1rem; border-left: 3px solid #4caf50;">
-                        <p style="margin: 0 0 0.5rem 0; font-weight: bold; color: #2e7d32;">Producer's Response:</p>
-                        <p style="margin: 0;">{{ review.producer_response }}</p>
-                        <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: #666;">
-                            {{ review.producer_response_date|date:"F d, Y" }}
-                        </p>
-                    </div>
-                    {% endif %}
+                            {% if review.producer_response %}
+                                <div class="review-card__response">
+                                    <strong>Producer's response</strong>
+                                    <p>{{ review.producer_response }}</p>
+                                    <span class="review-card__byline">{{ review.producer_response_date|date:"F d, Y" }}</span>
+                                </div>
+                            {% endif %}
 
-                    {% if user.is_authenticated %}
-                        {% if user == review.customer %}
-                        <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                            <a href="/browse/review/{{ review.id }}/edit/" class="btn-primary" style="font-size: 0.85rem; padding: 0.3rem 0.6rem;">Edit</a>
-                        </div>
-                        {% elif user == product.producer and not review.producer_response %}
-                        <div style="margin-top: 1rem;">
-                            <a href="/browse/review/{{ review.id }}/respond/" class="btn-primary" style="font-size: 0.85rem; padding: 0.3rem 0.6rem;">Respond</a>
-                        </div>
-                        {% elif user == product.producer and review.producer_response %}
-                        <div style="margin-top: 1rem;">
-                            <a href="/browse/review/{{ review.id }}/respond/" class="btn-primary" style="font-size: 0.85rem; padding: 0.3rem 0.6rem;">Edit Response</a>
-                        </div>
-                        {% endif %}
-                    {% endif %}
+                            {% if user.is_authenticated %}
+                                {% if user == review.customer %}
+                                    <div class="review-card__actions">
+                                        <a href="/browse/review/{{ review.id }}/edit/" class="btn-pill btn-pill--ghost">Edit</a>
+                                    </div>
+                                {% elif user == product.producer and not review.producer_response %}
+                                    <div class="review-card__actions">
+                                        <a href="/browse/review/{{ review.id }}/respond/" class="btn-pill btn-pill--ghost">Respond</a>
+                                    </div>
+                                {% elif user == product.producer and review.producer_response %}
+                                    <div class="review-card__actions">
+                                        <a href="/browse/review/{{ review.id }}/respond/" class="btn-pill btn-pill--ghost">Edit response</a>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </article>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
             {% else %}
-            <div style="text-align: center; padding: 2rem; background: #f8f9fa; border-radius: 4px;">
-                <p style="margin: 0; color: #666;">No reviews yet. Be the first to review this product!</p>
-            </div>
+                <div class="empty-state empty-state--compact">
+                    <div class="empty-state__icon">📝</div>
+                    <p class="empty-state__text">No reviews yet. Be the first to review this product!</p>
+                </div>
             {% endif %}
-        </div>
+        </section>
     </div>
 {% endblock %}

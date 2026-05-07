@@ -3,170 +3,127 @@
 {% load brfn_extras %}
 {% block title %}Browse Produce – BRFN{% endblock %}
 {% block content %}
-    <div class="page page-wide">
-        <h2>Browse Produce</h2>
+    <header class="page-header">
+        <span class="page-header__eyebrow">Marketplace</span>
+        <h1 class="page-header__title">
+            {% if search %}Results for &ldquo;{{ search }}&rdquo;
+            {% elif producer_name %}Products from {{ producer_name }}
+            {% else %}Browse produce{% endif %}
+        </h1>
+        <p class="page-header__subtitle">
+            {% if products %}
+                {{ products|length }} product{{ products|length|pluralize }}
+                {% if search or producer_name or allergen_filter or organic_certification %}match your filters{% else %}from independent Bristol producers within a 20-mile radius{% endif %}.
+            {% else %}
+                Filter by category, allergens or organic certification.
+            {% endif %}
+        </p>
+    </header>
 
-        <form method="get" class="filters">
-            <input type="text" name="search" placeholder="Search for a product, e.g. Apple, Bread, Milk..."
+    <div class="page-body">
+        <form method="get" class="filters" role="search" aria-label="Product filters">
+            <input type="text" name="search" placeholder="Search for a product, e.g. Apple, Bread, Milk…"
                 value="{{ search }}">
 
-            <select name="category" onchange="this.form.submit()">
-                <option value="">All Categories</option>
+            <select name="category" onchange="this.form.submit()" aria-label="Category">
+                <option value="">All categories</option>
                 {% for cat in categories %}
-                <option value="{{ cat.slug }}" {% if cat.is_selected %}selected{% endif %}>{{ cat.name }}</option>
+                    <option value="{{ cat.slug }}" {% if cat.is_selected %}selected{% endif %}>{{ cat.name }}</option>
                 {% endfor %}
             </select>
 
-            <select name="allergen_filter">
-                <option value="">All Products</option>
-                <option value="has_allergens" {% if allergen_filter == 'has_allergens' %}selected{% endif %}>Has Allergens</option>
-                <option value="no_allergens" {% if allergen_filter == 'no_allergens' %}selected{% endif %}>No Allergens</option>
+            <select name="allergen_filter" aria-label="Allergens">
+                <option value="">All products</option>
+                <option value="has_allergens" {% if allergen_filter == 'has_allergens' %}selected{% endif %}>Has allergens</option>
+                <option value="no_allergens" {% if allergen_filter == 'no_allergens' %}selected{% endif %}>No allergens</option>
             </select>
 
-            <select name="organic_certification">
-                <option value="">Organic Certification</option>
-                <option value="certified_organic" {% if organic_certification == 'certified_organic' %}selected{% endif %}>Certified Organic</option>
-                <option value="not_certified" {% if organic_certification == 'not_certified' %}selected{% endif %}>Non-Organic</option>
+            <select name="organic_certification" aria-label="Organic certification">
+                <option value="">Organic certification</option>
+                <option value="certified_organic" {% if organic_certification == 'certified_organic' %}selected{% endif %}>Certified organic</option>
+                <option value="not_certified" {% if organic_certification == 'not_certified' %}selected{% endif %}>Non-organic</option>
             </select>
 
             <button type="submit">Search</button>
         </form>
 
-        {% if search %}
-        <p class="search-summary">
-            Showing results for "<strong>{{ search }}</strong>" -
-            {{ products|length }} product{{ products|length|pluralize }} found
-        </p>
-        {% elif producer_name %}
-        <p class="search-summary">
-            Showing products from producer: <strong>{{ producer_name }}</strong> -
-            {{ products|length }} product{{ products|length|pluralize }} found
-        </p>
-        {% elif allergen_filter == 'has_allergens' %}
-        <p class="search-summary">
-            Showing products with allergen information -
-            {{ products|length }} product{{ products|length|pluralize }} found
-        </p>
-        {% elif allergen_filter == 'no_allergens' %}
-        <p class="search-summary">
-            Showing products with no allergen information -
-            {{ products|length }} product{{ products|length|pluralize }} found
-        </p>
-        {% elif organic_certification == 'certified_organic' %}
-        <p class="search-summary">
-            Showing products with <strong>Certified Organic</strong> status -
-            {{ products|length }} product{{ products|length|pluralize }} found
-        </p>
-        {% elif organic_certification == 'not_certified' %}
-        <p class="search-summary">
-            Showing products with <strong>Not Certified</strong> status -
-            {{ products|length }} product{{ products|length|pluralize }} found
-        </p>
-        {% endif %}
-
         {% if products %}
-        <div class="product-grid">
-            {% for product in products %}
-            <div class="product-card">
-                <a href="/browse/product/{{ product.id }}/" class="product-card__media">
-                    <img src="{% product_image_url product %}" alt="{{ product.name }}" loading="lazy" class="product-card__image">
-                    {% if not product.is_available %}<span class="product-card__badge product-card__badge--soldout">Out of stock</span>{% endif %}
-                </a>
-                <div class="product-card__body">
-                <h3 class="product-card__title"><a href="/browse/product/{{ product.id }}/">{{ product.name }}</a></h3>
-                <p class="producer">Sold by: {{ product.producer.username }}</p>
-                <span class="category-tag">{{ product.category.name }}</span>
+            <div class="product-grid">
+                {% for product in products %}
+                    <article class="product-card">
+                        <a href="/browse/product/{{ product.id }}/" class="product-card__media">
+                            <img src="{% product_image_url product %}" alt="{{ product.name }}" loading="lazy" class="product-card__image">
+                            {% if not product.is_available %}
+                                <span class="product-card__badge product-card__badge--soldout">Out of stock</span>
+                            {% endif %}
+                        </a>
+                        <div class="product-card__body">
+                            <p class="product-card__producer">{{ product.producer.username }}</p>
+                            <h3 class="product-card__title">
+                                <a href="/browse/product/{{ product.id }}/">{{ product.name }}</a>
+                            </h3>
 
-                {% if product.is_currently_in_season %}
-                <span class="category-tag" style="background: #e8f5e9; color: #2e7d32;">
-                    ✓ {{ product.get_seasonal_date_range_display }}
-                </span>
-                {% else %}
-                <span class="category-tag" style="background: #fff3e0; color: #e65100;">
-                    Out of Season{% if product.seasonal_start_date %} ({{ product.get_seasonal_date_range_display }}){% endif %}
-                </span>
-                {% endif %}
-
-                {% if product.organic_certification_status == 'certified_organic' %}
-                <span class="category-tag" style="background: #e8f5e9; color: #1b5e20;">
-                    Certified Organic
-                </span>
-                {% else %}
-                <span class="category-tag" style="background: #f1f1f1; color: #555;">
-                    Not Certified
-                </span>
-                {% endif %}
-
-                <p class="price">£{{ product.price }} / {{ product.unit }}</p>
-
-                <!-- Rating Display -->
-                <div style="margin: 0.75rem 0; padding: 0.5rem; background: #f9f9f9; border-radius: 4px; border: 1px solid #e0e0e0;">
-                    {% if product.review_count > 0 %}
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div>
-                                <span style="color: #f5a623; font-size: 1rem; font-weight: bold;">
-                                    {% for i in "12345" %}
-                                        {% if forloop.counter <= product.avg_rating|default:0|floatformat:0|add:"0" %}★{% else %}☆{% endif %}
-                                    {% endfor %}
-                                </span>
-                                <span style="color: #333; font-size: 0.85rem; margin-left: 0.3rem;">{{ product.avg_rating|floatformat:1 }}</span>
+                            <div class="product-card__chips">
+                                <span class="brfn-chip">{{ product.category.name }}</span>
+                                {% if product.is_currently_in_season %}
+                                    <span class="brfn-chip brfn-chip--season">In season</span>
+                                {% else %}
+                                    <span class="brfn-chip brfn-chip--off">Out of season</span>
+                                {% endif %}
+                                {% if product.organic_certification_status == 'certified_organic' %}
+                                    <span class="brfn-chip brfn-chip--organic">Organic</span>
+                                {% endif %}
+                                {% if product.food_miles is not None %}
+                                    <span class="brfn-chip brfn-chip--miles">{{ product.food_miles }} mi</span>
+                                {% endif %}
+                                {% if product.allergen_info %}
+                                    <span class="brfn-chip brfn-chip--allergen">Allergens</span>
+                                {% endif %}
                             </div>
-                            <a href="/browse/product/{{ product.id }}/#reviews" style="color: #4CAF50; font-size: 0.8rem; text-decoration: none; font-weight: 500;">
-                                {{ product.review_count }} review{{ product.review_count|pluralize }}
-                            </a>
+
+                            <div class="product-card__rating">
+                                {% if product.review_count > 0 %}
+                                    <span class="stars" aria-label="{{ product.avg_rating|floatformat:1 }} out of 5">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= product.avg_rating|default:0|floatformat:0|add:"0" %}★{% else %}☆{% endif %}
+                                        {% endfor %}
+                                    </span>
+                                    <span class="product-card__rating-count">
+                                        {{ product.avg_rating|floatformat:1 }} · {{ product.review_count }} review{{ product.review_count|pluralize }}
+                                    </span>
+                                {% else %}
+                                    <span class="stars stars--muted">☆☆☆☆☆</span>
+                                    <span class="product-card__rating-count">No reviews yet</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="product-card__footer">
+                                <span class="product-card__price">
+                                    £{{ product.price }} <small>/ {{ product.unit }}</small>
+                                </span>
+                                {% if user.is_authenticated %}
+                                    <form method="post" action="/orders/cart/add/{{ product.id }}/" class="product-card__cta-form">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="quantity" value="1">
+                                        <button type="submit" class="btn-pill btn-pill--soft" {% if not product.is_available %}disabled{% endif %}>
+                                            {% if product.is_available %}Add to cart{% else %}Sold out{% endif %}
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <a href="/browse/product/{{ product.id }}/" class="btn-pill btn-pill--soft">View</a>
+                                {% endif %}
+                            </div>
                         </div>
-                    {% else %}
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <span style="color: #ccc; font-size: 1rem;">☆☆☆☆☆</span>
-                            <a href="/browse/product/{{ product.id }}/#reviews" style="color: #666; font-size: 0.8rem; text-decoration: none;">
-                                No reviews yet
-                            </a>
-                        </div>
-                    {% endif %}
-                </div>
-
-                {% if product.food_miles is not None %}
-                <p style="font-size: 0.75rem; color: #1565c0; margin-top: 0.3rem;">
-                    Food miles: {{ product.food_miles }} miles
-                </p>
-                {% endif %}
-
-                <p style="font-size: 0.75rem; color: #2e7d32; margin-top: 0.3rem;">
-                    Organic Certification: {{ product.get_organic_certification_status_display }}
-                </p>
-
-                {% if product.allergen_info %}
-                <p style="font-size: 0.75rem; color: #e65100; margin-top: 0.3rem;">
-                    Allergen information: {{ product.allergen_info }}
-                </p>
-                {% else %}
-                <p style="font-size: 0.75rem; color: #2e7d32; margin-top: 0.3rem;">
-                    Allergen information: No common allergens
-                </p>
-                {% endif %}
-
-                {% if user.is_authenticated %}
-                <div class="product-card-actions">
-                    <form method="post" action="/orders/cart/add/{{ product.id }}/" class="product-card-form">
-                        {% csrf_token %}
-                        <input type="hidden" name="quantity" value="1">
-                        <button type="submit" class="btn-add-to-cart">Add to Cart</button>
-                    </form>
-                    <a href="/browse/product/{{ product.id }}/#reviews" class="btn-view-reviews">
-                        Reviews
-                    </a>
-                </div>
-                {% else %}
-                <div class="product-card-actions">
-                    <a href="/browse/product/{{ product.id }}/" class="btn-add-to-cart">View Product</a>
-                </div>
-                {% endif %}
-                </div>
+                    </article>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
         {% else %}
-        <p class="empty">No products found. Try a different search or category.</p>
+            <div class="empty-state">
+                <div class="empty-state__icon">🥕</div>
+                <h2 class="empty-state__title">No products match those filters</h2>
+                <p class="empty-state__text">Try clearing the search or picking a different category.</p>
+                <a href="/browse/" class="btn-pill">See all products</a>
+            </div>
         {% endif %}
     </div>
 {% endblock %}

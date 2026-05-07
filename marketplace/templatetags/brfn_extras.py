@@ -111,6 +111,39 @@ def _match_filename(name: str) -> str | None:
     return None
 
 
+def _uploaded_url_or_none(uploaded) -> str | None:
+    """
+    Return the URL for an uploaded FieldFile, but ONLY if the file actually
+    exists in storage. This avoids the very common "ghost record" bug where a
+    Product (or Recipe, or Story) has an image path stored in the DB but the
+    underlying file is missing on disk — fixture data, a media volume that
+    wasn't carried across to a new environment, an upload that was deleted
+    out-of-band, etc. Without this check the browser would happily request
+    /media/products/old_upload.jpg and render a broken image icon.
+    """
+    if not uploaded:
+        return None
+    try:
+        url = uploaded.url
+    except (ValueError, AttributeError):
+        return None
+
+    # `storage.exists()` is a quick disk stat for the default FileSystemStorage
+    # and a HEAD request for S3-backed storage. Either way it's cheap enough
+    # for a templatetag — the result is implicitly cached by per-request
+    # template rendering since we only call this at most once per object.
+    try:
+        name = getattr(uploaded, "name", None)
+        if name and uploaded.storage.exists(name):
+            return url
+    except Exception:
+        # Any storage backend that raises here (network blip, mis-configured
+        # bucket) — fall through to the static fallback rather than rendering
+        # a broken image.
+        return None
+    return None
+
+
 def _resolve_image(obj, themes: list[str], name_attrs: tuple[str, ...]) -> str:
     """
     Shared resolution logic for product/recipe/story.
@@ -121,12 +154,9 @@ def _resolve_image(obj, themes: list[str], name_attrs: tuple[str, ...]) -> str:
     if obj is None:
         return static("images/products/_placeholder.svg")
 
-    uploaded = getattr(obj, "image", None)
-    if uploaded:
-        try:
-            return uploaded.url
-        except (ValueError, AttributeError):
-            pass
+    uploaded_url = _uploaded_url_or_none(getattr(obj, "image", None))
+    if uploaded_url:
+        return uploaded_url
 
     name = ""
     for attr in name_attrs:

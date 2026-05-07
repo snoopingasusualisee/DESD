@@ -687,3 +687,30 @@
   - Authenticated customer pages (cart, my-orders, favourite-recipes) all return HTTP 200
   - Authenticated producer pages (my-products, my-recipes, my-stories, my-reviews, manage orders, payments, stock-alerts, add-product / -recipe / -story) all return HTTP 200
 - **Constraint respected**: zero backend changes. No models, views, URL patterns, migrations, forms or settings touched. Everything in this commit is templates, CSS, static assets, and one read-only templatetag module.
+# V1.1.48 - Zain Malik
+- **Frontend: closed the V1.1.47 gaps on the marketplace (browse + product detail) and fixed the broken-image bug**
+  - **Why**: V1.1.47 modernised every page _except_ the two most-visited ones — `marketplace/browse.html` and `marketplace/product_detail.html`. Both were still using the old card layout, plain `<h2>` heading, and dozens of inline `style="..."` chunks for badges, ratings and review cards. They didn't share the visual language of the home page or the rest of the site.
+  - **Image fallback bug fix (`marketplace/templatetags/brfn_extras.py`)**:
+    - The "some images are not loading" report traced to the templatetag returning `uploaded.url` whenever a `Product.image` field had a path stored in the DB — even if the underlying file was missing on disk (a very common situation: fixture data with no media volume, an upload deleted out of band, a media bucket that wasn't carried across to a new environment).
+    - Added a new `_uploaded_url_or_none()` helper that calls `uploaded.storage.exists(uploaded.name)` before trusting the URL. If the file isn't actually there, we fall through to the slug-matched static image, then the curated themed fallback, then the SVG placeholder. End result: no more broken `<img>` icons regardless of what the DB says.
+    - Wraps the storage call in a broad `try/except` so a network blip / mis-configured bucket cannot 500 the page — it just degrades gracefully to the placeholder.
+  - **`marketplace/browse.html` rewritten in the V1.1.47 design language**:
+    - Replaced the plain `<h2>Browse Produce</h2>` heading with a `page-header` block that swaps copy depending on whether the user is searching, filtering by producer, or browsing everything.
+    - The product card body is reorganised into a clean stack: producer eyebrow → product title → status chips (`brfn-chip`, `brfn-chip--season`, `--organic`, `--miles`, `--allergen`) → rating row → footer with bold price and a `btn-pill btn-pill--soft` CTA. All inline `style="..."` blocks deleted.
+    - "Add to cart" button is disabled and labelled "Sold out" when the product is unavailable, instead of just hiding the button silently.
+    - Empty state uses the existing `empty-state` component instead of a bare `<p>`.
+  - **`marketplace/product_detail.html` rewritten with a sticky buy-box pattern**:
+    - Top of the page is now a wide hero image (`detail-hero detail-hero--full`) backed by `product_image_url`, then a `page-header` with a back-link and the producer attribution.
+    - Body uses the `layout-with-aside` grid: left column is a `surface-card` with chips → description → a clean `<dl>` of allergens / certification / harvest date / food miles. Right column is a sticky `summary-card` with bold price, in-stock chip, quantity input and `Add to cart` button — so the call to action stays visible while customers scroll the description and reviews.
+    - Recipe suggestions, when present, render as a `surface-card` with thumbnailled `recipe-suggestion` rows that link to the recipe detail page.
+    - Reviews section is a proper `reviews-section` with a styled `reviews-summary` average and a list of `review-card`s; producer responses get a green left-bordered callout.
+    - All inline `style="..."` chunks (~30 of them) replaced with proper component classes so the card looks the same wherever it's reused.
+  - **CSS**: appended a "V1.1.48 — Browse + Product detail polish" block to `static/css/main.css` defining the new components: `.brfn-chip` (+ 5 modifiers), `.product-card__producer / __chips / __rating / __footer / __price`, `.stars` (+ `--muted`), `.detail-hero--full`, `.product-detail__description / __facts / __fact`, `.summary-card__price / __stock / __form / __label / __qty / __hint / __owner-actions`, `.recipe-suggestion(s)`, `.reviews-section / __header`, `.reviews-summary`, `.review-card / __header / __title / __text / __byline / __response / __actions`, `.empty-state--compact`, plus `.page-header__back` and `.page-header__link`. The existing `.product-card` rules now use `display: flex; flex-direction: column` so the footer sticks to the bottom of every card for a consistent visual rhythm.
+- **Tested**:
+  - `manage.py check` clean
+  - All 16 existing email / notification tests still pass
+  - All 43 templates load via Django's template loader without errors
+  - All 8 public pages (home, browse, login, register, terms, recipes, stories, producers) return HTTP 200
+  - Real product fixtures rendered: `/browse/`, `/browse/product/<id>/` (in-stock and sold-out variants) all 200 with the new design markers (`page-header`, `brfn-chip`, `summary-card__price`, `reviews-section`) confirmed in the response body
+  - Authenticated customer + producer dashboard pages (cart, my-orders, my-products, my-recipes, my-stories, my-reviews, manage orders, payments, stock-alerts, add-product / -recipe / -story) all return HTTP 200
+- **Constraint respected**: zero backend changes. No models, views, URL patterns, migrations, forms or settings touched. Everything in this commit is templates, CSS, and the read-only `brfn_extras` templatetag module.
