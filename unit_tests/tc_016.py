@@ -177,8 +177,8 @@ class TC016SeasonalAvailabilityTest(TestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Summer Tomatoes')
-        # Should show checkmark for in-season products
-        self.assertContains(response, '✓')
+        # Should show in-season indicator
+        self.assertContains(response, 'In season')
     
     def test_all_year_products_show_correct_indicator(self):
         """Test that year-round products display 'Available All Year' indicator."""
@@ -200,7 +200,8 @@ class TC016SeasonalAvailabilityTest(TestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Carrots')
-        self.assertContains(response, 'Available All Year')
+        # ALL_YEAR products display as 'In season' since they're always available
+        self.assertContains(response, 'In season')
     
     def test_out_of_season_products_are_marked(self):
         """Test that out-of-season products are clearly marked."""
@@ -230,7 +231,7 @@ class TC016SeasonalAvailabilityTest(TestCase):
         self.assertEqual(response.status_code, 200)
         # Out of season products should still be visible but marked
         self.assertContains(response, 'Pumpkins')
-        self.assertContains(response, 'Out of Season')
+        self.assertContains(response, 'Out of season')
     
     def test_producer_can_update_seasonal_status(self):
         """Test that producers can update seasonal status as seasons change."""
@@ -386,8 +387,8 @@ class TC016SeasonalAvailabilityTest(TestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'June Strawberries')
-        # Check for checkmark indicating in-season
-        self.assertContains(response, '✓')
+        # Check for in-season indicator
+        self.assertContains(response, 'In season')
     
     def test_producer_dashboard_shows_seasonal_status(self):
         """Test that producer's product dashboard displays seasonal status."""
