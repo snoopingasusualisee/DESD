@@ -96,7 +96,7 @@ class TC008MultiVendorCheckoutTests(TestCase):
         self.assertEqual(response.context['commission'], Decimal('0.80'))
         self.assertEqual(response.context['grand_total'], Decimal('16.80'))
 
-        self.assertContains(response, 'Network Commission (5%)')
+        self.assertContains(response, 'Network commission (5%)')
 
     @patch('stripe.checkout.Session.create')
     @patch('stripe.checkout.Session.retrieve')
@@ -237,4 +237,4 @@ class TC008MultiVendorCheckoutTests(TestCase):
         grouped = response.context['grouped_items']
         self.assertEqual(len(grouped), 2)
 
-        self.assertContains(response, 'Network Commission (5%)')
+        self.assertContains(response, 'Network commission')

@@ -116,7 +116,7 @@ class TC024ProductReviewTest(TestCase):
         response = self.client.get(self.submit_review_url)
         
         self.assertEqual(response.status_code, 200, "Review form should be accessible")
-        self.assertContains(response, 'Write a Review', msg_prefix="Page should show review form")
+        self.assertContains(response, 'Write a review', msg_prefix="Page should show review form")
         self.assertContains(response, 'Organic Tomatoes', msg_prefix="Page should show product name")
     
     def test_review_form_validation(self):
@@ -180,7 +180,7 @@ class TC024ProductReviewTest(TestCase):
         response = self.client.get(self.product_detail_url)
         
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Customer Reviews', msg_prefix="Page should have reviews section")
+        self.assertContains(response, 'Customer reviews', msg_prefix="Page should have reviews section")
         self.assertContains(response, 'Excellent quality and flavour', msg_prefix="Review title should appear")
         self.assertContains(response, 'incredibly fresh', msg_prefix="Review text should appear")
     
@@ -262,7 +262,7 @@ class TC024ProductReviewTest(TestCase):
         self.assertContains(response, review.display_name, msg_prefix="Customer name should be displayed")
         
         # Check for verified purchase badge
-        self.assertContains(response, 'Verified Purchase', msg_prefix="Verified purchase badge should be shown")
+        self.assertContains(response, 'Verified purchase', msg_prefix="Verified purchase badge should be shown")
     
     def test_anonymous_review_hides_customer_name(self):
         """Test that anonymous reviews hide customer name."""

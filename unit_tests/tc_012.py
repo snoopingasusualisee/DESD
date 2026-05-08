@@ -234,7 +234,7 @@ class TC012WeeklySettlementTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Payments')
-        self.assertContains(response, 'Financial Reports')
+        self.assertContains(response, 'settlements')
 
     def test_weekly_settlement_only_includes_delivered_orders_from_previous_week(self):
         """
@@ -246,12 +246,12 @@ class TC012WeeklySettlementTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        self.assertContains(response, f"Order {self.order_1.id} -")
-        self.assertContains(response, f"Order {self.order_2.id} -")
+        self.assertContains(response, f"Order #{self.order_1.id}")
+        self.assertContains(response, f"Order #{self.order_2.id}")
 
-        self.assertNotContains(response, f"Order {self.order_3.id} -")  
-        self.assertNotContains(response, f"Order {self.order_4.id} -")  
-        self.assertNotContains(response, f"Order {self.order_5.id} -")  
+        self.assertNotContains(response, f"Order #{self.order_3.id}")  
+        self.assertNotContains(response, f"Order #{self.order_4.id}")  
+        self.assertNotContains(response, f"Order #{self.order_5.id}")  
 
     def test_weekly_summary_shows_correct_commission_and_producer_payment(self):
         """
@@ -279,7 +279,7 @@ class TC012WeeklySettlementTests(TestCase):
         self.assertTrue(
             'Processed' in response.content.decode() or 'Pending Bank Transfer' in response.content.decode()
         )
-        self.assertContains(response, 'Tax Year Total')
+        self.assertContains(response, 'Tax year total')
 
     def test_csv_payment_report_can_be_downloaded(self):
         """

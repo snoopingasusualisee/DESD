@@ -107,7 +107,6 @@ class TC011InventoryUpdateTests(TestCase):
 
         if is_available:
             data['is_available'] = 'on'
-
         return data
 
     def test_producer_can_access_edit_page_for_own_product(self):
@@ -116,14 +115,14 @@ class TC011InventoryUpdateTests(TestCase):
         response = self.client.get(self._edit_url(self.tomatoes.id))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Edit Product')
+        self.assertContains(response, 'Edit product')
         self.assertContains(response, 'Organic Tomatoes')
 
     def test_my_products_page_shows_edit_link(self):
         self.client.login(username='producer_tc011', password='Password123!')
 
         response = self.client.get(self.my_products_url)
-
+        
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, f'/browse/product/{self.tomatoes.id}/edit/')
 

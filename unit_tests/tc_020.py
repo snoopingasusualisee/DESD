@@ -110,7 +110,7 @@ class TC020ProducerContentSharingTests(TestCase):
         response = self.client.get(self.add_recipe_url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Add New Recipe')
+        self.assertContains(response, 'Add a new recipe')
         self.assertContains(response, 'Recipe Title')
 
     def test_producer_can_create_recipe_with_details(self):
@@ -200,7 +200,7 @@ class TC020ProducerContentSharingTests(TestCase):
         response = self.client.get(product_url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Recipe Suggestions')
+        self.assertContains(response, 'Recipes that use')
         self.assertContains(response, 'Roasted Root Vegetable Medley')
 
         # Click through to recipe detail
@@ -555,7 +555,7 @@ class TC020ProducerContentSharingTests(TestCase):
         response = self.client.get(recipe_url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Save Recipe')
+        self.assertContains(response, 'Save recipe')
 
         # Favorite the recipe
         FavoriteRecipe.objects.create(user=self.customer, recipe=recipe)
@@ -564,7 +564,7 @@ class TC020ProducerContentSharingTests(TestCase):
         response = self.client.get(recipe_url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Saved to Favorites')
+        self.assertContains(response, 'Saved to favourites')
 
 
     def test_content_moderation_rejects_inappropriate_recipe(self):

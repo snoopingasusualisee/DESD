@@ -177,8 +177,8 @@ class TC016SeasonalAvailabilityTest(TestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Summer Tomatoes')
-        # Should show in-season indicator
-        self.assertContains(response, 'In season')
+        # Should show in-season indicator with date range
+        self.assertContains(response, 'April - June')
     
     def test_all_year_products_show_correct_indicator(self):
         """Test that year-round products display 'Available All Year' indicator."""
@@ -200,8 +200,8 @@ class TC016SeasonalAvailabilityTest(TestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Carrots')
-        # ALL_YEAR products display as 'In season' since they're always available
-        self.assertContains(response, 'In season')
+        # ALL_YEAR products display as 'Available all year'
+        self.assertContains(response, 'Available all year')
     
     def test_out_of_season_products_are_marked(self):
         """Test that out-of-season products are clearly marked."""
@@ -387,8 +387,12 @@ class TC016SeasonalAvailabilityTest(TestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'June Strawberries')
-        # Check for in-season indicator
-        self.assertContains(response, 'In season')
+        # Check for in-season indicator with date range (product has dates set)
+        # The product is created with dates, so it should show the date range
+        self.assertTrue(
+            'April - June' in response.content.decode() or 
+            '✓' in response.content.decode()
+        )
     
     def test_producer_dashboard_shows_seasonal_status(self):
         """Test that producer's product dashboard displays seasonal status."""

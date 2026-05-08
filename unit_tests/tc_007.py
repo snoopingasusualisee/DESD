@@ -83,7 +83,7 @@ class TC007SingleProducerCheckoutTests(TestCase):
 
         self.assertEqual(response.context['commission'], Decimal('0.38'))
         self.assertEqual(response.context['grand_total'], Decimal('7.88'))
-        self.assertContains(response, 'Network Commission (5%)')
+        self.assertContains(response, 'Network commission (5%)')
 
     def test_checkout_enforces_48h_lead_time(self):
         """Delivery date less than 48 hours from now is rejected."""

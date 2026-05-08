@@ -65,10 +65,20 @@
 
                             <div class="product-card__chips">
                                 <span class="brfn-chip">{{ product.category.name }}</span>
-                                {% if product.is_currently_in_season %}
+                                {% if product.seasonal_status == 'all_year' %}
+                                    <span class="brfn-chip brfn-chip--season">Available all year</span>
+                                {% elif product.seasonal_start_date and product.seasonal_end_date %}
+                                    {% if product.is_currently_in_season %}
+                                        <span class="brfn-chip brfn-chip--season" title="{{ product.get_seasonal_date_range_display }}">✓ {{ product.get_seasonal_date_range_display }}</span>
+                                    {% else %}
+                                        <span class="brfn-chip brfn-chip--off" title="Out of season ({{ product.get_seasonal_date_range_display }})">Out of season ({{ product.get_seasonal_date_range_display }})</span>
+                                    {% endif %}
+                                {% elif product.seasonal_status == 'in_season' %}
                                     <span class="brfn-chip brfn-chip--season">In season</span>
-                                {% else %}
+                                {% elif product.seasonal_status == 'out_of_season' %}
                                     <span class="brfn-chip brfn-chip--off">Out of season</span>
+                                {% elif product.seasonal_status == 'limited' %}
+                                    <span class="brfn-chip brfn-chip--limited">Limited availability</span>
                                 {% endif %}
                                 {% if product.organic_certification_status == 'certified_organic' %}
                                     <span class="brfn-chip brfn-chip--organic">Organic</span>

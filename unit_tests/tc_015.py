@@ -186,7 +186,7 @@ class TC015AllergenWarningTests(TestCase):
     def test_allergen_information_is_visible_before_add_to_cart(self):
         """
         Expected results:
-        allergen information should be visible before ordering.
+        allergen information appears before the Add to cart button in the page flow.
         """
         self._login_customer()
         response = self.client.get(self.cheddar_url)
@@ -195,7 +195,7 @@ class TC015AllergenWarningTests(TestCase):
         page = response.content.decode()
 
         allergen_pos = page.find('Contains: Milk')
-        add_to_cart_pos = page.find('Add to Cart')
+        add_to_cart_pos = page.find('Add to cart')
 
         self.assertNotEqual(allergen_pos, -1)
         self.assertNotEqual(add_to_cart_pos, -1)
